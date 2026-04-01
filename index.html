@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Veldwerk Compliance — {{PROJECT_ID}}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+
+  :root {
+    --hp: #2D6A4F;
+    --hp-l: #40916C;
+    --hp-pale: #B7E4C7;
+    --hp-bg: #F0FFF4;
+    --dk: #1B1B1B;
+    --gy: #6B7280;
+    --gy-l: #F3F4F6;
+    --bd: #E5E7EB;
+    --rd: #DC2626;
+    --am: #D97706;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'DM Sans', -apple-system, sans-serif;
+    color: var(--dk);
+    background: var(--gy-l);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ─── SCREEN MODE ─── */
+  .app-shell { max-width: 640px; margin: 0 auto; min-height: 100vh; }
+
+  .header {
+    background: var(--hp);
+    color: white;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo-box {
+    width: 34px; height: 34px; background: white; border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 12px; color: var(--hp); flex-shrink: 0;
+  }
+  .header h1 { font-size: 15px; font-weight: 700; }
+  .header p { font-size: 11px; opacity: .8; }
+
+  /* Project banner */
+  .proj {
+    background: white; margin: 12px; border-radius: 10px; padding: 14px 16px;
+    border-left: 4px solid var(--hp); box-shadow: 0 1px 3px rgba(0,0,0,.06);
+  }
+  .proj .pid { color: var(--hp); font-weight: 700; font-size: 13px; }
+  .proj .addr { font-size: 15px; font-weight: 600; margin-top: 2px; }
+  .proj .info { font-size: 12px; color: var(--gy); margin-top: 6px; line-height: 1.6; }
+  .proj .info b { color: var(--dk); }
+
+  /* Cards */
+  .card { background:white; margin:0 12px 10px; border-radius:10px; padding:14px 16px; box-shadow:0 1px 3px rgba(0,0,0,.06); }
+  .card-t { font-size:13px; font-weight:700; color:var(--hp); margin-bottom:10px; display:flex; align-items:center; gap:7px; }
+  .card-t .ic { font-size:15px; }
+
+  /* Toggle rows */
+  .trow {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:9px 11px; background:var(--gy-l); border-radius:7px; margin-bottom:6px;
+  }
+  .trow:last-child { margin-bottom:0; }
+  .trow .tl { font-size:12px; font-weight:500; flex:1; padding-right:10px; }
+  .trow .req { color:var(--rd); font-weight:700; }
+  .tsw { display:flex; border-radius:5px; overflow:hidden; border:1.5px solid var(--bd); }
+  .tsw button {
+    padding:5px 12px; font-size:11px; font-weight:600; font-family:inherit;
+    border:none; background:white; color:var(--gy); cursor:pointer; transition:.15s;
+  }
+  .tsw button.y { background:var(--hp); color:white; }
+  .tsw button.n { background:var(--rd); color:white; }
+  .tsw button.v { background:var(--gy); color:white; }
+
+  /* Fields */
+  .fld { margin-bottom:12px; }
+  .fld:last-child { margin-bottom:0; }
+  .fld label { display:block; font-size:11px; font-weight:600; color:var(--gy); margin-bottom:4px; text-transform:uppercase; letter-spacing:.4px; }
+  .fld input,.fld select,.fld textarea {
+    width:100%; padding:9px 11px; border:1.5px solid var(--bd); border-radius:7px;
+    font-size:13px; font-family:inherit; background:white; transition:border .2s;
+  }
+  .fld input:focus,.fld select:focus,.fld textarea:focus { outline:none; border-color:var(--hp); box-shadow:0 0 0 3px rgba(45,106,79,.1); }
+  .fld textarea { resize:vertical; min-height:60px; }
+  .fld .prefilled { background:#F8FFF8; border-color:var(--hp-pale); color:var(--dk); }
+
+  /* Divider */
+  .divider { margin:16px 12px; border:none; border-top:2px solid var(--bd); }
+  .section-title { margin:16px 12px 8px; font-size:14px; font-weight:700; color:var(--hp); display:flex; align-items:center; gap:8px; }
+
+  /* Signature */
+  .sig-box { border:2px dashed var(--bd); border-radius:8px; height:100px; position:relative; cursor:crosshair; touch-action:none; background:#FAFAFA; }
+  .sig-box canvas { width:100%; height:100%; border-radius:6px; }
+  .sig-hint { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:11px; color:#CCC; pointer-events:none; }
+  .sig-clr { position:absolute; top:4px; right:4px; background:rgba(0,0,0,.05); border:none; border-radius:4px; padding:3px 7px; font-size:10px; cursor:pointer; }
+
+  /* Norm refs */
+  .norm { font-size:10px; color:var(--gy); padding:7px 11px; background:var(--gy-l); border-radius:5px; margin:8px 12px; border-left:3px solid var(--hp-pale); }
+
+  /* Buttons */
+  .actions { display:flex; gap:8px; margin:16px 12px 30px; }
+  .btn {
+    flex:1; padding:13px; border-radius:9px; border:none;
+    font-size:13px; font-weight:700; font-family:inherit; cursor:pointer; transition:.2s;
+    display:flex; align-items:center; justify-content:center; gap:6px;
+  }
+  .btn-p { background:var(--hp); color:white; }
+  .btn-p:active { background:var(--hp-l); }
+  .btn-d { background:var(--dk); color:white; }
+  .btn-d:active { background:#333; }
+
+  /* Toast */
+  .toast {
+    position:fixed; bottom:16px; left:50%; transform:translateX(-50%) translateY(80px);
+    background:var(--dk); color:white; padding:10px 20px; border-radius:8px;
+    font-size:12px; font-weight:600; z-index:200; transition:transform .3s;
+  }
+  .toast.show { transform:translateX(-50%) translateY(0); }
+
+  /* ═══════════════════════════════════════════
+     PRINT MODE — dit is het rapportbijlage
+     ═══════════════════════════════════════════ */
+  @media print {
+    body { background:white; font-size:10pt; }
+    .app-shell { max-width:100%; }
+    .header { position:static; background:white !important; color:var(--dk) !important; border-bottom:3px solid var(--hp); padding:10mm 0 4mm; }
+    .logo-box { background:var(--hp) !important; color:white !important; }
+    .header h1 { color:var(--hp) !important; font-size:14pt; }
+    .header p { color:var(--gy) !important; opacity:1; font-size:9pt; }
+
+    .proj,.card { box-shadow:none; margin:4mm 0; border:1px solid #EEE; page-break-inside:avoid; }
+    .actions,.btn,.sig-clr,.sig-hint,.no-print { display:none !important; }
+    .norm { margin:2mm 0; }
+    .divider { margin:4mm 0; }
+
+    .trow { background:#F9F9F9 !important; print-color-adjust:exact; -webkit-print-color-adjust:exact; }
+    .tsw button { border:1px solid #DDD !important; }
+    .tsw button.y { background:var(--hp) !important; color:white !important; print-color-adjust:exact; -webkit-print-color-adjust:exact; }
+    .tsw button.n { background:var(--rd) !important; color:white !important; print-color-adjust:exact; -webkit-print-color-adjust:exact; }
+
+    .fld input,.fld select,.fld textarea { border:1px solid #DDD; background:white; }
+    .fld .prefilled { background:#F4FFF4 !important; print-color-adjust:exact; -webkit-print-color-adjust:exact; }
+
+    .sig-box { border:1px solid #CCC; background:white !important; }
+    .sig-box canvas { background:white; }
+
+    /* Footer per page */
+    @page {
+      size: A4;
+      margin: 15mm 15mm 20mm 15mm;
+      @bottom-center { content: "Hopman en Peters B.V. — Veldwerk Compliance Formulier"; font-size:8pt; color:#999; }
+    }
+
+    .print-footer {
+      display:block !important;
+      text-align:center;
+      font-size:8pt;
+      color:var(--gy);
+      margin-top:8mm;
+      padding-top:4mm;
+      border-top:1px solid #EEE;
+    }
+  }
+  .print-footer { display:none; }
+
+  /* ─── Conditional sections ─── */
+  .cond-2002 { display:none; }
+  .cond-2002.vis { display:block; }
+  .cond-2018 { display:none; }
+  .cond-2018.vis { display:block; }
+
+  /* ─── PIN Lock Screen ─── */
+  .pin-overlay {
+    position:fixed; inset:0; z-index:9999;
+    background:var(--hp);
+    display:flex; align-items:center; justify-content:center;
+    transition: opacity .4s, visibility .4s;
+  }
+  .pin-overlay.unlocked { opacity:0; visibility:hidden; pointer-events:none; }
+  .pin-box {
+    background:white; border-radius:16px; padding:36px 32px; width:320px;
+    box-shadow:0 20px 60px rgba(0,0,0,.3); text-align:center;
+  }
+  .pin-box .pin-logo {
+    width:52px; height:52px; background:var(--hp); border-radius:12px;
+    display:inline-flex; align-items:center; justify-content:center;
+    font-weight:700; font-size:16px; color:white; margin-bottom:16px;
+  }
+  .pin-box h2 { font-size:17px; font-weight:700; color:var(--dk); margin-bottom:4px; }
+  .pin-box p { font-size:12px; color:var(--gy); margin-bottom:20px; }
+  .pin-digits {
+    display:flex; gap:10px; justify-content:center; margin-bottom:20px;
+  }
+  .pin-digits input {
+    width:48px; height:56px; border:2px solid var(--bd); border-radius:10px;
+    text-align:center; font-size:22px; font-weight:700; font-family:inherit;
+    color:var(--dk); background:var(--gy-l); transition:border .2s;
+    -webkit-appearance:none;
+  }
+  .pin-digits input:focus { outline:none; border-color:var(--hp); background:white; box-shadow:0 0 0 3px rgba(45,106,79,.15); }
+  .pin-digits input.wrong { border-color:var(--rd); background:var(--rd);  color:white; animation:shake .4s; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-6px)} 40%,80%{transform:translateX(6px)} }
+  .pin-error { font-size:12px; color:var(--rd); font-weight:600; height:16px; margin-bottom:4px; }
+
+  .app-shell.locked { filter:blur(8px); pointer-events:none; user-select:none; }
+</style>
+</head>
+<body>
+
+<!-- ═══ PIN LOCK SCREEN ═══ -->
+<div class="pin-overlay" id="pin-overlay">
+  <div class="pin-box">
+    <div class="pin-logo">H&P</div>
+    <h2>Hopman en Peters B.V.</h2>
+    <p>Veldwerk Compliance — voer pincode in</p>
+    <div class="pin-digits" id="pin-digits">
+      <input type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]" autofocus>
+      <input type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]">
+      <input type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]">
+      <input type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]">
+    </div>
+    <div class="pin-error" id="pin-error"></div>
+  </div>
+</div>
+
+<div class="app-shell locked" id="app-shell">
+
+  <div class="header">
+    <div class="logo-box">H&P</div>
+    <div>
+      <h1>Veldwerk Compliance Formulier</h1>
+      <p>BRL SIKB 2000 — Protocol 2001 / 2002 / 2018</p>
+    </div>
+  </div>
+
+  <!-- ═══ PROJECT ═══ -->
+  <div class="proj">
+    <div class="pid" id="d-pid">P2600125</div>
+    <div class="addr" id="d-addr">Arendsweg 36, Beverwijk</div>
+    <div class="info" id="d-info">
+      <b>Opdrachtgever:</b> Bouwbedrijf Luntz<br>
+      <b>Projectleider:</b> B. Achterberg<br>
+      <b>Boormeester:</b> M. Berkhof &nbsp;|&nbsp; <b>Medewerker:</b> J. Verwoert<br>
+      <b>Datum veldwerk:</b> 20-02-2026 &nbsp;|&nbsp; <b>Protocollen:</b> 2001, 2002<br>
+      <b>Meetpunten:</b> 5 &nbsp;|&nbsp; <b>Peilbuizen:</b> 1 &nbsp;|&nbsp; <b>Monsters:</b> 6 grond, 1 water
+    </div>
+  </div>
+
+  <!-- ═══ LMRA ═══ -->
+  <div class="section-title"><span>🛡️</span> LMRA — Laatste Minuut Risico Analyse</div>
+  <div class="card">
+    <div class="trow"><span class="tl">Situatie op locatie veilig? <span class="req">*</span></span><div class="tsw" data-f="lmra_veilig"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+    <div class="trow"><span class="tl">Toegang terrein geregeld?</span><div class="tsw" data-f="lmra_toegang"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+    <div class="trow"><span class="tl">Toestemming eigenaar verkregen?</span><div class="tsw" data-f="lmra_toestemming"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button><button onclick="tw(this,'v')">N.v.t.</button></div></div>
+    <div class="trow"><span class="tl">Tekening/situatieschets duidelijk?</span><div class="tsw" data-f="lmra_tekening"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+  </div>
+  <div class="card">
+    <div class="card-t"><span class="ic">📡</span>KLIC-melding</div>
+    <div class="fld"><label>Referentienummer</label><input id="f-klic" placeholder="25G001234"></div>
+    <div class="fld"><label>Datum</label><input type="date" id="f-klic-d"></div>
+  </div>
+  <div class="card">
+    <div class="fld"><label>Bijzondere risico's / opmerkingen</label><textarea id="f-risk" placeholder="Eventuele risico's..."></textarea></div>
+  </div>
+  <div class="norm">BRL SIKB 2000 v7.0, §2.3 — De organisatie voldoet aan alle veiligheidseisen uit de protocollen.</div>
+
+  <hr class="divider">
+
+  <!-- ═══ VELDWERK ═══ -->
+  <div class="section-title"><span>🔧</span> Uitvoering veldwerk</div>
+  <div class="card">
+    <div class="trow"><span class="tl">Uitvoering conform opdracht? <span class="req">*</span></span><div class="tsw" data-f="conf_opdracht"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+    <div class="trow"><span class="tl">Opdracht afgerond?</span><div class="tsw" data-f="afgerond"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+    <div class="trow"><span class="tl">Foto's genomen?</span><div class="tsw" data-f="fotos"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+    <div class="trow"><span class="tl">Monsteroverdracht uitgevoerd?</span><div class="tsw" data-f="overdracht"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+    <div class="trow"><span class="tl">Asbest aangetroffen op locatie?</span><div class="tsw" data-f="asbest_loc"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+  </div>
+  <div class="card">
+    <div class="card-t"><span class="ic">📝</span>Afwijkingen van protocol</div>
+    <div class="trow"><span class="tl">Afwijkingen SIKB / NEN 5740? <span class="req">*</span></span><div class="tsw" data-f="afwijkingen"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+    <div class="fld" style="margin-top:10px"><label>Toelichting afwijkingen</label><textarea id="f-afw" placeholder="Aard en motivatie..."></textarea></div>
+  </div>
+  <div class="card">
+    <div class="fld"><label>Overtollige grond</label>
+      <select id="f-grond"><option value="">— Selecteer —</option><option>Verspreid op locatie</option><option>Gronddepot ingericht</option><option>Afgevoerd</option><option>N.v.t.</option></select>
+    </div>
+    <div class="fld"><label>Opmerkingen na veldwerk</label><textarea id="f-opm" placeholder=""></textarea></div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ═══ PROTOCOL 2002 (conditional) ═══ -->
+  <div class="cond-2002 vis" id="sec-2002">
+    <div class="section-title"><span>💧</span> Protocol 2002 — Grondwater</div>
+    <div class="card">
+      <p style="font-size:11px;color:var(--gy);margin-bottom:8px">EC, pH, O₂, NTU, temperatuur zijn vastgelegd in TerraIndex. Onderstaand zijn aanvullende compliance-checks.</p>
+      <div class="trow"><span class="tl">Wachttijd ≥ 1 week? <span class="req">*</span></span><div class="tsw" data-f="gw_wacht"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+      <div class="trow"><span class="tl">Drijf-/zaklaag aanwezig?</span><div class="tsw" data-f="gw_drijf"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+      <div class="trow"><span class="tl">Beluchting opgetreden?</span><div class="tsw" data-f="gw_beluch"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+      <div class="trow"><span class="tl">Veldfiltratie uitgevoerd?</span><div class="tsw" data-f="gw_filtr"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+      <div class="fld" style="margin-top:8px"><label>Toelichting</label><textarea id="f-gw" placeholder="Bijv. drijflaag bij PB01..."></textarea></div>
+    </div>
+    <div class="norm">Protocol 2002 v7.0 — NTA 8017 wachttijd-eisen van toepassing.</div>
+  </div>
+
+  <!-- ═══ PROTOCOL 2018 (conditional) ═══ -->
+  <div class="cond-2018" id="sec-2018">
+    <div class="section-title"><span>🏗️</span> Protocol 2018 — Asbest veldinspectie</div>
+    <div class="card">
+      <div class="card-t"><span class="ic">🌤️</span>Weersomstandigheden</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div class="fld"><label>Temperatuur (°C)</label><input type="number" id="f-at"></div>
+        <div class="fld"><label>Neerslag</label><select id="f-an"><option value="">—</option><option>Geen</option><option>Motregen</option><option>Regen</option><option>Hagel</option><option>Sneeuw</option></select></div>
+        <div class="fld"><label>Wind (Bft)</label><select id="f-aw"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></div>
+        <div class="fld"><label>Windrichting</label><select id="f-awr"><option value="">—</option><option>N</option><option>NO</option><option>O</option><option>ZO</option><option>Z</option><option>ZW</option><option>W</option><option>NW</option></select></div>
+        <div class="fld"><label>Zicht</label><select id="f-az"><option value="">—</option><option>&lt; 50m</option><option>&gt; 50m</option></select></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-t"><span class="ic">🔍</span>Maaiveld inspectie</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div class="fld"><label>Grondsoort</label><select id="f-ag"><option value="">—</option><option>Zand</option><option>Klei</option><option>Leem</option><option>Veen</option></select></div>
+        <div class="fld"><label>Conditie</label><select id="f-ac"><option value="">—</option><option>Los</option><option>Vastgereden</option><option>Vochtig</option></select></div>
+        <div class="fld"><label>Bedekkingsgraad (%)</label><input type="number" id="f-ab" min="0" max="100"></div>
+        <div class="fld"><label>Na verwijdering (%)</label><input type="number" id="f-abn" min="0" max="100"></div>
+      </div>
+      <div class="trow" style="margin-top:6px"><span class="tl">Vegetatie verwijderd?</span><div class="tsw" data-f="asb_veg"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+      <div class="trow"><span class="tl">Asbestverdacht materiaal?</span><div class="tsw" data-f="asb_verd"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+      <div class="fld" style="margin-top:8px"><label>Beschrijving vindplaatsen</label><textarea id="f-abes" placeholder="Type, gewicht, locatie..."></textarea></div>
+    </div>
+    <div class="norm">Protocol 2018 v7.0 — NEN 5707 van toepassing.</div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ═══ CONFORMITEITSVERKLARING ═══ -->
+  <div class="section-title"><span>✍️</span> Conformiteitsverklaring</div>
+  <div class="card">
+    <p style="font-size:11px;color:var(--gy);margin-bottom:10px;line-height:1.5">
+      Door ondertekening verklaart de geregistreerde boormeester dat het veldwerk
+      <b>onafhankelijk van de opdrachtgever</b> is uitgevoerd conform de eisen van de
+      BRL SIKB 2000 met de daarbij horende protocollen.
+    </p>
+    <div class="fld">
+      <label>Handtekening boormeester</label>
+      <div class="sig-box" id="sig-box">
+        <canvas id="sig-cv"></canvas>
+        <span class="sig-hint" id="sig-h">Teken hier</span>
+        <button class="sig-clr no-print" onclick="clrSig()">Wis</button>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+      <div class="fld"><label>Naam</label><input id="f-sn" class="prefilled" value="M. Berkhof"></div>
+      <div class="fld"><label>Datum</label><input type="date" id="f-sd"></div>
+    </div>
+  </div>
+  <div class="norm">BRL SIKB 2000 v7.0, §2.4 — Veldwerkverslag met onafhankelijkheidsverklaring.</div>
+
+  <!-- ═══ ACTIES ═══ -->
+  <div class="actions no-print">
+    <button class="btn btn-p" onclick="doPrint()">🖨️ Opslaan als PDF</button>
+    <button class="btn btn-d" onclick="doJSON()">📄 Export JSON</button>
+  </div>
+
+  <div class="print-footer">
+    Hopman en Peters B.V. — Utrechtseweg 230, 3818 EN Amersfoort — NC-SIK-10093<br>
+    Gegenereerd: <span id="pf-date"></span> — Veldwerk Compliance App v1.0
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══ HANS INJECTS DATA HERE ═══════════════════════════════════
+// Hans vervangt dit blok met werkelijke projectdata uit TerraIndex + AFAS
+const PROJECT = {
+  projectnummer: "P2600125",
+  adres: "Arendsweg 36, Beverwijk",
+  opdrachtgever: "Bouwbedrijf Luntz",
+  projectleider: "B. Achterberg",
+  boormeester: "M. Berkhof",
+  boormedewerker: "J. Verwoert",
+  datum_veldwerk: "2026-02-20",
+  protocollen: ["2001", "2002"],
+  meetpunten: 5,
+  peilbuizen: 1,
+  monsters_grond: 6,
+  watermonsters: 1,
+  klic_ref: "",
+  klic_datum: ""
+};
+// ═══════════════════════════════════════════════════════════════
+
+// State
+const S = {};
+
+// Toggle handler
+function tw(btn, val) {
+  const sw = btn.parentElement;
+  sw.querySelectorAll('button').forEach(b => b.className = '');
+  btn.className = val === 'y' ? 'y' : val === 'n' ? 'n' : 'v';
+  S[sw.dataset.f] = val === 'y' ? 'ja' : val === 'n' ? 'nee' : 'n.v.t.';
+}
+
+// Signature
+let drawing = false, hasSig = false;
+function initSig() {
+  const cv = document.getElementById('sig-cv');
+  const box = cv.parentElement;
+  const ctx = cv.getContext('2d');
+  function rs() { const r = box.getBoundingClientRect(); cv.width = r.width; cv.height = r.height; }
+  rs(); window.addEventListener('resize', rs);
+  function gp(e) { const r = cv.getBoundingClientRect(); const t = e.touches ? e.touches[0] : e; return {x:t.clientX-r.left, y:t.clientY-r.top}; }
+  function st(e) { e.preventDefault(); drawing=true; hasSig=true; document.getElementById('sig-h').style.display='none'; const p=gp(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); }
+  function mv(e) { if(!drawing)return; e.preventDefault(); const p=gp(e); ctx.lineWidth=2; ctx.lineCap='round'; ctx.strokeStyle='#1B1B1B'; ctx.lineTo(p.x,p.y); ctx.stroke(); }
+  function en() { drawing=false; }
+  cv.addEventListener('mousedown',st); cv.addEventListener('mousemove',mv); cv.addEventListener('mouseup',en);
+  cv.addEventListener('touchstart',st,{passive:false}); cv.addEventListener('touchmove',mv,{passive:false}); cv.addEventListener('touchend',en);
+}
+function clrSig() {
+  const cv=document.getElementById('sig-cv'); cv.getContext('2d').clearRect(0,0,cv.width,cv.height);
+  document.getElementById('sig-h').style.display=''; hasSig=false;
+}
+
+// Prefill from PROJECT data
+function prefill() {
+  document.getElementById('d-pid').textContent = PROJECT.projectnummer;
+  document.getElementById('d-addr').textContent = PROJECT.adres;
+  document.getElementById('d-info').innerHTML = `
+    <b>Opdrachtgever:</b> ${PROJECT.opdrachtgever}<br>
+    <b>Projectleider:</b> ${PROJECT.projectleider}<br>
+    <b>Boormeester:</b> ${PROJECT.boormeester} &nbsp;|&nbsp; <b>Medewerker:</b> ${PROJECT.boormedewerker}<br>
+    <b>Datum veldwerk:</b> ${PROJECT.datum_veldwerk} &nbsp;|&nbsp; <b>Protocollen:</b> ${PROJECT.protocollen.join(', ')}<br>
+    <b>Meetpunten:</b> ${PROJECT.meetpunten} &nbsp;|&nbsp; <b>Peilbuizen:</b> ${PROJECT.peilbuizen} &nbsp;|&nbsp; <b>Monsters:</b> ${PROJECT.monsters_grond} grond, ${PROJECT.watermonsters} water
+  `;
+  document.getElementById('f-sn').value = PROJECT.boormeester;
+  document.getElementById('f-sd').value = PROJECT.datum_veldwerk;
+  if (PROJECT.klic_ref) document.getElementById('f-klic').value = PROJECT.klic_ref;
+  if (PROJECT.klic_datum) document.getElementById('f-klic-d').value = PROJECT.klic_datum;
+  document.title = `Veldwerk Compliance — ${PROJECT.projectnummer}`;
+
+  // Show/hide conditional sections
+  if (PROJECT.protocollen.includes('2002')) document.getElementById('sec-2002').classList.add('vis');
+  if (PROJECT.protocollen.includes('2018')) document.getElementById('sec-2018').classList.add('vis');
+
+  document.getElementById('pf-date').textContent = new Date().toLocaleDateString('nl-NL');
+}
+
+// Print = save as PDF
+function doPrint() { window.print(); }
+
+// JSON export
+function doJSON() {
+  const data = {
+    _meta: { schema:'hp_veldwerk_compliance_v1', generated:new Date().toISOString(), bron:'HP Veldwerk Compliance App' },
+    project: { ...PROJECT },
+    lmra: {
+      situatie_veilig: S.lmra_veilig||null, toegang: S.lmra_toegang||null,
+      toestemming: S.lmra_toestemming||null, tekening: S.lmra_tekening||null,
+      klic_ref: document.getElementById('f-klic').value||null,
+      klic_datum: document.getElementById('f-klic-d').value||null,
+      risicos: document.getElementById('f-risk').value||null
+    },
+    veldwerk: {
+      conform_opdracht: S.conf_opdracht||null, afgerond: S.afgerond||null,
+      fotos: S.fotos||null, monsteroverdracht: S.overdracht||null,
+      asbest_locatie: S.asbest_loc||null, afwijkingen: S.afwijkingen||null,
+      afwijkingen_toelichting: document.getElementById('f-afw').value||null,
+      overtollige_grond: document.getElementById('f-grond').value||null,
+      opmerkingen: document.getElementById('f-opm').value||null,
+      handtekening: hasSig, handtekening_naam: document.getElementById('f-sn').value,
+      handtekening_datum: document.getElementById('f-sd').value
+    }
+  };
+  if (PROJECT.protocollen.includes('2002')) {
+    data.protocol_2002 = {
+      wachttijd: S.gw_wacht||null, drijflaag: S.gw_drijf||null,
+      beluchting: S.gw_beluch||null, filtratie: S.gw_filtr||null,
+      toelichting: document.getElementById('f-gw').value||null
+    };
+  }
+  if (PROJECT.protocollen.includes('2018')) {
+    data.protocol_2018 = {
+      weer: { temp: document.getElementById('f-at').value||null, neerslag: document.getElementById('f-an').value||null, wind_bft: document.getElementById('f-aw').value||null, windrichting: document.getElementById('f-awr').value||null, zicht: document.getElementById('f-az').value||null },
+      maaiveld: { grondsoort: document.getElementById('f-ag').value||null, conditie: document.getElementById('f-ac').value||null, bedekking_pct: document.getElementById('f-ab').value||null, veg_verwijderd: S.asb_veg||null, bedekking_na_pct: document.getElementById('f-abn').value||null },
+      bevindingen: { verdacht: S.asb_verd||null, beschrijving: document.getElementById('f-abes').value||null }
+    };
+  }
+  const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a = document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=`veldwerk_compliance_${PROJECT.projectnummer}.json`; a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('✓ JSON geëxporteerd');
+}
+
+function showToast(m) { const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2000); }
+
+// ═══ PIN LOGIC ═══════════════════════════════════════════════
+const PIN_CODE = '2026';
+const PIN_SESSION_KEY = 'hp_veldwerk_unlocked';
+
+function initPin() {
+  // Check if already unlocked this session
+  if (sessionStorage.getItem(PIN_SESSION_KEY) === 'true') {
+    unlockApp();
+    return;
+  }
+
+  const inputs = document.querySelectorAll('#pin-digits input');
+
+  inputs.forEach((inp, i) => {
+    inp.addEventListener('input', (e) => {
+      const val = e.target.value.replace(/\D/g, '');
+      e.target.value = val;
+      if (val && i < inputs.length - 1) {
+        inputs[i + 1].focus();
+      }
+      // Check when all 4 digits filled
+      if (i === inputs.length - 1 && val) {
+        const entered = Array.from(inputs).map(x => x.value).join('');
+        if (entered === PIN_CODE) {
+          sessionStorage.setItem(PIN_SESSION_KEY, 'true');
+          inputs.forEach(x => { x.style.borderColor = 'var(--hp)'; x.style.background = 'var(--hp)'; x.style.color = 'white'; });
+          setTimeout(unlockApp, 300);
+        } else {
+          document.getElementById('pin-error').textContent = 'Onjuiste pincode';
+          inputs.forEach(x => x.classList.add('wrong'));
+          setTimeout(() => {
+            inputs.forEach(x => { x.classList.remove('wrong'); x.value = ''; });
+            inputs[0].focus();
+            document.getElementById('pin-error').textContent = '';
+          }, 600);
+        }
+      }
+    });
+
+    inp.addEventListener('keydown', (e) => {
+      if (e.key === 'Backspace' && !e.target.value && i > 0) {
+        inputs[i - 1].focus();
+        inputs[i - 1].value = '';
+      }
+    });
+
+    // Handle paste (plak pincode)
+    inp.addEventListener('paste', (e) => {
+      e.preventDefault();
+      const paste = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, 4);
+      paste.split('').forEach((ch, ci) => {
+        if (inputs[ci]) { inputs[ci].value = ch; }
+      });
+      if (paste.length >= 4) {
+        inputs[3].focus();
+        inputs[3].dispatchEvent(new Event('input'));
+      }
+    });
+  });
+
+  // Auto-focus first input
+  setTimeout(() => inputs[0]?.focus(), 100);
+}
+
+function unlockApp() {
+  document.getElementById('pin-overlay').classList.add('unlocked');
+  document.getElementById('app-shell').classList.remove('locked');
+}
+
+// Init
+document.addEventListener('DOMContentLoaded', () => {
+  initPin();
+  prefill();
+  setTimeout(initSig, 100);
+});
+</script>
+</body>
+</html>
