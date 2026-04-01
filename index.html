@@ -139,6 +139,31 @@
   .toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--dk);color:white;padding:10px 20px;border-radius:8px;font-size:12px;font-weight:600;z-index:200;transition:transform .3s}
   .toast.show{transform:translateX(-50%) translateY(0)}
 
+  /* ─── Picker screen ─── */
+  #picker-screen{display:none}
+  #picker-screen.vis{display:block}
+  .pick-header{background:var(--hp);color:white;padding:14px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100}
+  .pick-header h1{font-size:15px;font-weight:700}
+  .pick-header p{font-size:11px;opacity:.8}
+  .pick-search{background:white;margin:12px;border-radius:10px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+  .pick-search input{width:100%;padding:10px 12px;border:1.5px solid var(--bd);border-radius:8px;font-size:14px;font-family:inherit;background:var(--gy-l)}
+  .pick-search input:focus{outline:none;border-color:var(--hp);background:white;box-shadow:0 0 0 3px rgba(45,106,79,.1)}
+  .pick-hint{font-size:11px;color:var(--gy);margin-top:8px;text-align:center}
+  .pick-result{background:white;margin:0 12px 8px;border-radius:10px;padding:13px 15px;border-left:4px solid var(--hp);box-shadow:0 1px 3px rgba(0,0,0,.06);cursor:pointer;transition:background .15s}
+  .pick-result:active{background:var(--hp-bg)}
+  .pick-result .pr-pid{color:var(--hp);font-weight:700;font-size:12px}
+  .pick-result .pr-addr{font-size:14px;font-weight:600;margin-top:2px}
+  .pick-result .pr-info{font-size:11px;color:var(--gy);margin-top:4px}
+  .pick-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;margin-left:6px;vertical-align:middle}
+  .pick-badge.brl2000{background:var(--hp-pale);color:var(--hp)}
+  .pick-badge.brl1001{background:var(--ap-pale);color:var(--ap)}
+  .pick-badge.brl1002{background:var(--bw-pale);color:var(--bw)}
+  .pick-empty{text-align:center;color:var(--gy);font-size:13px;padding:32px 20px}
+  .pick-loading{text-align:center;color:var(--gy);font-size:12px;padding:16px}
+  #main-content{display:none}
+  #main-content.vis{display:block}
+  .back-btn{background:rgba(255,255,255,.2);border:none;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:white;cursor:pointer;margin-left:auto;font-family:inherit;white-space:nowrap}
+
   /* ─── Print ─── */
   @media print{
     body{background:white;font-size:10pt}
@@ -146,7 +171,8 @@
     .header{position:static;background:white!important;color:var(--dk)!important;border-bottom:3px solid var(--mod-c);padding:10mm 0 4mm}
     .logo-box{background:var(--mod-c)!important;color:white!important}
     .header h1{color:var(--mod-c)!important;font-size:14pt}
-    .phase-bar,.actions,.btn,.sig-clr,.sig-hint,.no-print,.pin-overlay,.mod-badge{display:none!important}
+    .phase-bar,.actions,.btn,.sig-clr,.sig-hint,.no-print,.pin-overlay,.mod-badge,.back-btn,#picker-screen{display:none!important}
+    #main-content{display:block!important}
     .module-section{display:block!important}
     .phase-section{display:block!important}
     .proj,.card,.partij-banner{box-shadow:none;margin:4mm 0;border:1px solid #EEE;page-break-inside:avoid}
@@ -165,6 +191,20 @@
 </head>
 <body>
 
+<!-- ═══ PICKER SCREEN ═══ -->
+<div id="picker-screen">
+  <div class="pick-header">
+    <div class="logo-box" style="color:var(--hp)">H&P</div>
+    <div><h1>Kies project</h1><p>Typ projectnummer, adres of opdrachtgever</p></div>
+  </div>
+  <div class="pick-search">
+    <input type="search" id="pick-q" placeholder="P2600125 of Arendsweg 36..." autocomplete="off"
+           oninput="pickSearch(this.value)" onfocus="if(!this.value)pickSearch('')">
+    <div class="pick-hint" id="pick-hint">Recente projecten worden getoond — typ om te zoeken</div>
+  </div>
+  <div id="pick-results"></div>
+</div>
+
 <!-- ═══ PIN ═══ -->
 <div class="pin-overlay" id="pin-overlay">
   <div class="pin-box">
@@ -182,10 +222,12 @@
 </div>
 
 <div class="app-shell locked" id="app-shell">
+<div id="main-content">
   <div class="header">
     <div class="logo-box">H&P</div>
     <div><h1 id="hdr-titel">Veldwerk Compliance</h1><p id="hdr-sub">BRL SIKB 2000 — Protocol 2001 / 2002 / 2018</p></div>
     <span class="mod-badge" id="hdr-badge">BRL 2000</span>
+    <button class="back-btn no-print" onclick="showPicker()" title="Ander project kiezen">&#8592; Project</button>
   </div>
 
   <!-- ═══ PROJECT BANNER ═══ -->
@@ -489,11 +531,15 @@
     Hopman en Peters B.V. — Utrechtseweg 230, 3818 EN Amersfoort — NC-SIK-10093<br>
     Gegenereerd: <span id="pf-date"></span> — Veldwerk Compliance App v3.0
   </div>
+</div><!-- /main-content -->
 </div><!-- /app-shell -->
 
 <div class="toast" id="toast"></div>
 
 <script>
+// ─── API ───────────────────────────────────────────
+const API_URL = 'http://100.115.79.123:8092';
+
 // ═══ HANS INJECTS DATA HERE ═══════════════════════════════════
 const PROJECT = {
   // Verplicht voor alle modules
@@ -818,12 +864,98 @@ function initPin(){
   });
   setTimeout(()=>inputs[0]?.focus(),100);
 }
-function unlock(){document.getElementById('pin-overlay').classList.add('unlocked');document.getElementById('app-shell').classList.remove('locked')}
+function unlock(){
+  document.getElementById('pin-overlay').classList.add('unlocked');
+  document.getElementById('app-shell').classList.remove('locked');
+  showPicker();
+}
+
+// ─── Projectkiezer ─────────────────────────────────
+function showPicker(){
+  document.getElementById('picker-screen').classList.add('vis');
+  document.getElementById('main-content').classList.remove('vis');
+  // Laad recente projecten direct
+  const q = document.getElementById('pick-q');
+  if (q) { q.value = ''; pickSearch(''); setTimeout(()=>q.focus(),100); }
+}
+
+function showForm(){
+  document.getElementById('picker-screen').classList.remove('vis');
+  document.getElementById('main-content').classList.add('vis');
+  window.scrollTo(0,0);
+}
+
+let _pickTimer = null;
+function pickSearch(q){
+  clearTimeout(_pickTimer);
+  _pickTimer = setTimeout(()=>_doPickSearch(q.trim()), q ? 300 : 0);
+}
+
+function _doPickSearch(q){
+  const results = document.getElementById('pick-results');
+  const hint = document.getElementById('pick-hint');
+  results.innerHTML = '<div class="pick-loading">Laden...</div>';
+  hint.style.display = 'none';
+
+  fetch(`${API_URL}/api/projects${q?'?q='+encodeURIComponent(q):''}`)
+    .then(r => r.json())
+    .then(data => {
+      if (!data.ok || !data.resultaten.length) {
+        results.innerHTML = `<div class="pick-empty">Geen projecten gevonden${q?' voor "'+q+'"':''}</div>`;
+        return;
+      }
+      results.innerHTML = data.resultaten.map(p => {
+        const disc = (p.discipline||'BRL2000').toUpperCase();
+        const cls = disc.includes('1001')||disc==='AP04' ? 'brl1001' : disc.includes('1002') ? 'brl1002' : 'brl2000';
+        const label = disc.includes('1001')||disc==='AP04' ? 'AP04' : disc.includes('1002') ? '1002' : '2000';
+        return `<div class="pick-result" onclick="selectProject('${p.projectnummer}')">
+          <div class="pr-pid">${p.projectnummer}<span class="pick-badge ${cls}">${label}</span></div>
+          <div class="pr-addr">${p.adres||'—'}</div>
+          <div class="pr-info">${p.opdrachtgever||''}</div>
+        </div>`;
+      }).join('');
+    })
+    .catch(err => {
+      results.innerHTML = `<div class="pick-empty">API niet bereikbaar<br><small style="font-size:10px;color:#999">Zorg dat de Veldwerk API draait (Tailscale vereist)</small></div>`;
+    });
+}
+
+function selectProject(pid){
+  const results = document.getElementById('pick-results');
+  results.innerHTML = '<div class="pick-loading">Project laden...</div>';
+
+  fetch(`${API_URL}/api/prefill?project=${pid}`)
+    .then(r => r.json())
+    .then(data => {
+      if (!data.ok) throw new Error(data.error||'Onbekende fout');
+      const pf = data.prefill;
+      // Merge prefill in PROJECT
+      PROJECT.projectnummer = pf.projectnummer || pid;
+      PROJECT.adres = pf.adres || '';
+      PROJECT.opdrachtgever = pf.opdrachtgever || '';
+      PROJECT.projectleider = pf.projectleider || '';
+      PROJECT.boormeester = pf.boormeester || '';
+      PROJECT.boormedewerker = pf.boormedewerker || '';
+      PROJECT.datum_veldwerk = pf.datum_veldwerk || '';
+      PROJECT.datum_grondwater = pf.datum_grondwater || '';
+      PROJECT.protocollen = pf.protocollen || ['2001'];
+      PROJECT.meetpunten = pf.meetpunten || 0;
+      PROJECT.peilbuizen = pf.peilbuizen || 0;
+      PROJECT.discipline = pf.discipline || pf.project_type || '';
+      PROJECT.monsternemer = pf.monsternemer || pf.boormeester || '';
+      PROJECT.datum_monstername = pf.datum_monstername || '';
+      PROJECT.partij = pf.partij || null;
+      prefill();
+      showForm();
+    })
+    .catch(err => {
+      results.innerHTML = `<div class="pick-empty">Laden mislukt: ${err.message}</div>`;
+    });
+}
 
 // ─── Init ──────────────────────────────────────────
 document.addEventListener('DOMContentLoaded',()=>{
   initPin();
-  prefill();
   setTimeout(()=>{initSig(1);initSig(2);initSig(3);initSig(4)},200);
 });
 </script>
