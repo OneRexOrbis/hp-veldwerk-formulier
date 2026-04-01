@@ -1,0 +1,2 @@
+# Vercel Python functions gebruiken alleen stdlib
+# (geen externe dependencies nodig)
