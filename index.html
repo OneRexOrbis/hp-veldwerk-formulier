@@ -8,8 +8,11 @@
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
   :root {
     --hp:#2D6A4F;--hp-l:#40916C;--hp-pale:#B7E4C7;--hp-bg:#F0FFF4;
+    --ap:#4a3570;--ap-l:#6a50a0;--ap-pale:#d4c8f0;--ap-bg:#f8f5ff;
+    --bw:#1a4a70;--bw-l:#2563ab;--bw-pale:#b8d0e8;--bw-bg:#f3f8fd;
     --dk:#1B1B1B;--gy:#6B7280;--gy-l:#F3F4F6;--bd:#E5E7EB;
-    --rd:#DC2626;--am:#D97706;--bl:#2563EB;
+    --rd:#DC2626;--am:#D97706;
+    --mod-c:var(--hp);--mod-pale:var(--hp-pale);--mod-bg:var(--hp-bg);
   }
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:'DM Sans',-apple-system,sans-serif;color:var(--dk);background:var(--gy-l);-webkit-font-smoothing:antialiased}
@@ -32,31 +35,35 @@
   .app-shell.locked{filter:blur(8px);pointer-events:none;user-select:none}
 
   /* ─── Header ─── */
-  .header{background:var(--hp);color:white;padding:14px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100}
+  .header{background:var(--mod-c);color:white;padding:14px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100}
   .logo-box{width:34px;height:34px;background:white;border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:var(--hp);flex-shrink:0}
   .header h1{font-size:15px;font-weight:700}
   .header p{font-size:11px;opacity:.8}
+  .header .mod-badge{margin-left:auto;background:rgba(255,255,255,.2);border-radius:6px;padding:3px 8px;font-size:10px;font-weight:700;white-space:nowrap}
 
-  /* ─── Phase selector ─── */
+  /* ─── Phase selector (BRL 2000) ─── */
   .phase-bar{display:flex;background:white;border-bottom:1px solid var(--bd)}
   .phase-tab{flex:1;padding:12px 8px;text-align:center;font-size:12px;font-weight:600;color:var(--gy);background:none;border:none;border-bottom:3px solid transparent;cursor:pointer;transition:.2s}
   .phase-tab.active{color:var(--hp);border-bottom-color:var(--hp)}
-  .phase-tab.done{color:var(--hp)}
   .phase-tab .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
-  .dot-empty{background:var(--bd)}
-  .dot-progress{background:var(--am)}
-  .dot-done{background:var(--hp)}
+  .dot-empty{background:var(--bd)}.dot-progress{background:var(--am)}.dot-done{background:var(--hp)}
 
-  /* ─── Project ─── */
-  .proj{background:white;margin:12px;border-radius:10px;padding:14px 16px;border-left:4px solid var(--hp);box-shadow:0 1px 3px rgba(0,0,0,.06)}
-  .proj .pid{color:var(--hp);font-weight:700;font-size:13px}
+  /* ─── Project banner ─── */
+  .proj{background:white;margin:12px;border-radius:10px;padding:14px 16px;border-left:4px solid var(--mod-c);box-shadow:0 1px 3px rgba(0,0,0,.06)}
+  .proj .pid{color:var(--mod-c);font-weight:700;font-size:13px}
   .proj .addr{font-size:15px;font-weight:600;margin-top:2px}
   .proj .info{font-size:12px;color:var(--gy);margin-top:6px;line-height:1.6}
   .proj .info b{color:var(--dk)}
 
+  /* ─── Partij banner (BRL 1001/1002) ─── */
+  .partij-banner{background:white;margin:0 12px 10px;border-radius:10px;padding:12px 14px;border-left:4px solid var(--mod-c);box-shadow:0 1px 3px rgba(0,0,0,.06)}
+  .partij-banner .pb-title{font-size:12px;font-weight:700;color:var(--mod-c);margin-bottom:4px}
+  .partij-banner .pb-naam{font-size:14px;font-weight:600}
+  .partij-banner .pb-info{font-size:11px;color:var(--gy);margin-top:4px;line-height:1.5}
+
   /* ─── Cards ─── */
   .card{background:white;margin:0 12px 10px;border-radius:10px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
-  .card-t{font-size:13px;font-weight:700;color:var(--hp);margin-bottom:10px;display:flex;align-items:center;gap:7px}
+  .card-t{font-size:13px;font-weight:700;color:var(--mod-c);margin-bottom:10px;display:flex;align-items:center;gap:7px}
   .card-t .ic{font-size:15px}
 
   /* ─── Toggle rows ─── */
@@ -75,9 +82,26 @@
   .fld:last-child{margin-bottom:0}
   .fld label{display:block;font-size:11px;font-weight:600;color:var(--gy);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
   .fld input,.fld select,.fld textarea{width:100%;padding:9px 11px;border:1.5px solid var(--bd);border-radius:7px;font-size:13px;font-family:inherit;background:white;transition:border .2s}
-  .fld input:focus,.fld select:focus,.fld textarea:focus{outline:none;border-color:var(--hp);box-shadow:0 0 0 3px rgba(45,106,79,.1)}
+  .fld input:focus,.fld select:focus,.fld textarea:focus{outline:none;border-color:var(--mod-c);box-shadow:0 0 0 3px rgba(45,106,79,.1)}
   .fld textarea{resize:vertical;min-height:60px}
   .fld .prefilled{background:#F8FFF8;border-color:var(--hp-pale)}
+
+  /* ─── Bijmenging % inputs (BRL 1001) ─── */
+  .bij-row{display:flex;align-items:center;gap:10px;padding:8px 11px;background:var(--gy-l);border-radius:7px;margin-bottom:6px}
+  .bij-row:last-child{margin-bottom:0}
+  .bij-lbl{font-size:12px;font-weight:500;flex:1}
+  .bij-row input[type=number]{width:64px;padding:5px 8px;border:1.5px solid var(--bd);border-radius:6px;font-size:13px;font-weight:600;font-family:inherit;text-align:center;background:white}
+  .bij-bar-wrap{width:80px;height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden}
+  .bij-bar{height:100%;border-radius:4px;transition:width .3s;background:var(--ap-l)}
+  .bij-pct{font-size:11px;font-weight:600;color:var(--gy);width:28px;text-align:right}
+
+  /* ─── Deelpartijen tabel (BRL 1002) ─── */
+  .dp-table{width:100%;border-collapse:collapse;font-size:12px}
+  .dp-table th{background:var(--bw-bg);color:var(--bw);font-size:11px;font-weight:600;padding:6px 8px;text-align:left;border-bottom:1.5px solid var(--bw-pale)}
+  .dp-table td{padding:6px 8px;border-bottom:1px solid var(--bd);vertical-align:middle}
+  .dp-table input{border:1px solid var(--bd);border-radius:5px;padding:4px 6px;font-size:11px;font-family:inherit;width:100%;background:white}
+  .dp-table .del-btn{background:none;border:none;color:var(--rd);cursor:pointer;font-size:16px;padding:0 4px;line-height:1}
+  .dp-add{display:flex;align-items:center;gap:6px;padding:8px 0 0;font-size:12px;color:var(--bw);cursor:pointer;font-weight:600;background:none;border:none;font-family:inherit}
 
   /* ─── Signature ─── */
   .sig-box{border:2px dashed var(--bd);border-radius:8px;height:100px;position:relative;cursor:crosshair;touch-action:none;background:#FAFAFA}
@@ -85,53 +109,54 @@
   .sig-hint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:11px;color:#CCC;pointer-events:none}
   .sig-clr{position:absolute;top:4px;right:4px;background:rgba(0,0,0,.05);border:none;border-radius:4px;padding:3px 7px;font-size:10px;cursor:pointer}
 
-  /* ─── Phase sections ─── */
+  /* ─── Module sections ─── */
+  .module-section{display:none}
+  .module-section.active{display:block}
   .phase-section{display:none}
   .phase-section.active{display:block}
 
   /* ─── Norm refs ─── */
   .norm{font-size:10px;color:var(--gy);padding:7px 11px;background:var(--gy-l);border-radius:5px;margin:8px 12px;border-left:3px solid var(--hp-pale)}
   .divider{margin:16px 12px;border:none;border-top:2px solid var(--bd)}
-  .section-title{margin:16px 12px 8px;font-size:14px;font-weight:700;color:var(--hp);display:flex;align-items:center;gap:8px}
+  .section-title{margin:16px 12px 8px;font-size:14px;font-weight:700;color:var(--mod-c);display:flex;align-items:center;gap:8px}
 
-  /* ─── Status banner ─── */
+  /* ─── Status banners ─── */
   .status-banner{margin:12px;padding:10px 14px;border-radius:8px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px}
   .status-banner.phase1-done{background:var(--hp-bg);color:var(--hp);border:1px solid var(--hp-pale)}
   .status-banner.phase2-todo{background:#FFFBEB;color:var(--am);border:1px solid #FDE68A}
   .status-banner.complete{background:var(--hp-bg);color:var(--hp);border:1px solid var(--hp-pale)}
 
+  /* ─── Cond 2018 ─── */
+  .cond-2018{display:none}.cond-2018.vis{display:block}
+
   /* ─── Buttons ─── */
   .actions{display:flex;gap:8px;margin:16px 12px 30px}
   .btn{flex:1;padding:13px;border-radius:9px;border:none;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:6px}
-  .btn-p{background:var(--hp);color:white}
-  .btn-p:active{background:var(--hp-l)}
+  .btn-p{background:var(--mod-c);color:white}
+  .btn-p:active{opacity:.85}
   .btn-d{background:var(--dk);color:white}
-  .btn-s{background:white;color:var(--hp);border:2px solid var(--hp)}
+  .btn-s{background:white;color:var(--mod-c);border:2px solid var(--mod-c)}
   .toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--dk);color:white;padding:10px 20px;border-radius:8px;font-size:12px;font-weight:600;z-index:200;transition:transform .3s}
   .toast.show{transform:translateX(-50%) translateY(0)}
-
-  /* ─── Conditional ─── */
-  .cond-2018{display:none}
-  .cond-2018.vis{display:block}
 
   /* ─── Print ─── */
   @media print{
     body{background:white;font-size:10pt}
     .app-shell{max-width:100%}
-    .header{position:static;background:white!important;color:var(--dk)!important;border-bottom:3px solid var(--hp);padding:10mm 0 4mm}
-    .logo-box{background:var(--hp)!important;color:white!important}
-    .header h1{color:var(--hp)!important;font-size:14pt}
-    .header p{color:var(--gy)!important;opacity:1;font-size:9pt}
-    .phase-bar{display:none}
+    .header{position:static;background:white!important;color:var(--dk)!important;border-bottom:3px solid var(--mod-c);padding:10mm 0 4mm}
+    .logo-box{background:var(--mod-c)!important;color:white!important}
+    .header h1{color:var(--mod-c)!important;font-size:14pt}
+    .phase-bar,.actions,.btn,.sig-clr,.sig-hint,.no-print,.pin-overlay,.mod-badge{display:none!important}
+    .module-section{display:block!important}
     .phase-section{display:block!important}
-    .proj,.card{box-shadow:none;margin:4mm 0;border:1px solid #EEE;page-break-inside:avoid}
-    .actions,.btn,.sig-clr,.sig-hint,.no-print,.pin-overlay{display:none!important}
+    .proj,.card,.partij-banner{box-shadow:none;margin:4mm 0;border:1px solid #EEE;page-break-inside:avoid}
     .norm{margin:2mm 0}
     .trow{background:#F9F9F9!important;print-color-adjust:exact;-webkit-print-color-adjust:exact}
     .tsw button.y{background:var(--hp)!important;color:white!important;print-color-adjust:exact;-webkit-print-color-adjust:exact}
     .tsw button.n{background:var(--rd)!important;color:white!important;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+    .dp-table{font-size:9pt}
+    .bij-bar-wrap{print-color-adjust:exact;-webkit-print-color-adjust:exact}
     .sig-box{border:1px solid #CCC;background:white!important}
-    .status-banner{print-color-adjust:exact;-webkit-print-color-adjust:exact}
     .print-footer{display:block!important;text-align:center;font-size:8pt;color:var(--gy);margin-top:8mm;padding-top:4mm;border-top:1px solid #EEE}
     @page{size:A4;margin:15mm}
   }
@@ -159,13 +184,8 @@
 <div class="app-shell locked" id="app-shell">
   <div class="header">
     <div class="logo-box">H&P</div>
-    <div><h1>Veldwerk Compliance</h1><p>BRL SIKB 2000 — Protocol 2001 / 2002 / 2018</p></div>
-  </div>
-
-  <!-- ═══ FASE SELECTOR ═══ -->
-  <div class="phase-bar no-print">
-    <button class="phase-tab active" onclick="showPhase(1)" id="ptab1"><span class="dot dot-empty" id="dot1"></span>Fase 1 — Boordag</button>
-    <button class="phase-tab" onclick="showPhase(2)" id="ptab2"><span class="dot dot-empty" id="dot2"></span>Fase 2 — Grondwater</button>
+    <div><h1 id="hdr-titel">Veldwerk Compliance</h1><p id="hdr-sub">BRL SIKB 2000 — Protocol 2001 / 2002 / 2018</p></div>
+    <span class="mod-badge" id="hdr-badge">BRL 2000</span>
   </div>
 
   <!-- ═══ PROJECT BANNER ═══ -->
@@ -176,152 +196,290 @@
   </div>
 
   <!-- ═══════════════════════════════════════════════
-       FASE 1 — BOORDAG
+       MODULE: BRL SIKB 2000 (NEN 5740)
        ═══════════════════════════════════════════════ -->
-  <div class="phase-section active" id="phase-1">
+  <div id="mod-2000" class="module-section active">
 
-    <div class="section-title"><span>🛡️</span> LMRA — Boordag</div>
-    <div class="card">
-      <div class="trow"><span class="tl">Situatie op locatie veilig? <span class="req">*</span></span><div class="tsw" data-f="f1_lmra_veilig"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
-      <div class="trow"><span class="tl">Toegang terrein geregeld?</span><div class="tsw" data-f="f1_lmra_toegang"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
-      <div class="trow"><span class="tl">Toestemming eigenaar?</span><div class="tsw" data-f="f1_lmra_toestemming"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button><button onclick="tw(this,'v')">N.v.t.</button></div></div>
-      <div class="trow"><span class="tl">Tekening duidelijk?</span><div class="tsw" data-f="f1_lmra_tekening"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+    <div class="phase-bar no-print">
+      <button class="phase-tab active" onclick="showPhase(1)" id="ptab1"><span class="dot dot-empty" id="dot1"></span>Fase 1 — Boordag</button>
+      <button class="phase-tab" onclick="showPhase(2)" id="ptab2"><span class="dot dot-empty" id="dot2"></span>Fase 2 — Grondwater</button>
     </div>
 
-    <div class="card">
-      <div class="card-t"><span class="ic">📡</span>KLIC-melding</div>
-      <div class="fld"><label>Referentienummer</label><input id="f-klic" placeholder="25G001234"></div>
-      <div class="fld"><label>Datum KLIC</label><input type="date" id="f-klic-d"></div>
-    </div>
-
-    <div class="section-title"><span>🔧</span> Uitvoering Protocol 2001</div>
-    <div class="card">
-      <div class="trow"><span class="tl">Uitvoering conform opdracht? <span class="req">*</span></span><div class="tsw" data-f="f1_conform"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
-      <div class="trow"><span class="tl">Opdracht afgerond?</span><div class="tsw" data-f="f1_afgerond"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
-      <div class="trow"><span class="tl">Foto's genomen?</span><div class="tsw" data-f="f1_fotos"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
-      <div class="trow"><span class="tl">Monsteroverdracht grond?</span><div class="tsw" data-f="f1_overdracht"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
-      <div class="trow"><span class="tl">Boorgaten afgewerkt (bentoniet)?</span><div class="tsw" data-f="f1_bentoniet"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
-      <div class="trow"><span class="tl">Peilbuizen geplaatst + voorgepompt?</span><div class="tsw" data-f="f1_peilbuizen"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button><button onclick="tw(this,'v')">N.v.t.</button></div></div>
-      <div class="trow"><span class="tl">Asbest aangetroffen?</span><div class="tsw" data-f="f1_asbest"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
-    </div>
-
-    <div class="card">
-      <div class="card-t"><span class="ic">📝</span>Afwijkingen Protocol 2001 / NEN 5740</div>
-      <div class="trow"><span class="tl">Afwijkingen? <span class="req">*</span></span><div class="tsw" data-f="f1_afwijkingen"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
-      <div class="fld" style="margin-top:10px"><label>Toelichting</label><textarea id="f1-afw" placeholder="Aard en motivatie..."></textarea></div>
-    </div>
-
-    <div class="card">
-      <div class="fld"><label>Overtollige grond</label><select id="f1-grond"><option value="">—</option><option>Verspreid op locatie</option><option>Gronddepot</option><option>Afgevoerd</option><option>N.v.t.</option></select></div>
-      <div class="fld"><label>Opmerkingen</label><textarea id="f1-opm" placeholder=""></textarea></div>
-    </div>
-
-    <!-- Asbest Protocol 2018 (conditioneel) -->
-    <div class="cond-2018" id="sec-2018">
-      <div class="section-title"><span>🏗️</span> Protocol 2018 — Asbest veldinspectie</div>
+    <!-- FASE 1 -->
+    <div class="phase-section active" id="phase-1">
+      <div class="section-title"><span>🛡️</span> LMRA — Boordag</div>
       <div class="card">
-        <div class="card-t"><span class="ic">🌤️</span>Weersomstandigheden</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <div class="fld"><label>Temp (°C)</label><input type="number" id="f-at"></div>
-          <div class="fld"><label>Neerslag</label><select id="f-an"><option value="">—</option><option>Geen</option><option>Motregen</option><option>Regen</option><option>Hagel</option><option>Sneeuw</option></select></div>
-          <div class="fld"><label>Wind (Bft)</label><select id="f-aw"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></div>
-          <div class="fld"><label>Windrichting</label><select id="f-awr"><option value="">—</option><option>N</option><option>NO</option><option>O</option><option>ZO</option><option>Z</option><option>ZW</option><option>W</option><option>NW</option></select></div>
-          <div class="fld"><label>Zicht</label><select id="f-az"><option value="">—</option><option>&lt;50m</option><option>&gt;50m</option></select></div>
-        </div>
+        <div class="trow"><span class="tl">Situatie op locatie veilig? <span class="req">*</span></span><div class="tsw" data-f="f1_lmra_veilig"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+        <div class="trow"><span class="tl">Toegang terrein geregeld?</span><div class="tsw" data-f="f1_lmra_toegang"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+        <div class="trow"><span class="tl">Toestemming eigenaar?</span><div class="tsw" data-f="f1_lmra_toestemming"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button><button onclick="tw(this,'v')">N.v.t.</button></div></div>
+        <div class="trow"><span class="tl">Tekening duidelijk?</span><div class="tsw" data-f="f1_lmra_tekening"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
       </div>
       <div class="card">
-        <div class="card-t"><span class="ic">🔍</span>Maaiveld</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <div class="fld"><label>Grondsoort</label><select id="f-ag"><option value="">—</option><option>Zand</option><option>Klei</option><option>Leem</option><option>Veen</option></select></div>
-          <div class="fld"><label>Conditie</label><select id="f-ac"><option value="">—</option><option>Los</option><option>Vastgereden</option><option>Vochtig</option></select></div>
-          <div class="fld"><label>Bedekking (%)</label><input type="number" id="f-ab" min="0" max="100"></div>
-          <div class="fld"><label>Na verwijdering (%)</label><input type="number" id="f-abn" min="0" max="100"></div>
+        <div class="card-t"><span class="ic">📡</span>KLIC-melding</div>
+        <div class="fld"><label>Referentienummer</label><input id="f-klic" placeholder="25G001234"></div>
+        <div class="fld"><label>Datum KLIC</label><input type="date" id="f-klic-d"></div>
+      </div>
+      <div class="section-title"><span>🔧</span> Uitvoering Protocol 2001</div>
+      <div class="card">
+        <div class="trow"><span class="tl">Uitvoering conform opdracht? <span class="req">*</span></span><div class="tsw" data-f="f1_conform"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+        <div class="trow"><span class="tl">Opdracht afgerond?</span><div class="tsw" data-f="f1_afgerond"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+        <div class="trow"><span class="tl">Foto's genomen?</span><div class="tsw" data-f="f1_fotos"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+        <div class="trow"><span class="tl">Monsteroverdracht grond?</span><div class="tsw" data-f="f1_overdracht"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+        <div class="trow"><span class="tl">Boorgaten afgewerkt (bentoniet)?</span><div class="tsw" data-f="f1_bentoniet"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+        <div class="trow"><span class="tl">Peilbuizen geplaatst + voorgepompt?</span><div class="tsw" data-f="f1_peilbuizen"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button><button onclick="tw(this,'v')">N.v.t.</button></div></div>
+        <div class="trow"><span class="tl">Asbest aangetroffen?</span><div class="tsw" data-f="f1_asbest"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+      </div>
+      <div class="card">
+        <div class="card-t"><span class="ic">📝</span>Afwijkingen Protocol 2001 / NEN 5740</div>
+        <div class="trow"><span class="tl">Afwijkingen? <span class="req">*</span></span><div class="tsw" data-f="f1_afwijkingen"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+        <div class="fld" style="margin-top:10px"><label>Toelichting</label><textarea id="f1-afw" placeholder="Aard en motivatie..."></textarea></div>
+      </div>
+      <div class="card">
+        <div class="fld"><label>Overtollige grond</label><select id="f1-grond"><option value="">—</option><option>Verspreid op locatie</option><option>Gronddepot</option><option>Afgevoerd</option><option>N.v.t.</option></select></div>
+        <div class="fld"><label>Opmerkingen</label><textarea id="f1-opm" placeholder=""></textarea></div>
+      </div>
+
+      <!-- Protocol 2018 conditioneel -->
+      <div class="cond-2018" id="sec-2018">
+        <div class="section-title"><span>🏗️</span> Protocol 2018 — Asbest veldinspectie</div>
+        <div class="card">
+          <div class="card-t"><span class="ic">🌤️</span>Weersomstandigheden</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div class="fld"><label>Temp (°C)</label><input type="number" id="f-at"></div>
+            <div class="fld"><label>Neerslag</label><select id="f-an"><option value="">—</option><option>Geen</option><option>Motregen</option><option>Regen</option><option>Hagel</option><option>Sneeuw</option></select></div>
+            <div class="fld"><label>Wind (Bft)</label><select id="f-aw"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></div>
+            <div class="fld"><label>Windrichting</label><select id="f-awr"><option value="">—</option><option>N</option><option>NO</option><option>O</option><option>ZO</option><option>Z</option><option>ZW</option><option>W</option><option>NW</option></select></div>
+          </div>
         </div>
-        <div class="trow" style="margin-top:6px"><span class="tl">Vegetatie verwijderd?</span><div class="tsw" data-f="asb_veg"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
-        <div class="trow"><span class="tl">Asbestverdacht materiaal?</span><div class="tsw" data-f="asb_verd"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
-        <div class="fld" style="margin-top:8px"><label>Beschrijving vindplaatsen</label><textarea id="f-abes" placeholder="Type, gewicht, locatie..."></textarea></div>
+        <div class="card">
+          <div class="trow"><span class="tl">Asbestverdacht materiaal?</span><div class="tsw" data-f="asb_verd"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+          <div class="fld" style="margin-top:8px"><label>Beschrijving vindplaatsen</label><textarea id="f-abes" placeholder="Type, gewicht, locatie..."></textarea></div>
+        </div>
+        <div class="norm">Protocol 2018 v7.0 — NEN 5707 van toepassing.</div>
       </div>
-      <div class="norm">Protocol 2018 v7.0 — NEN 5707 van toepassing.</div>
-    </div>
 
-    <!-- Conformiteitsverklaring Fase 1 -->
-    <hr class="divider">
-    <div class="section-title"><span>✍️</span> Conformiteitsverklaring — Protocol 2001</div>
-    <div class="card">
-      <p style="font-size:11px;color:var(--gy);margin-bottom:10px;line-height:1.5">
-        Door ondertekening verklaart de geregistreerde boormeester dat het veldwerk
-        <b>onafhankelijk van de opdrachtgever</b> is uitgevoerd conform BRL SIKB 2000 met protocol 2001.
-      </p>
-      <div class="fld"><label>Handtekening boormeester</label>
-        <div class="sig-box" id="sig1-box"><canvas id="sig1-cv"></canvas><span class="sig-hint" id="sig1-h">Teken hier</span><button class="sig-clr no-print" onclick="clrSig(1)">Wis</button></div>
+      <hr class="divider">
+      <div class="section-title"><span>✍️</span> Conformiteitsverklaring — Protocol 2001</div>
+      <div class="card">
+        <p style="font-size:11px;color:var(--gy);margin-bottom:10px;line-height:1.5">Door ondertekening verklaart de geregistreerde boormeester dat het veldwerk <b>onafhankelijk van de opdrachtgever</b> is uitgevoerd conform BRL SIKB 2000 met protocol 2001.</p>
+        <div class="fld"><label>Handtekening boormeester</label>
+          <div class="sig-box" id="sig1-box"><canvas id="sig1-cv"></canvas><span class="sig-hint" id="sig1-h">Teken hier</span><button class="sig-clr no-print" onclick="clrSig(1)">Wis</button></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+          <div class="fld"><label>Naam</label><input id="f1-sn" class="prefilled"></div>
+          <div class="fld"><label>Datum</label><input type="date" id="f1-sd"></div>
+        </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
-        <div class="fld"><label>Naam</label><input id="f1-sn" class="prefilled"></div>
-        <div class="fld"><label>Datum</label><input type="date" id="f1-sd"></div>
-      </div>
-    </div>
-    <div class="norm">BRL SIKB 2000 v7.0, §2.4 — Veldwerkverslag met onafhankelijkheidsverklaring.</div>
+      <div class="actions no-print"><button class="btn btn-p" onclick="saveFase(1)">💾 Fase 1 opslaan</button></div>
+    </div><!-- /phase-1 -->
 
-    <div class="actions no-print">
-      <button class="btn btn-p" onclick="saveFase(1)">💾 Fase 1 opslaan</button>
-    </div>
-  </div>
+    <!-- FASE 2 -->
+    <div class="phase-section" id="phase-2">
+      <div id="f2-status-banner"></div>
+      <div class="section-title"><span>🛡️</span> LMRA — Grondwatermonstername</div>
+      <div class="card">
+        <div class="trow"><span class="tl">Situatie op locatie veilig? <span class="req">*</span></span><div class="tsw" data-f="f2_lmra_veilig"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+        <div class="trow"><span class="tl">Toegang terrein geregeld?</span><div class="tsw" data-f="f2_lmra_toegang"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+      </div>
+      <div class="section-title"><span>💧</span> Protocol 2002 — Grondwater</div>
+      <div class="card">
+        <div class="trow"><span class="tl">Wachttijd ≥ 1 week na plaatsing? <span class="req">*</span></span><div class="tsw" data-f="f2_wachttijd"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+        <div class="trow"><span class="tl">Drijf-/zaklaag aanwezig?</span><div class="tsw" data-f="f2_drijflaag"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+        <div class="trow"><span class="tl">Beluchting opgetreden?</span><div class="tsw" data-f="f2_beluchting"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+        <div class="trow"><span class="tl">Veldfiltratie uitgevoerd?</span><div class="tsw" data-f="f2_filtratie"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+        <div class="trow"><span class="tl">Monsteroverdracht water?</span><div class="tsw" data-f="f2_overdracht"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+      </div>
+      <div class="card">
+        <div class="card-t"><span class="ic">📝</span>Afwijkingen Protocol 2002 / NEN 5744</div>
+        <div class="trow"><span class="tl">Afwijkingen?</span><div class="tsw" data-f="f2_afwijkingen"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+        <div class="fld" style="margin-top:10px"><label>Toelichting</label><textarea id="f2-afw" placeholder="Bijv. drijflaag PB01..."></textarea></div>
+        <div class="fld"><label>Opmerkingen</label><textarea id="f2-opm" placeholder=""></textarea></div>
+      </div>
+      <hr class="divider">
+      <div class="section-title"><span>✍️</span> Conformiteitsverklaring — Protocol 2002</div>
+      <div class="card">
+        <p style="font-size:11px;color:var(--gy);margin-bottom:10px;line-height:1.5">Door ondertekening verklaart de monsternemer dat de grondwatermonstername <b>onafhankelijk van de opdrachtgever</b> is uitgevoerd conform BRL SIKB 2000 met protocol 2002 en NEN 5744.</p>
+        <div class="fld"><label>Handtekening monsternemer</label>
+          <div class="sig-box" id="sig2-box"><canvas id="sig2-cv"></canvas><span class="sig-hint" id="sig2-h">Teken hier</span><button class="sig-clr no-print" onclick="clrSig(2)">Wis</button></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+          <div class="fld"><label>Naam</label><input id="f2-sn" class="prefilled"></div>
+          <div class="fld"><label>Datum</label><input type="date" id="f2-sd"></div>
+        </div>
+      </div>
+      <div class="actions no-print"><button class="btn btn-p" onclick="saveFase(2)">💾 Fase 2 opslaan</button></div>
+    </div><!-- /phase-2 -->
+  </div><!-- /mod-2000 -->
 
   <!-- ═══════════════════════════════════════════════
-       FASE 2 — GRONDWATER (~1 week later)
+       MODULE: BRL SIKB 1001 — AP04 Partijkeuring Grond
        ═══════════════════════════════════════════════ -->
-  <div class="phase-section" id="phase-2">
+  <div id="mod-1001" class="module-section">
 
-    <div id="f2-status-banner"></div>
-
-    <div class="section-title"><span>🛡️</span> LMRA — Grondwatermonstername</div>
-    <div class="card">
-      <div class="trow"><span class="tl">Situatie op locatie veilig? <span class="req">*</span></span><div class="tsw" data-f="f2_lmra_veilig"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
-      <div class="trow"><span class="tl">Toegang terrein geregeld?</span><div class="tsw" data-f="f2_lmra_toegang"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+    <div class="partij-banner">
+      <div class="pb-title">⛏️ Partijkeuring</div>
+      <div class="pb-naam" id="ap-partij-naam">—</div>
+      <div class="pb-info" id="ap-partij-info"></div>
     </div>
 
-    <div class="section-title"><span>💧</span> Protocol 2002 — Grondwater</div>
+    <div class="section-title"><span>🗺️</span> Terreininspectie</div>
     <div class="card">
-      <p style="font-size:11px;color:var(--gy);margin-bottom:8px">EC, pH, O₂, NTU worden in TerraIndex vastgelegd. Onderstaand zijn aanvullende compliance-checks.</p>
-      <div class="trow"><span class="tl">Wachttijd ≥ 1 week na plaatsing? <span class="req">*</span></span><div class="tsw" data-f="f2_wachttijd"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
-      <div class="trow"><span class="tl">Drijf-/zaklaag aanwezig?</span><div class="tsw" data-f="f2_drijflaag"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
-      <div class="trow"><span class="tl">Beluchting opgetreden?</span><div class="tsw" data-f="f2_beluchting"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
-      <div class="trow"><span class="tl">Veldfiltratie uitgevoerd?</span><div class="tsw" data-f="f2_filtratie"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
-      <div class="trow"><span class="tl">Monsteroverdracht water?</span><div class="tsw" data-f="f2_overdracht"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+      <div class="trow"><span class="tl">Locatie toegankelijk?</span><div class="tsw" data-f="ap_terrein_toegang"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+      <div class="trow"><span class="tl">Terrein veilig betreedbaar?</span><div class="tsw" data-f="ap_terrein_veilig"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+      <div class="trow"><span class="tl">Partij visueel bereikbaar?</span><div class="tsw" data-f="ap_terrein_bereikbaar"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+      <div class="fld" style="margin-top:8px"><label>Bijzonderheden</label><input id="ap-terrein-bijz" placeholder="Bijv. slechte weersomstandigheden..."></div>
+    </div>
+
+    <div class="section-title"><span>🛡️</span> LMRA</div>
+    <div class="card">
+      <div class="trow"><span class="tl">Situatie op locatie veilig? <span class="req">*</span></span><div class="tsw" data-f="ap_lmra_veilig"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+      <div class="trow"><span class="tl">Gevaren geïdentificeerd en beheersbaar?</span><div class="tsw" data-f="ap_lmra_gevaren"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+      <div class="trow"><span class="tl">PBM aanwezig en gedragen?</span><div class="tsw" data-f="ap_lmra_pbm"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+    </div>
+
+    <div class="section-title"><span>🔍</span> Partijcontrole</div>
+    <div class="card">
+      <div class="trow"><span class="tl">Partij homogeen van samenstelling?</span><div class="tsw" data-f="ap_pc_homogeen"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+      <div class="trow"><span class="tl">Chemische geur aanwezig?</span><div class="tsw" data-f="ap_pc_geur"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+      <div class="trow"><span class="tl">Afwijkende kleur?</span><div class="tsw" data-f="ap_pc_kleur"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+        <div class="fld"><label>Grondsoort</label><select id="ap-grondsoort"><option value="">—</option><option>Zand</option><option>Klei</option><option>Leem</option><option>Veen</option><option>Gemengd</option></select></div>
+        <div class="fld"><label>Vochtgehalte</label><select id="ap-vocht"><option value="">—</option><option>Droog</option><option>Matig vochtig</option><option>Vochtig</option><option>Nat</option></select></div>
+      </div>
+    </div>
+
+    <div class="section-title"><span>📊</span> Bijmenging</div>
+    <div class="card">
+      <p style="font-size:11px;color:var(--gy);margin-bottom:10px">Geef de visueel geschatte bijmenging in percentages.</p>
+      <div class="bij-row"><span class="bij-lbl">Puin (%)</span><input type="number" id="bij-puin" min="0" max="100" placeholder="0" oninput="updBij('bij-puin','bar-puin')"><div class="bij-bar-wrap"><div class="bij-bar" id="bar-puin" style="width:0%"></div></div><span class="bij-pct" id="pct-puin">0%</span></div>
+      <div class="bij-row"><span class="bij-lbl">Steenachtigen (%)</span><input type="number" id="bij-steen" min="0" max="100" placeholder="0" oninput="updBij('bij-steen','bar-steen')"><div class="bij-bar-wrap"><div class="bij-bar" id="bar-steen" style="width:0%"></div></div><span class="bij-pct" id="pct-steen">0%</span></div>
+      <div class="bij-row"><span class="bij-lbl">Plastic (%)</span><input type="number" id="bij-plastic" min="0" max="100" placeholder="0" oninput="updBij('bij-plastic','bar-plastic')"><div class="bij-bar-wrap"><div class="bij-bar" id="bar-plastic" style="width:0%"></div></div><span class="bij-pct" id="pct-plastic">0%</span></div>
+      <div class="bij-row"><span class="bij-lbl">Hout (%)</span><input type="number" id="bij-hout" min="0" max="100" placeholder="0" oninput="updBij('bij-hout','bar-hout')"><div class="bij-bar-wrap"><div class="bij-bar" id="bar-hout" style="width:0%"></div></div><span class="bij-pct" id="pct-hout">0%</span></div>
+    </div>
+
+    <div class="section-title"><span>🧪</span> Monstername</div>
+    <div class="card">
+      <div class="trow"><span class="tl">Monstername conform Protocol 1001? <span class="req">*</span></span><div class="tsw" data-f="ap_mn_conform"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+      <div class="trow"><span class="tl">Grepen representatief verdeeld?</span><div class="tsw" data-f="ap_mn_grepen"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+      <div class="trow"><span class="tl">Monsters gekoeld bewaard en gelabeld?</span><div class="tsw" data-f="ap_mn_bewaard"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+      <div class="trow"><span class="tl">Monsteroverdracht conform procedure?</span><div class="tsw" data-f="ap_mn_overdracht"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+        <div class="fld"><label>Aantal grepen per monster</label><input type="number" id="ap-grepen" min="1" placeholder="10"></div>
+        <div class="fld"><label>Labcode</label><input id="ap-labcode" placeholder="L-2026-XXXX"></div>
+      </div>
+    </div>
+
+    <div class="section-title"><span>⚠️</span> Visuele asbestinspectie</div>
+    <div class="card">
+      <div class="trow"><span class="tl">Asbestverdacht materiaal aangetroffen? <span class="req">*</span></span><div class="tsw" data-f="ap_asb_aangetroffen"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+      <div class="trow"><span class="tl">Asbestverdachte plaatmaterialen?</span><div class="tsw" data-f="ap_asb_plaat"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+      <div class="trow"><span class="tl">Asbestverdachte pijpfragmenten?</span><div class="tsw" data-f="ap_asb_pijp"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+      <div class="fld" style="margin-top:8px"><label>Beschrijving vindplaatsen</label><textarea id="ap-asb-beschr" placeholder="Geen / type, gewicht, locatie..."></textarea></div>
     </div>
 
     <div class="card">
-      <div class="card-t"><span class="ic">📝</span>Afwijkingen Protocol 2002 / NEN 5744</div>
-      <div class="trow"><span class="tl">Afwijkingen?</span><div class="tsw" data-f="f2_afwijkingen"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
-      <div class="fld" style="margin-top:10px"><label>Toelichting</label><textarea id="f2-afw" placeholder="Bijv. drijflaag PB01..."></textarea></div>
-      <div class="fld"><label>Opmerkingen</label><textarea id="f2-opm" placeholder=""></textarea></div>
+      <div class="card-t"><span class="ic">📝</span>Afwijkingen &amp; Opmerkingen</div>
+      <div class="trow"><span class="tl">Afwijkingen t.o.v. protocol?</span><div class="tsw" data-f="ap_afwijkingen"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+      <div class="fld" style="margin-top:10px"><label>Toelichting afwijkingen</label><textarea id="ap-afw" placeholder=""></textarea></div>
+      <div class="fld"><label>Opmerkingen</label><textarea id="ap-opm" placeholder=""></textarea></div>
     </div>
-    <div class="norm">Protocol 2002 v7.0 — NTA 8017 wachttijd-eisen van toepassing.</div>
+    <div class="norm">BRL SIKB 1000 v5.0 — Protocol 1001 (AP04) Partijkeuring grond en baggerspecie.</div>
 
-    <!-- Conformiteitsverklaring Fase 2 -->
     <hr class="divider">
-    <div class="section-title"><span>✍️</span> Conformiteitsverklaring — Protocol 2002</div>
+    <div class="section-title"><span>✍️</span> Conformiteitsverklaring — BRL SIKB 1000</div>
     <div class="card">
-      <p style="font-size:11px;color:var(--gy);margin-bottom:10px;line-height:1.5">
-        Door ondertekening verklaart de monsternemer dat de grondwatermonstername
-        <b>onafhankelijk van de opdrachtgever</b> is uitgevoerd conform BRL SIKB 2000 met protocol 2002 en NEN 5744.
-      </p>
+      <p style="font-size:11px;color:var(--gy);margin-bottom:10px;line-height:1.5">Door ondertekening verklaart de erkende monsternemer dat de partijkeuring <b>onafhankelijk van de opdrachtgever</b> is uitgevoerd conform BRL SIKB 1000 met Protocol 1001.</p>
       <div class="fld"><label>Handtekening monsternemer</label>
-        <div class="sig-box" id="sig2-box"><canvas id="sig2-cv"></canvas><span class="sig-hint" id="sig2-h">Teken hier</span><button class="sig-clr no-print" onclick="clrSig(2)">Wis</button></div>
+        <div class="sig-box" id="sig3-box"><canvas id="sig3-cv"></canvas><span class="sig-hint" id="sig3-h">Teken hier</span><button class="sig-clr no-print" onclick="clrSig(3)">Wis</button></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
-        <div class="fld"><label>Naam</label><input id="f2-sn" class="prefilled"></div>
-        <div class="fld"><label>Datum</label><input type="date" id="f2-sd"></div>
+        <div class="fld"><label>Naam</label><input id="ap-sn" class="prefilled"></div>
+        <div class="fld"><label>Datum</label><input type="date" id="ap-sd"></div>
       </div>
     </div>
-    <div class="norm">BRL SIKB 2000 v7.0, §2.4 — Veldwerkverslag met onafhankelijkheidsverklaring.</div>
+    <div class="actions no-print"><button class="btn btn-p" onclick="saveModule('1001')">💾 Opslaan</button></div>
+  </div><!-- /mod-1001 -->
 
-    <div class="actions no-print">
-      <button class="btn btn-p" onclick="saveFase(2)">💾 Fase 2 opslaan</button>
+  <!-- ═══════════════════════════════════════════════
+       MODULE: BRL SIKB 1002 — Partijkeuring Bouwstoffen
+       ═══════════════════════════════════════════════ -->
+  <div id="mod-1002" class="module-section">
+
+    <div class="partij-banner">
+      <div class="pb-title">🏗️ Partijkeuring Bouwstoffen</div>
+      <div class="pb-naam" id="bw-partij-naam">—</div>
+      <div class="pb-info" id="bw-partij-info"></div>
     </div>
-  </div>
 
-  <!-- ═══ EXPORT BAR (altijd zichtbaar) ═══ -->
+    <div class="section-title"><span>🛡️</span> LMRA</div>
+    <div class="card">
+      <div class="trow"><span class="tl">Situatie op locatie veilig? <span class="req">*</span></span><div class="tsw" data-f="bw_lmra_veilig"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+      <div class="trow"><span class="tl">Toegang geregeld?</span><div class="tsw" data-f="bw_lmra_toegang"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+      <div class="trow"><span class="tl">PBM aanwezig en gedragen?</span><div class="tsw" data-f="bw_lmra_pbm"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+      <div class="trow"><span class="tl">Vallend materiaal / instabiliteit beoordeeld?</span><div class="tsw" data-f="bw_lmra_val"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+    </div>
+
+    <div class="section-title"><span>🔍</span> Partijcontrole</div>
+    <div class="card">
+      <div class="trow"><span class="tl">Partij homogeen?</span><div class="tsw" data-f="bw_pc_homogeen"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+      <div class="trow"><span class="tl">Type bouwstof overeenkomstig opgave?</span><div class="tsw" data-f="bw_pc_type"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+      <div class="trow"><span class="tl">Maximale korrelgrootte conform opgave?</span><div class="tsw" data-f="bw_pc_korrel"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+      <div class="trow"><span class="tl">Vreemde fractie zichtbaar (&gt;5%)?</span><div class="tsw" data-f="bw_pc_vreemd"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+      <div class="trow"><span class="tl">Verontreiniging (geur/kleur)?</span><div class="tsw" data-f="bw_pc_veront"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+      <div class="fld" style="margin-top:8px"><label>Bijzonderheden partij</label><input id="bw-pc-bijz" placeholder=""></div>
+    </div>
+
+    <div class="section-title"><span>📋</span> Deelpartijregistratie</div>
+    <div class="card">
+      <p style="font-size:11px;color:var(--gy);margin-bottom:10px">Registreer elke grep met gewicht en barcode.</p>
+      <table class="dp-table" id="dp-tabel">
+        <tr><th>#</th><th>Deelpartij</th><th>Gewicht (kg)</th><th>Barcode</th><th></th></tr>
+      </table>
+      <button class="dp-add" onclick="dpAdd()">＋ Deelpartij toevoegen</button>
+    </div>
+
+    <div class="section-title"><span>👁️</span> Visuele inspectie</div>
+    <div class="card">
+      <div class="trow"><span class="tl">Materiaal overeenkomstig opgave?</span><div class="tsw" data-f="bw_vi_overeenk"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+      <div class="trow"><span class="tl">Asbestverdacht materiaal aangetroffen?</span><div class="tsw" data-f="bw_vi_asbest"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+      <div class="trow"><span class="tl">Kleur / textuur afwijkend?</span><div class="tsw" data-f="bw_vi_kleur"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+      <div class="fld" style="margin-top:8px"><label>Bijzonderheden inspectie</label><textarea id="bw-vi-bijz" placeholder="Bijv. stukken metselspecie < 2%..."></textarea></div>
+    </div>
+
+    <div class="section-title"><span>🚚</span> Monsteroverdracht</div>
+    <div class="card">
+      <div class="trow"><span class="tl">Monster overdragen aan erkend lab? <span class="req">*</span></span><div class="tsw" data-f="bw_mo_overdracht"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+      <div class="trow"><span class="tl">Verzegeld transport?</span><div class="tsw" data-f="bw_mo_verzegeld"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+        <div class="fld"><label>Labcode</label><input id="bw-labcode" placeholder="RDL-2026-XXXX"></div>
+        <div class="fld"><label>Laboratorium</label><input id="bw-lab" placeholder=""></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-t"><span class="ic">📝</span>Afwijkingen &amp; Opmerkingen</div>
+      <div class="trow"><span class="tl">Afwijkingen t.o.v. protocol?</span><div class="tsw" data-f="bw_afwijkingen"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+      <div class="fld" style="margin-top:10px"><label>Toelichting</label><textarea id="bw-afw" placeholder=""></textarea></div>
+      <div class="fld"><label>Opmerkingen</label><textarea id="bw-opm" placeholder=""></textarea></div>
+    </div>
+    <div class="norm">BRL SIKB 1000 v5.0 — Protocol 1002: partijkeuring niet-vormgegeven bouwstoffen.</div>
+
+    <hr class="divider">
+    <div class="section-title"><span>✍️</span> Conformiteitsverklaring — BRL SIKB 1000</div>
+    <div class="card">
+      <p style="font-size:11px;color:var(--gy);margin-bottom:10px;line-height:1.5">Door ondertekening verklaart de erkende monsternemer dat de partijkeuring <b>onafhankelijk van de opdrachtgever</b> is uitgevoerd conform BRL SIKB 1000 met Protocol 1002.</p>
+      <div class="fld"><label>Handtekening monsternemer</label>
+        <div class="sig-box" id="sig4-box"><canvas id="sig4-cv"></canvas><span class="sig-hint" id="sig4-h">Teken hier</span><button class="sig-clr no-print" onclick="clrSig(4)">Wis</button></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+        <div class="fld"><label>Naam</label><input id="bw-sn" class="prefilled"></div>
+        <div class="fld"><label>Datum</label><input type="date" id="bw-sd"></div>
+      </div>
+    </div>
+    <div class="actions no-print"><button class="btn btn-p" onclick="saveModule('1002')">💾 Opslaan</button></div>
+  </div><!-- /mod-1002 -->
+
+  <!-- ═══ EXPORT BAR ═══ -->
   <div class="actions no-print" style="border-top:2px solid var(--bd);padding-top:16px">
     <button class="btn btn-s" onclick="window.print()">🖨️ PDF bijlage</button>
     <button class="btn btn-d" onclick="doJSON()">📄 Export JSON</button>
@@ -329,37 +487,75 @@
 
   <div class="print-footer">
     Hopman en Peters B.V. — Utrechtseweg 230, 3818 EN Amersfoort — NC-SIK-10093<br>
-    Gegenereerd: <span id="pf-date"></span> — Veldwerk Compliance App v2.0
+    Gegenereerd: <span id="pf-date"></span> — Veldwerk Compliance App v3.0
   </div>
-</div>
+</div><!-- /app-shell -->
 
 <div class="toast" id="toast"></div>
 
 <script>
 // ═══ HANS INJECTS DATA HERE ═══════════════════════════════════
 const PROJECT = {
+  // Verplicht voor alle modules
   projectnummer: "P2600125",
   adres: "Arendsweg 36, Beverwijk",
   opdrachtgever: "Bouwbedrijf Luntz",
   projectleider: "B. Achterberg",
+
+  // Module-selectie: "BRL2000" | "AP04" | "BRL1001" | "BRL1002"
+  discipline: "BRL2000",
+  protocollen: ["2001", "2002"],
+
+  // BRL 2000 velden
   boormeester: "M. Berkhof",
   boormedewerker: "J. Verwoert",
   datum_veldwerk: "2026-02-20",
-  datum_grondwater: "",  // wordt pas bekend bij fase 2
-  protocollen: ["2001", "2002"],
+  datum_grondwater: "",
   meetpunten: 5,
   peilbuizen: 1,
-  monsters_grond: 6,
-  watermonsters: 1
+
+  // BRL 1001 / 1002 velden (leeg voor BRL 2000)
+  monsternemer: "",
+  datum_monstername: "",
+  partij: null
+  // partij: { naam: "Lichte fractie depot noord", type: "Grond", oppervlakte_m2: 1200, volume_m3: 480, diepte: "0,0-1,0 m-mv", partijcode: "VDB-2026-03-A" }
+  // Voor 1002: partij: { naam: "Puingranulaat", type_bouwstof: "Puingranulaat 0/40", herkomst: "...", tonnage: 607 }
 };
 
-// Hans kan ook eerder opgeslagen state injecteren:
-const SAVED_STATE = null;  // of: { fase1: {...}, fase2: {...} }
+const SAVED_STATE = null;
 // ═══════════════════════════════════════════════════════════════
 
 const S = {};
 const sigs = {};
 let currentPhase = 1;
+let dpRows = [];
+let activeModule = '2000';
+
+// ─── Module routing ────────────────────────────────
+function detectModule() {
+  const d = (PROJECT.discipline || '').toUpperCase();
+  const p = PROJECT.protocollen || [];
+  if (d === 'AP04' || d === 'BRL1001' || d === '1001' || p.includes('1001')) return '1001';
+  if (d === 'BRL1002' || d === '1002' || p.includes('1002')) return '1002';
+  return '2000';
+}
+
+function activateModule(mod) {
+  activeModule = mod;
+  document.querySelectorAll('.module-section').forEach(el => el.classList.remove('active'));
+  document.getElementById('mod-' + mod).classList.add('active');
+
+  const colors = { '2000': ['var(--hp)','var(--hp-pale)','var(--hp-bg)','BRL 2000','Veldwerk Compliance','BRL SIKB 2000 — Protocol 2001 / 2002 / 2018'],
+                   '1001': ['var(--ap)','var(--ap-pale)','var(--ap-bg)','AP04 / 1001','AP04 Partijkeuring','BRL SIKB 1000 — Protocol 1001'],
+                   '1002': ['var(--bw)','var(--bw-pale)','var(--bw-bg)','BRL 1002','Partijkeuring Bouwstoffen','BRL SIKB 1000 — Protocol 1002'] };
+  const [c, pale, bg, badge, titel, sub] = colors[mod];
+  document.documentElement.style.setProperty('--mod-c', c);
+  document.documentElement.style.setProperty('--mod-pale', pale);
+  document.documentElement.style.setProperty('--mod-bg', bg);
+  document.getElementById('hdr-badge').textContent = badge;
+  document.getElementById('hdr-titel').textContent = titel;
+  document.getElementById('hdr-sub').textContent = sub;
+}
 
 // ─── Toggle handler ────────────────────────────────
 function tw(btn, val) {
@@ -368,23 +564,19 @@ function tw(btn, val) {
   btn.className = val === 'y' ? 'y' : val === 'n' ? 'n' : 'v';
   S[sw.dataset.f] = val === 'y' ? 'ja' : val === 'n' ? 'nee' : 'n.v.t.';
 }
-
-// Restore toggle from saved state
 function restoreToggle(field, value) {
   if (!value) return;
   const sw = document.querySelector(`.tsw[data-f="${field}"]`);
   if (!sw) return;
   const map = {'ja':'y','nee':'n','n.v.t.':'v'};
-  const code = map[value];
   sw.querySelectorAll('button').forEach(b => {
-    if ((code==='y'&&b.textContent==='Ja') || (code==='n'&&b.textContent==='Nee') || (code==='v'&&b.textContent==='N.v.t.')) {
-      b.className = code;
-    }
+    const code = map[value];
+    if ((code==='y'&&b.textContent==='Ja')||(code==='n'&&b.textContent==='Nee')||(code==='v'&&b.textContent==='N.v.t.')) b.className = code;
   });
   S[field] = value;
 }
 
-// ─── Phase switching ───────────────────────────────
+// ─── Phase switching (BRL 2000) ────────────────────
 function showPhase(n) {
   currentPhase = n;
   document.querySelectorAll('.phase-section').forEach((s,i) => s.classList.toggle('active', i===n-1));
@@ -392,29 +584,59 @@ function showPhase(n) {
   window.scrollTo(0,0);
   updatePhaseDots();
 }
-
 function updatePhaseDots() {
   const f1done = S.f1_lmra_veilig && S.f1_conform;
   const f2done = S.f2_wachttijd && S.f2_overdracht;
-  const d1 = document.getElementById('dot1');
-  const d2 = document.getElementById('dot2');
-  d1.className = 'dot ' + (f1done ? 'dot-done' : (S.f1_lmra_veilig ? 'dot-progress' : 'dot-empty'));
-  d2.className = 'dot ' + (f2done ? 'dot-done' : (S.f2_lmra_veilig ? 'dot-progress' : 'dot-empty'));
-
-  // Status banner fase 2
+  document.getElementById('dot1').className = 'dot '+(f1done?'dot-done':(S.f1_lmra_veilig?'dot-progress':'dot-empty'));
+  document.getElementById('dot2').className = 'dot '+(f2done?'dot-done':(S.f2_lmra_veilig?'dot-progress':'dot-empty'));
   const banner = document.getElementById('f2-status-banner');
   if (!PROJECT.protocollen.includes('2002')) {
-    banner.innerHTML = '<div class="status-banner phase1-done">Protocol 2002 is niet van toepassing — geen grondwater.</div>';
+    banner.innerHTML = '<div class="status-banner phase1-done">Protocol 2002 is niet van toepassing.</div>';
   } else if (f1done && !f2done) {
-    banner.innerHTML = '<div class="status-banner phase2-todo">⏳ Fase 1 afgerond. Vul fase 2 in na grondwatermonstername (~1 week).</div>';
+    banner.innerHTML = '<div class="status-banner phase2-todo">⏳ Fase 1 afgerond — vul fase 2 in na grondwatermonstername.</div>';
   } else if (f1done && f2done) {
     banner.innerHTML = '<div class="status-banner complete">✅ Beide fases afgerond — formulier compleet.</div>';
   }
 }
 
+// ─── Bijmenging visueel (BRL 1001) ─────────────────
+function updBij(inputId, barId) {
+  const v = Math.min(100, Math.max(0, parseInt(document.getElementById(inputId).value)||0));
+  document.getElementById(barId).style.width = v + '%';
+  const pctEl = document.getElementById(barId.replace('bar-','pct-'));
+  if (pctEl) pctEl.textContent = v + '%';
+}
+
+// ─── Deelpartijen (BRL 1002) ───────────────────────
+let dpNr = 0;
+function dpAdd() {
+  dpNr++;
+  const nr = dpNr;
+  const tbody = document.getElementById('dp-tabel');
+  const tr = document.createElement('tr');
+  tr.id = 'dp-row-' + nr;
+  tr.innerHTML = `<td>${nr}</td><td><input placeholder="DP-0${nr}"></td><td><input type="number" placeholder="0" min="0"></td><td><input placeholder="BC-000${nr}"></td><td><button class="del-btn" onclick="dpDel(${nr})">✕</button></td>`;
+  tbody.appendChild(tr);
+  dpRows.push(nr);
+}
+function dpDel(nr) {
+  const row = document.getElementById('dp-row-' + nr);
+  if (row) row.remove();
+  dpRows = dpRows.filter(r => r !== nr);
+}
+function dpGetData() {
+  return dpRows.map(nr => {
+    const row = document.getElementById('dp-row-' + nr);
+    if (!row) return null;
+    const cells = row.querySelectorAll('input');
+    return { naam: cells[0].value||null, gewicht_kg: parseInt(cells[1].value)||null, barcode: cells[2].value||null };
+  }).filter(Boolean);
+}
+
 // ─── Signatures ────────────────────────────────────
 function initSig(n) {
   const cv = document.getElementById('sig'+n+'-cv');
+  if (!cv) return;
   const box = cv.parentElement;
   const ctx = cv.getContext('2d');
   let drawing = false, hasDraw = false;
@@ -428,37 +650,56 @@ function initSig(n) {
   cv.addEventListener('touchstart',st,{passive:false});cv.addEventListener('touchmove',mv,{passive:false});cv.addEventListener('touchend',en);
   sigs[n] = { canvas:cv, hasDraw:()=>hasDraw };
 }
-function clrSig(n){const cv=document.getElementById('sig'+n+'-cv');cv.getContext('2d').clearRect(0,0,cv.width,cv.height);document.getElementById('sig'+n+'-h').style.display='';sigs[n].hasDraw=()=>false}
+function clrSig(n){const cv=document.getElementById('sig'+n+'-cv');cv.getContext('2d').clearRect(0,0,cv.width,cv.height);document.getElementById('sig'+n+'-h').style.display='';if(sigs[n])sigs[n].hasDraw=()=>false}
 
 // ─── Prefill ───────────────────────────────────────
 function prefill() {
+  const mod = detectModule();
+  activateModule(mod);
+
   document.getElementById('d-pid').textContent = PROJECT.projectnummer;
   document.getElementById('d-addr').textContent = PROJECT.adres;
-  const hasGW = PROJECT.protocollen.includes('2002');
-  const hasASB = PROJECT.protocollen.includes('2018');
-  document.getElementById('d-info').innerHTML = `
-    <b>Opdrachtgever:</b> ${PROJECT.opdrachtgever}<br>
-    <b>Projectleider:</b> ${PROJECT.projectleider}<br>
-    <b>Boormeester:</b> ${PROJECT.boormeester} | <b>Medewerker:</b> ${PROJECT.boormedewerker}<br>
-    <b>Datum boordag:</b> ${PROJECT.datum_veldwerk}${PROJECT.datum_grondwater ? ' | <b>Grondwater:</b> '+PROJECT.datum_grondwater : ''}<br>
-    <b>Protocollen:</b> ${PROJECT.protocollen.join(', ')} | <b>Meetpunten:</b> ${PROJECT.meetpunten} | <b>Peilbuizen:</b> ${PROJECT.peilbuizen}
-  `;
-  document.getElementById('f1-sn').value = PROJECT.boormeester;
-  document.getElementById('f1-sd').value = PROJECT.datum_veldwerk;
-  document.getElementById('f2-sn').value = PROJECT.boormedewerker || PROJECT.boormeester;
-  if (PROJECT.datum_grondwater) document.getElementById('f2-sd').value = PROJECT.datum_grondwater;
-  document.title = `HP Veldwerk — ${PROJECT.projectnummer}`;
   document.getElementById('pf-date').textContent = new Date().toLocaleDateString('nl-NL');
+  document.title = `HP Veldwerk — ${PROJECT.projectnummer}`;
 
-  // Show/hide conditional sections
-  if (hasASB) document.getElementById('sec-2018').classList.add('vis');
-  if (!hasGW) {
-    document.getElementById('ptab2').style.display = 'none';
+  if (mod === '2000') {
+    document.getElementById('d-info').innerHTML =
+      `<b>Opdrachtgever:</b> ${PROJECT.opdrachtgever}<br><b>Projectleider:</b> ${PROJECT.projectleider}<br><b>Boormeester:</b> ${PROJECT.boormeester} | <b>Medewerker:</b> ${PROJECT.boormedewerker}<br><b>Datum boordag:</b> ${PROJECT.datum_veldwerk}${PROJECT.datum_grondwater?' | <b>Grondwater:</b> '+PROJECT.datum_grondwater:''}<br><b>Protocollen:</b> ${PROJECT.protocollen.join(', ')} | <b>Meetpunten:</b> ${PROJECT.meetpunten} | <b>Peilbuizen:</b> ${PROJECT.peilbuizen}`;
+    document.getElementById('f1-sn').value = PROJECT.boormeester;
+    document.getElementById('f1-sd').value = PROJECT.datum_veldwerk;
+    document.getElementById('f2-sn').value = PROJECT.boormedewerker || PROJECT.boormeester;
+    if (PROJECT.datum_grondwater) document.getElementById('f2-sd').value = PROJECT.datum_grondwater;
+    if (PROJECT.protocollen.includes('2018')) document.getElementById('sec-2018').classList.add('vis');
+    if (!PROJECT.protocollen.includes('2002')) document.getElementById('ptab2').style.display = 'none';
+    updatePhaseDots();
   }
 
-  // Restore saved state if available
+  if (mod === '1001') {
+    const monsternemer = PROJECT.monsternemer || PROJECT.boormeester || '';
+    document.getElementById('d-info').innerHTML =
+      `<b>Opdrachtgever:</b> ${PROJECT.opdrachtgever}<br><b>Projectleider:</b> ${PROJECT.projectleider}<br><b>Monsternemer:</b> ${monsternemer}<br><b>Datum monstername:</b> ${PROJECT.datum_monstername||'—'}<br><b>Protocol:</b> BRL SIKB 1000 / 1001`;
+    const p = PROJECT.partij || {};
+    document.getElementById('ap-partij-naam').textContent = p.naam || '—';
+    document.getElementById('ap-partij-info').innerHTML =
+      `Type: <b>${p.type||'—'}</b> | Code: <b>${p.partijcode||'—'}</b>${p.volume_m3?' | Volume: <b>'+p.volume_m3+' m³</b>':''}${p.diepte?' | Diepte: <b>'+p.diepte+'</b>':''}`;
+    document.getElementById('ap-sn').value = monsternemer;
+    document.getElementById('ap-sd').value = PROJECT.datum_monstername || '';
+  }
+
+  if (mod === '1002') {
+    const monsternemer = PROJECT.monsternemer || PROJECT.boormeester || '';
+    document.getElementById('d-info').innerHTML =
+      `<b>Opdrachtgever:</b> ${PROJECT.opdrachtgever}<br><b>Projectleider:</b> ${PROJECT.projectleider}<br><b>Monsternemer:</b> ${monsternemer}<br><b>Datum monstername:</b> ${PROJECT.datum_monstername||'—'}<br><b>Protocol:</b> BRL SIKB 1000 / 1002`;
+    const p = PROJECT.partij || {};
+    document.getElementById('bw-partij-naam').textContent = p.naam || '—';
+    document.getElementById('bw-partij-info').innerHTML =
+      `Type: <b>${p.type_bouwstof||p.type||'—'}</b> | Code: <b>${p.partijcode||'—'}</b>${p.tonnage?' | Netto: <b>'+p.tonnage+' ton</b>':''}${p.herkomst?' | Herkomst: '+p.herkomst:''}`;
+    document.getElementById('bw-sn').value = monsternemer;
+    document.getElementById('bw-sd').value = PROJECT.datum_monstername || '';
+    dpAdd(); dpAdd(); // standaard 2 deelpartijen
+  }
+
   if (SAVED_STATE) restoreState(SAVED_STATE);
-  updatePhaseDots();
 }
 
 function restoreState(saved) {
@@ -477,60 +718,80 @@ function restoreState(saved) {
   }
 }
 
-// ─── Save fase ─────────────────────────────────────
-function saveFase(n) {
-  showToast(`✓ Fase ${n} opgeslagen`);
-  updatePhaseDots();
-  // In productie: POST naar hp-sp-writer
+// ─── Save ──────────────────────────────────────────
+function saveFase(n) { showToast(`✓ Fase ${n} opgeslagen`); updatePhaseDots(); }
+function saveModule(mod) { showToast(`✓ Module ${mod} opgeslagen`); }
+
+// ─── Build export ──────────────────────────────────
+function buildExport() {
+  if (activeModule === '1001') return buildExport1001();
+  if (activeModule === '1002') return buildExport1002();
+  return buildExport2000();
 }
 
-// ─── Build export data ─────────────────────────────
-function buildExport() {
+function buildExport2000() {
   const data = {
-    _meta: {schema:'hp_veldwerk_compliance_v2', generated:new Date().toISOString(), app:'HP Veldwerk Compliance v2.0'},
-    project: {...PROJECT},
-    fase1: {
-      lmra: {veilig:S.f1_lmra_veilig||null, toegang:S.f1_lmra_toegang||null, toestemming:S.f1_lmra_toestemming||null, tekening:S.f1_lmra_tekening||null},
-      klic: {ref:document.getElementById('f-klic').value||null, datum:document.getElementById('f-klic-d').value||null},
-      protocol_2001: {
-        conform:S.f1_conform||null, afgerond:S.f1_afgerond||null, fotos:S.f1_fotos||null,
-        overdracht:S.f1_overdracht||null, bentoniet:S.f1_bentoniet||null, peilbuizen:S.f1_peilbuizen||null,
-        asbest:S.f1_asbest||null, afwijkingen:S.f1_afwijkingen||null,
-        afwijkingen_toelichting:document.getElementById('f1-afw').value||null
-      },
+    _meta:{schema:'hp_veldwerk_compliance_v3',generated:new Date().toISOString(),app:'HP Veldwerk Compliance v3.0'},
+    project:{...PROJECT},
+    fase1:{
+      lmra:{veilig:S.f1_lmra_veilig||null,toegang:S.f1_lmra_toegang||null,toestemming:S.f1_lmra_toestemming||null,tekening:S.f1_lmra_tekening||null},
+      klic:{ref:document.getElementById('f-klic').value||null,datum:document.getElementById('f-klic-d').value||null},
+      protocol_2001:{conform:S.f1_conform||null,afgerond:S.f1_afgerond||null,fotos:S.f1_fotos||null,overdracht:S.f1_overdracht||null,bentoniet:S.f1_bentoniet||null,peilbuizen:S.f1_peilbuizen||null,asbest:S.f1_asbest||null,afwijkingen:S.f1_afwijkingen||null,afwijkingen_toelichting:document.getElementById('f1-afw').value||null},
       grond:{overtollig:document.getElementById('f1-grond').value||null},
       opmerkingen:document.getElementById('f1-opm').value||null,
-      conformiteitsverklaring:{ondertekend:sigs[1]?.hasDraw()||false, naam:document.getElementById('f1-sn').value, datum:document.getElementById('f1-sd').value,
-        handtekening_base64:sigs[1]?.hasDraw()?sigs[1].canvas.toDataURL('image/png'):null}
+      conformiteitsverklaring:{ondertekend:sigs[1]?.hasDraw()||false,naam:document.getElementById('f1-sn').value,datum:document.getElementById('f1-sd').value,handtekening_base64:sigs[1]?.hasDraw()?sigs[1].canvas.toDataURL('image/png'):null}
     }
   };
   if (PROJECT.protocollen.includes('2018')) {
-    data.fase1.protocol_2018 = {
-      weer:{temp:document.getElementById('f-at').value||null,neerslag:document.getElementById('f-an').value||null,wind:document.getElementById('f-aw').value||null,richting:document.getElementById('f-awr').value||null,zicht:document.getElementById('f-az').value||null},
-      maaiveld:{grondsoort:document.getElementById('f-ag').value||null,conditie:document.getElementById('f-ac').value||null,bedekking:document.getElementById('f-ab').value||null,veg_verwijderd:S.asb_veg||null,bedekking_na:document.getElementById('f-abn').value||null},
-      bevindingen:{verdacht:S.asb_verd||null,beschrijving:document.getElementById('f-abes').value||null}
-    };
+    data.fase1.protocol_2018={weer:{temp:document.getElementById('f-at').value||null,neerslag:document.getElementById('f-an').value||null,wind:document.getElementById('f-aw').value||null,richting:document.getElementById('f-awr').value||null},bevindingen:{verdacht:S.asb_verd||null,beschrijving:document.getElementById('f-abes').value||null}};
   }
   if (PROJECT.protocollen.includes('2002')) {
-    data.fase2 = {
-      lmra:{veilig:S.f2_lmra_veilig||null, toegang:S.f2_lmra_toegang||null},
-      protocol_2002:{wachttijd:S.f2_wachttijd||null, drijflaag:S.f2_drijflaag||null, beluchting:S.f2_beluchting||null, filtratie:S.f2_filtratie||null, overdracht:S.f2_overdracht||null, afwijkingen:S.f2_afwijkingen||null, afwijkingen_toelichting:document.getElementById('f2-afw').value||null},
-      opmerkingen:document.getElementById('f2-opm').value||null,
-      conformiteitsverklaring:{ondertekend:sigs[2]?.hasDraw()||false, naam:document.getElementById('f2-sn').value, datum:document.getElementById('f2-sd').value,
-        handtekening_base64:sigs[2]?.hasDraw()?sigs[2].canvas.toDataURL('image/png'):null}
-    };
+    data.fase2={lmra:{veilig:S.f2_lmra_veilig||null,toegang:S.f2_lmra_toegang||null},protocol_2002:{wachttijd:S.f2_wachttijd||null,drijflaag:S.f2_drijflaag||null,beluchting:S.f2_beluchting||null,filtratie:S.f2_filtratie||null,overdracht:S.f2_overdracht||null,afwijkingen:S.f2_afwijkingen||null,afwijkingen_toelichting:document.getElementById('f2-afw').value||null},opmerkingen:document.getElementById('f2-opm').value||null,conformiteitsverklaring:{ondertekend:sigs[2]?.hasDraw()||false,naam:document.getElementById('f2-sn').value,datum:document.getElementById('f2-sd').value,handtekening_base64:sigs[2]?.hasDraw()?sigs[2].canvas.toDataURL('image/png'):null}};
   }
   return data;
 }
 
+function buildExport1001() {
+  return {
+    _meta:{schema:'hp_veldwerk_1001_v1',generated:new Date().toISOString(),app:'HP Veldwerk Compliance v3.0'},
+    project:{...PROJECT},
+    partij: PROJECT.partij || {},
+    terreininspectie:{toegankelijk:S.ap_terrein_toegang||null,veilig:S.ap_terrein_veilig||null,bereikbaar:S.ap_terrein_bereikbaar||null,bijzonderheden:document.getElementById('ap-terrein-bijz').value||null},
+    lmra:{veilig:S.ap_lmra_veilig||null,gevaren:S.ap_lmra_gevaren||null,pbm:S.ap_lmra_pbm||null},
+    partijcontrole:{homogeen:S.ap_pc_homogeen||null,geur:S.ap_pc_geur||null,kleur:S.ap_pc_kleur||null,grondsoort:document.getElementById('ap-grondsoort').value||null,vocht:document.getElementById('ap-vocht').value||null},
+    bijmenging:{puin_pct:parseInt(document.getElementById('bij-puin').value)||0,steenachtigen_pct:parseInt(document.getElementById('bij-steen').value)||0,plastic_pct:parseInt(document.getElementById('bij-plastic').value)||0,hout_pct:parseInt(document.getElementById('bij-hout').value)||0},
+    monstername:{conform:S.ap_mn_conform||null,grepen_representatief:S.ap_mn_grepen||null,monsters_bewaard:S.ap_mn_bewaard||null,overdracht:S.ap_mn_overdracht||null,aantal_grepen:parseInt(document.getElementById('ap-grepen').value)||null,labcode:document.getElementById('ap-labcode').value||null},
+    visuele_asbestinspectie:{aangetroffen:S.ap_asb_aangetroffen||null,plaatmateriaal:S.ap_asb_plaat||null,pijpfragmenten:S.ap_asb_pijp||null,beschrijving:document.getElementById('ap-asb-beschr').value||null},
+    afwijkingen:{aanwezig:S.ap_afwijkingen||null,toelichting:document.getElementById('ap-afw').value||null},
+    opmerkingen:document.getElementById('ap-opm').value||null,
+    conformiteit:{ondertekend:sigs[3]?.hasDraw()||false,naam:document.getElementById('ap-sn').value,datum:document.getElementById('ap-sd').value,handtekening_base64:sigs[3]?.hasDraw()?sigs[3].canvas.toDataURL('image/png'):null}
+  };
+}
+
+function buildExport1002() {
+  return {
+    _meta:{schema:'hp_veldwerk_1002_v1',generated:new Date().toISOString(),app:'HP Veldwerk Compliance v3.0'},
+    project:{...PROJECT},
+    partij: PROJECT.partij || {},
+    lmra:{veilig:S.bw_lmra_veilig||null,toegang:S.bw_lmra_toegang||null,pbm:S.bw_lmra_pbm||null,vallend:S.bw_lmra_val||null},
+    partijcontrole:{homogeen:S.bw_pc_homogeen||null,type_correct:S.bw_pc_type||null,korrel_correct:S.bw_pc_korrel||null,vreemde_fractie:S.bw_pc_vreemd||null,verontreiniging:S.bw_pc_veront||null,bijzonderheden:document.getElementById('bw-pc-bijz').value||null},
+    deelpartijen: dpGetData(),
+    visuele_inspectie:{overeenkomstig:S.bw_vi_overeenk||null,asbest:S.bw_vi_asbest||null,kleur_afwijkend:S.bw_vi_kleur||null,bijzonderheden:document.getElementById('bw-vi-bijz').value||null},
+    monsteroverdracht:{overdracht:S.bw_mo_overdracht||null,verzegeld:S.bw_mo_verzegeld||null,labcode:document.getElementById('bw-labcode').value||null,laboratorium:document.getElementById('bw-lab').value||null},
+    afwijkingen:{aanwezig:S.bw_afwijkingen||null,toelichting:document.getElementById('bw-afw').value||null},
+    opmerkingen:document.getElementById('bw-opm').value||null,
+    conformiteit:{ondertekend:sigs[4]?.hasDraw()||false,naam:document.getElementById('bw-sn').value,datum:document.getElementById('bw-sd').value,handtekening_base64:sigs[4]?.hasDraw()?sigs[4].canvas.toDataURL('image/png'):null}
+  };
+}
+
 function doJSON() {
   const data = buildExport();
-  const preview = JSON.parse(JSON.stringify(data));
-  if(preview.fase1?.conformiteitsverklaring?.handtekening_base64) preview.fase1.conformiteitsverklaring.handtekening_base64='[BASE64]';
-  if(preview.fase2?.conformiteitsverklaring?.handtekening_base64) preview.fase2.conformiteitsverklaring.handtekening_base64='[BASE64]';
+  // Masker base64 signatures in preview
+  ['fase1','fase2','conformiteit'].forEach(k=>{if(data[k]?.conformiteitsverklaring?.handtekening_base64)data[k].conformiteitsverklaring.handtekening_base64='[BASE64]'});
+  if(data.conformiteit?.handtekening_base64)data.conformiteit.handtekening_base64='[BASE64]';
   const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-  a.download=`veldwerk_compliance_${PROJECT.projectnummer}.json`;a.click();
+  a.download=`veldwerk_${activeModule}_${PROJECT.projectnummer}.json`;a.click();
   URL.revokeObjectURL(a.href);
   showToast('✓ JSON geëxporteerd');
 }
@@ -563,7 +824,7 @@ function unlock(){document.getElementById('pin-overlay').classList.add('unlocked
 document.addEventListener('DOMContentLoaded',()=>{
   initPin();
   prefill();
-  setTimeout(()=>{initSig(1);initSig(2)},200);
+  setTimeout(()=>{initSig(1);initSig(2);initSig(3);initSig(4)},200);
 });
 </script>
 </body>
