@@ -581,7 +581,7 @@ let activeModule = '2000';
 function detectModule() {
   const d = (PROJECT.discipline || '').toUpperCase();
   const p = PROJECT.protocollen || [];
-  if (d === 'AP04' || d === 'BRL1001' || d === '1001' || p.includes('1001')) return '1001';
+  if (d === 'AP04' || d === 'BRL1001' || d === '1001' || d === 'BRL1000' || p.includes('1001')) return '1001';
   if (d === 'BRL1002' || d === '1002' || p.includes('1002')) return '1002';
   return '2000';
 }
