@@ -261,6 +261,14 @@
         <div class="fld"><label>Referentienummer</label><input id="f-klic" placeholder="25G001234"></div>
         <div class="fld"><label>Datum KLIC</label><input type="date" id="f-klic-d"></div>
       </div>
+      <div class="card">
+        <div class="card-t"><span class="ic">🌤️</span>Weersomstandigheden &amp; veldbevindingen</div>
+        <div class="fld"><label>Weersomstandigheden</label><input id="f-weers" placeholder="bijv. zonnig, 12°C, droog"></div>
+        <div class="trow" style="margin-top:8px"><span class="tl">Grond herkenbaar als beschreven?</span><div class="tsw" data-f="f1_vb_grond"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button><button onclick="tw(this,'v')">N.v.t.</button></div></div>
+        <div class="trow"><span class="tl">Zintuiglijke verontreiniging waargenomen?</span><div class="tsw" data-f="f1_vb_verontr"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+        <div class="trow"><span class="tl">Puin- of asbijmenging aanwezig?</span><div class="tsw" data-f="f1_vb_puin"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+        <div class="trow"><span class="tl">Onverwachte situatie aangetroffen?</span><div class="tsw" data-f="f1_vb_onverwacht"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+      </div>
       <div class="section-title"><span>🔧</span> Uitvoering Protocol 2001</div>
       <div class="card">
         <div class="trow"><span class="tl">Uitvoering conform opdracht? <span class="req">*</span></span><div class="tsw" data-f="f1_conform"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
@@ -331,6 +339,11 @@
         <div class="trow"><span class="tl">Veldfiltratie uitgevoerd?</span><div class="tsw" data-f="f2_filtratie"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
         <div class="trow"><span class="tl">Monsteroverdracht water?</span><div class="tsw" data-f="f2_overdracht"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
       </div>
+      <div class="card" id="pb-meetwaarden-card">
+        <div class="card-t"><span class="ic">📊</span>Peilbuizen — gemeten waarden (Protocol 2002)</div>
+        <div id="pb-metingen"></div>
+        <button type="button" onclick="addPbRij()" style="margin-top:8px;padding:6px 12px;border:1px solid #1a4e3a;color:#1a4e3a;background:white;border-radius:6px;cursor:pointer;font-size:12px">+ Peilbuis toevoegen</button>
+      </div>
       <div class="card">
         <div class="card-t"><span class="ic">📝</span>Afwijkingen Protocol 2002 / NEN 5744</div>
         <div class="trow"><span class="tl">Afwijkingen?</span><div class="tsw" data-f="f2_afwijkingen"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
@@ -362,6 +375,12 @@
       <div class="pb-title">⛏️ Partijkeuring</div>
       <div class="pb-naam" id="ap-partij-naam">—</div>
       <div class="pb-info" id="ap-partij-info"></div>
+    </div>
+    <div class="card">
+      <div class="card-t"><span class="ic">📋</span>Partijgegevens aanvullend</div>
+      <div class="fld"><label>Type keuring (doelstelling)</label><select id="ap-type-keuring"><option value="">— kies —</option><option value="1">Doelstelling 1 — hergebruik</option><option value="2">Doelstelling 2 — depot</option><option value="3">Doelstelling 3 — stort</option></select></div>
+      <div class="fld"><label>Herkomst partij</label><input id="ap-herkomst" placeholder="bijv. slooplocatie, grondwerkzaamheden"></div>
+      <div class="fld"><label>Certificaatnummer monsternemer</label><input id="ap-cert" placeholder="bijv. BRL2000-12345"></div>
     </div>
 
     <div class="section-title"><span>🗺️</span> Terreininspectie</div>
@@ -409,6 +428,12 @@
         <div class="fld"><label>Aantal grepen per monster</label><input type="number" id="ap-grepen" min="1" placeholder="10"></div>
         <div class="fld"><label>Labcode</label><input id="ap-labcode" placeholder="L-2026-XXXX"></div>
       </div>
+    </div>
+    <div class="card">
+      <div class="card-t"><span class="ic">⏱️</span>Tijdsbesteding monsterneming (Protocol 1001 §6.2.17)</div>
+      <div class="fld"><label>Aanvang</label><input type="time" id="ap-ts-aanvang"></div>
+      <div class="fld"><label>Einde</label><input type="time" id="ap-ts-einde"></div>
+      <div class="fld"><label>Opmerkingen</label><textarea id="ap-ts-opm" rows="2" placeholder="bijv. wachttijden, weersomstandigheden"></textarea></div>
     </div>
 
     <div class="section-title"><span>⚠️</span> Visuele asbestinspectie</div>
@@ -775,13 +800,18 @@ function buildExport() {
   return buildExport2000();
 }
 
+function pbGetData(){return Array.from(document.querySelectorAll('.pb-meetrij')).map(function(r){return {id:r.querySelector('[data-pb-id]').value||null,gws:r.querySelector('[data-pb-gws]').value||null,ph:r.querySelector('[data-pb-ph]').value||null,ec:r.querySelector('[data-pb-ec]').value||null,ntu:r.querySelector('[data-pb-ntu]').value||null,kleur_geur:r.querySelector('[data-pb-kg]').value||null};}).filter(function(r){return r.id;});}
+function vbGetData(){return {grond_herkenbaar:S.f1_vb_grond||null,verontreiniging_zintuiglijk:S.f1_vb_verontr||null,puin_bijmenging:S.f1_vb_puin||null,onverwachte_situatie:S.f1_vb_onverwacht||null};}
+function addPbRij(){var c=document.getElementById('pb-metingen');var n=c.children.length+1;var row=document.createElement('div');row.className='pb-meetrij';row.style='display:flex;gap:4px;margin-top:4px;align-items:center;flex-wrap:wrap';[['data-pb-id','PB-ID','60px'],['data-pb-gws','GWS m-mv','80px'],['data-pb-ph','pH','50px'],['data-pb-ec','EC mS/m','65px'],['data-pb-ntu','NTU','55px'],['data-pb-kg','kleur/geur','90px']].forEach(function(cfg){var inp=document.createElement('input');inp.setAttribute(cfg[0],'');inp.placeholder=cfg[1];inp.style='width:'+cfg[2]+';padding:4px;font-size:12px';row.appendChild(inp);});c.appendChild(row);}
+
 function buildExport2000() {
   const data = {
     _meta:{schema:'hp_veldwerk_compliance_v3',generated:new Date().toISOString(),app:'HP Veldwerk Compliance v3.0'},
-    project:{...PROJECT},
+    project:{...PROJECT,weersomstandigheden:document.getElementById('f-weers').value||null},
     fase1:{
       lmra:{veilig:S.f1_lmra_veilig||null,toegang:S.f1_lmra_toegang||null,toestemming:S.f1_lmra_toestemming||null,tekening:S.f1_lmra_tekening||null},
       klic:{ref:document.getElementById('f-klic').value||null,datum:document.getElementById('f-klic-d').value||null},
+      veldbevindingen:vbGetData(),
       protocol_2001:{conform:S.f1_conform||null,afgerond:S.f1_afgerond||null,fotos:S.f1_fotos||null,overdracht:S.f1_overdracht||null,bentoniet:S.f1_bentoniet||null,peilbuizen:S.f1_peilbuizen||null,asbest:S.f1_asbest||null,afwijkingen:S.f1_afwijkingen||null,afwijkingen_toelichting:document.getElementById('f1-afw').value||null},
       grond:{overtollig:document.getElementById('f1-grond').value||null},
       opmerkingen:document.getElementById('f1-opm').value||null,
@@ -793,6 +823,7 @@ function buildExport2000() {
   }
   if (PROJECT.protocollen.includes('2002')) {
     data.fase2={lmra:{veilig:S.f2_lmra_veilig||null,toegang:S.f2_lmra_toegang||null},protocol_2002:{wachttijd:S.f2_wachttijd||null,drijflaag:S.f2_drijflaag||null,beluchting:S.f2_beluchting||null,filtratie:S.f2_filtratie||null,overdracht:S.f2_overdracht||null,afwijkingen:S.f2_afwijkingen||null,afwijkingen_toelichting:document.getElementById('f2-afw').value||null},opmerkingen:document.getElementById('f2-opm').value||null,conformiteitsverklaring:{ondertekend:sigs[2]?.hasDraw()||false,naam:document.getElementById('f2-sn').value,datum:document.getElementById('f2-sd').value,handtekening_base64:sigs[2]?.hasDraw()?sigs[2].canvas.toDataURL('image/png'):null}};
+  data.fase2.peilbuizen_metingen = pbGetData();
   }
   return data;
 }
@@ -800,8 +831,8 @@ function buildExport2000() {
 function buildExport1001() {
   return {
     _meta:{schema:'hp_veldwerk_1001_v1',generated:new Date().toISOString(),app:'HP Veldwerk Compliance v3.0'},
-    project:{...PROJECT},
-    partij: PROJECT.partij || {},
+    project:{...PROJECT,cert_monsternemer:document.getElementById('ap-cert').value||null},
+    partij:{...(PROJECT.partij||{}),type_keuring:document.getElementById('ap-type-keuring').value||null,herkomst:document.getElementById('ap-herkomst').value||null},
     terreininspectie:{toegankelijk:S.ap_terrein_toegang||null,veilig:S.ap_terrein_veilig||null,bereikbaar:S.ap_terrein_bereikbaar||null,bijzonderheden:document.getElementById('ap-terrein-bijz').value||null},
     lmra:{veilig:S.ap_lmra_veilig||null,gevaren:S.ap_lmra_gevaren||null,pbm:S.ap_lmra_pbm||null},
     partijcontrole:{homogeen:S.ap_pc_homogeen||null,geur:S.ap_pc_geur||null,kleur:S.ap_pc_kleur||null,grondsoort:document.getElementById('ap-grondsoort').value||null,vocht:document.getElementById('ap-vocht').value||null},
@@ -810,6 +841,7 @@ function buildExport1001() {
     visuele_asbestinspectie:{aangetroffen:S.ap_asb_aangetroffen||null,plaatmateriaal:S.ap_asb_plaat||null,pijpfragmenten:S.ap_asb_pijp||null,beschrijving:document.getElementById('ap-asb-beschr').value||null},
     afwijkingen:{aanwezig:S.ap_afwijkingen||null,toelichting:document.getElementById('ap-afw').value||null},
     opmerkingen:document.getElementById('ap-opm').value||null,
+    tijdsbesteding:{aanvang:document.getElementById('ap-ts-aanvang').value||null,einde:document.getElementById('ap-ts-einde').value||null,opmerkingen:document.getElementById('ap-ts-opm').value||null},
     conformiteit:{ondertekend:sigs[3]?.hasDraw()||false,naam:document.getElementById('ap-sn').value,datum:document.getElementById('ap-sd').value,handtekening_base64:sigs[3]?.hasDraw()?sigs[3].canvas.toDataURL('image/png'):null}
   };
 }
