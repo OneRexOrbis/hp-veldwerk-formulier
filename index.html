@@ -550,6 +550,7 @@
   <div class="actions no-print" style="border-top:2px solid var(--bd);padding-top:16px">
     <button class="btn btn-s" onclick="window.print()">🖨️ PDF bijlage</button>
     <button class="btn btn-d" onclick="doJSON()">📄 Export JSON</button>
+    <button class="btn btn-p" id="btn-opslaan" onclick="opslaanCompliance()">💾 Opslaan &amp; PDF</button>
   </div>
 
   <div class="print-footer">
@@ -864,14 +865,41 @@ function buildExport1002() {
 
 function doJSON() {
   const data = buildExport();
-  // Masker base64 signatures in preview
-  ['fase1','fase2','conformiteit'].forEach(k=>{if(data[k]?.conformiteitsverklaring?.handtekening_base64)data[k].conformiteitsverklaring.handtekening_base64='[BASE64]'});
-  if(data.conformiteit?.handtekening_base64)data.conformiteit.handtekening_base64='[BASE64]';
-  const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  // Masker base64 signatures voor lokale download preview
+  const preview = JSON.parse(JSON.stringify(data));
+  ['fase1','fase2','conformiteit'].forEach(k=>{if(preview[k]?.conformiteitsverklaring?.handtekening_base64)preview[k].conformiteitsverklaring.handtekening_base64='[BASE64]'});
+  if(preview.conformiteit?.handtekening_base64)preview.conformiteit.handtekening_base64='[BASE64]';
+  const blob = new Blob([JSON.stringify(preview,null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
   a.download=`veldwerk_${activeModule}_${PROJECT.projectnummer}.json`;a.click();
   URL.revokeObjectURL(a.href);
   showToast('✓ JSON geëxporteerd');
+}
+
+async function opslaanCompliance() {
+  if (!PROJECT.projectnummer) { showToast('⚠ Geen project geselecteerd'); return; }
+  const btn = document.getElementById('btn-opslaan');
+  btn.disabled = true;
+  btn.textContent = '⏳ Bezig...';
+  try {
+    const data = buildExport(); // ongemaskerd — handtekening_base64 intact
+    const resp = await fetch(`${API_URL}/api/compliance`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(data)
+    });
+    const result = await resp.json();
+    if (result.ok) {
+      showToast('✓ Opgeslagen — PDF volgt binnen 5 min');
+    } else {
+      showToast('✗ Fout: ' + (result.error || 'onbekend'));
+    }
+  } catch(e) {
+    showToast('✗ Verbindingsfout');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '💾 Opslaan & PDF';
+  }
 }
 
 function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000)}
