@@ -92,16 +92,16 @@
   .bij-lbl{font-size:12px;font-weight:500;flex:1}
   .bij-row input[type=number]{width:64px;padding:5px 8px;border:1.5px solid var(--bd);border-radius:6px;font-size:13px;font-weight:600;font-family:inherit;text-align:center;background:white}
   .bij-bar-wrap{width:80px;height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden}
-  .bij-bar{height:100%;border-radius:4px;transition:width .3s;background:var(--ap-l)}
+  .bij-bar{height:100%;border-radius:4px;transition:width .3s;background:var(--hp-l)}
   .bij-pct{font-size:11px;font-weight:600;color:var(--gy);width:28px;text-align:right}
 
   /* ─── Deelpartijen tabel (BRL 1002) ─── */
   .dp-table{width:100%;border-collapse:collapse;font-size:12px}
-  .dp-table th{background:var(--bw-bg);color:var(--bw);font-size:11px;font-weight:600;padding:6px 8px;text-align:left;border-bottom:1.5px solid var(--bw-pale)}
+  .dp-table th{background:var(--hp-bg);color:var(--hp);font-size:11px;font-weight:600;padding:6px 8px;text-align:left;border-bottom:1.5px solid var(--hp-pale)}
   .dp-table td{padding:6px 8px;border-bottom:1px solid var(--bd);vertical-align:middle}
   .dp-table input{border:1px solid var(--bd);border-radius:5px;padding:4px 6px;font-size:11px;font-family:inherit;width:100%;background:white}
   .dp-table .del-btn{background:none;border:none;color:var(--rd);cursor:pointer;font-size:16px;padding:0 4px;line-height:1}
-  .dp-add{display:flex;align-items:center;gap:6px;padding:8px 0 0;font-size:12px;color:var(--bw);cursor:pointer;font-weight:600;background:none;border:none;font-family:inherit}
+  .dp-add{display:flex;align-items:center;gap:6px;padding:8px 0 0;font-size:12px;color:var(--hp);cursor:pointer;font-weight:600;background:none;border:none;font-family:inherit}
 
   /* ─── Signature ─── */
   .sig-box{border:2px dashed var(--bd);border-radius:8px;height:100px;position:relative;cursor:crosshair;touch-action:none;background:#FAFAFA}
@@ -156,8 +156,8 @@
   .pick-result .pr-info{font-size:11px;color:var(--gy);margin-top:4px}
   .pick-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;margin-left:6px;vertical-align:middle}
   .pick-badge.brl2000{background:var(--hp-pale);color:var(--hp)}
-  .pick-badge.brl1001{background:var(--ap-pale);color:var(--ap)}
-  .pick-badge.brl1002{background:var(--bw-pale);color:var(--bw)}
+  .pick-badge.brl1001{background:var(--hp-pale);color:var(--hp)}
+  .pick-badge.brl1002{background:var(--hp-pale);color:var(--hp)}
   .pick-empty{text-align:center;color:var(--gy);font-size:13px;padding:32px 20px}
   .pick-loading{text-align:center;color:var(--gy);font-size:12px;padding:16px}
   #main-content{display:none}
@@ -592,8 +592,8 @@ function activateModule(mod) {
   document.getElementById('mod-' + mod).classList.add('active');
 
   const colors = { '2000': ['var(--hp)','var(--hp-pale)','var(--hp-bg)','BRL 2000','Veldwerk Compliance','BRL SIKB 2000 — Protocol 2001 / 2002 / 2018'],
-                   '1001': ['var(--ap)','var(--ap-pale)','var(--ap-bg)','AP04 / 1001','AP04 Partijkeuring','BRL SIKB 1000 — Protocol 1001'],
-                   '1002': ['var(--bw)','var(--bw-pale)','var(--bw-bg)','BRL 1002','Partijkeuring Bouwstoffen','BRL SIKB 1000 — Protocol 1002'] };
+                   '1001': ['var(--hp)','var(--hp-pale)','var(--hp-bg)','AP04 / 1001','AP04 Partijkeuring','BRL SIKB 1000 — Protocol 1001'],
+                   '1002': ['var(--hp)','var(--hp-pale)','var(--hp-bg)','BRL 1002','Partijkeuring Bouwstoffen','BRL SIKB 1000 — Protocol 1002'] };
   const [c, pale, bg, badge, titel, sub] = colors[mod];
   document.documentElement.style.setProperty('--mod-c', c);
   document.documentElement.style.setProperty('--mod-pale', pale);
