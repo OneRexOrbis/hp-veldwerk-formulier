@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>HP Veldwerk Compliance</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#1a5276">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="HP Veldwerk">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
   :root {
@@ -1022,6 +1029,11 @@ document.addEventListener('DOMContentLoaded',()=>{
   initPin();
   setTimeout(()=>{initSig(1);initSig(2);initSig(3);initSig(4)},200);
 });
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js');
+}
 </script>
 </body>
 </html>
