@@ -81,10 +81,10 @@ class handler(BaseHTTPRequestHandler):
                     }})
                     status = 200
                 else:
-                    body = json.dumps({"ok": True, "prefill": project["prefill"]})
-                pf = dict(project["prefill"])
-                pf.setdefault("discipline", project.get("discipline", ""))
-                body = json.dumps({"ok": True, "prefill": pf})
+                    pf = dict(project["prefill"] or {})
+                    pf.setdefault("discipline", project.get("discipline", ""))
+                    body = json.dumps({"ok": True, "prefill": pf})
+                    status = 200
             except Exception as e:
                 body = json.dumps({"ok": False, "error": str(e)})
                 status = 500
