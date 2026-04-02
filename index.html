@@ -7,7 +7,7 @@
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
   :root {
-    --hp:#2D6A4F;--hp-l:#40916C;--hp-pale:#B7E4C7;--hp-bg:#F0FFF4;
+    --hp:#2D6A4F;--hp-l:#40916C;--hp-pale:#B7E4C7;--hp-bg:#F0FFF4;h
     --ap:#4a3570;--ap-l:#6a50a0;--ap-pale:#d4c8f0;--ap-bg:#f8f5ff;
     --bw:#1a4a70;--bw-l:#2563ab;--bw-pale:#b8d0e8;--bw-bg:#f3f8fd;
     --dk:#1B1B1B;--gy:#6B7280;--gy-l:#F3F4F6;--bd:#E5E7EB;
@@ -906,10 +906,12 @@ function _doPickSearch(q){
       }
       results.innerHTML = data.resultaten.map(p => {
         const disc = (p.discipline||'BRL2000').toUpperCase();
-        const cls = disc.includes('1001')||disc==='AP04' ? 'brl1001' : disc.includes('1002') ? 'brl1002' : 'brl2000';
-        const label = disc.includes('1001')||disc==='AP04' ? 'AP04' : disc.includes('1002') ? '1002' : '2000';
-        return `<div class="pick-result" onclick="selectProject('${p.projectnummer}')">
-          <div class="pr-pid">${p.projectnummer}<span class="pick-badge ${cls}">${label}</span></div>
+const cls = disc.includes('1001')||disc==='AP04'||disc==='BRL1000' ? 'brl1001' :
+          disc.includes('1002') ? 'brl1002' :
+          disc==='BRL6000'||disc.includes('6000') ? 'brl6000' : 'brl2000';
+const label = disc.includes('1001')||disc==='AP04'||disc==='BRL1000' ? 'AP04' :
+          disc.includes('1002') ? '1002' :
+          disc==='BRL6000'||disc.includes('6000') ? '6000' : '2000';
           <div class="pr-addr">${p.adres||'—'}</div>
           <div class="pr-info">${p.opdrachtgever||''}</div>
         </div>`;
