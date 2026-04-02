@@ -75,12 +75,12 @@ def _zoek(q: str) -> list:
         return {k: v for k, v in p.items() if k != "prefill"}
 
     if not q:
-        return [slim(p) for p in projecten[:20]]
+        return [slim(p) for p in projecten]
 
     resultaten = [(p, _score(p, q.lower())) for p in projecten]
     resultaten = [(p, s) for p, s in resultaten if s > 0]
     resultaten.sort(key=lambda x: (-x[1], x[0].get("projectnummer", "")))
-    return [slim(p) for p, _ in resultaten[:20]]
+    return [slim(p) for p, _ in resultaten]
 
 
 class handler(BaseHTTPRequestHandler):
