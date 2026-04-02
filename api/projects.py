@@ -45,7 +45,7 @@ def _get_index() -> list:
         return _cache["index"]
     drive_id = os.environ["DRIVE_ID"]
     token = _get_token()
-    url = f"https://graph.microsoft.com/v1.0/drives/{drive_id}/root:/{INDEX_SP_PATH}:/content"
+    url = f"https://graph.microsoft.com/v1.0/drives/{drive_id}/root:/{urllib.parse.quote(INDEX_SP_PATH, safe="/")}:/content"
     req = urllib.request.Request(url, headers={"Authorization": f"Bearer {token}"})
     resp = urllib.request.urlopen(req, timeout=10)
     data = json.loads(resp.read())
