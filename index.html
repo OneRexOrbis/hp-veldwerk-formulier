@@ -912,6 +912,8 @@ const cls = disc.includes('1001')||disc==='AP04'||disc==='BRL1000' ? 'brl1001' :
 const label = disc.includes('1001')||disc==='AP04'||disc==='BRL1000' ? 'AP04' :
           disc.includes('1002') ? '1002' :
           disc==='BRL6000'||disc.includes('6000') ? '6000' : '2000';
+        return `<div class="pick-result" onclick="selectProject('${p.projectnummer}')">
+          <div class="pr-header"><span class="pr-pid">${p.projectnummer}</span><span class="mod-badge ${cls}">${label}</span></div>
           <div class="pr-addr">${p.adres||'—'}</div>
           <div class="pr-info">${p.opdrachtgever||''}</div>
         </div>`;
