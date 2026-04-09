@@ -762,6 +762,7 @@
     <button class="btn btn-s" onclick="window.print()">🖨️ PDF bijlage</button>
     <button class="btn btn-d" onclick="doJSON()">📄 Export JSON</button>
     <button class="btn btn-s" id="btn-draft" onclick="slaaTussentijdsOp()">💾 Tussentijds opslaan</button>
+    <button class="btn btn-s no-print" id="btn-fase1" onclick="fase1Afronden()">📋 Fase 1 afronden</button>
     <button class="btn btn-p" id="btn-opslaan" onclick="definitiefMelden()">✅ Definitief melden</button>
   </div>
   <div id="draft-status" style="text-align:center;font-size:11px;color:var(--gy);padding:6px 0 2px"></div>
@@ -1709,6 +1710,10 @@ function selectProject(pid){
       showForm();
       // Draft herladen als die bestaat
       _laadDraftIndienBeschikbaar(pid);
+      // Check of er al een fase 1 is ingeleverd (heropenen-flow BRL 2000)
+      if (activeModule === '2000') {
+        _checkFase1Klaar(pid);
+      }
     })
     .catch(err => {
       results.innerHTML = `<div class="pick-empty">Laden mislukt: ${err.message}</div>`;
@@ -1739,6 +1744,93 @@ async function _laadDraftIndienBeschikbaar(pid) {
     _autoSaveSchedule();
   } catch(e) {
     _autoSaveSchedule();
+  }
+}
+
+async function _checkFase1Klaar(pid) {
+  try {
+    const resp = await fetch(`${API_URL}/api/compliance?project=${pid}`);
+    if (!resp.ok) return;
+    const result = await resp.json();
+    if (!result.ok || !result.compliance) return;
+    const c = result.compliance;
+    const fase1 = c.fase1 || {};
+    const conform1 = fase1.conformiteit || fase1.conformiteitsverklaring || {};
+    const fase1Klaar = conform1.ondertekend === true || conform1.signed === true;
+    if (!fase1Klaar) return;
+    const fase2 = c.fase2 || {};
+    const conform2 = fase2.conformiteit || fase2.conformiteitsverklaring || {};
+    const fase2Klaar = conform2.ondertekend === true || conform2.signed === true;
+    if (fase2Klaar) return; // volledig klaar, niets te doen
+    // Fase 1 klaar, fase 2 nog niet — toon banner
+    _toonFase1Banner(c);
+  } catch(e) {
+    // stil falen — niet kritiek
+  }
+}
+
+function _toonFase1Banner(compliance) {
+  let banner = document.getElementById('fase1-banner');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'fase1-banner';
+    banner.style.cssText = 'margin:0 12px 10px;padding:12px 14px;background:#FFF8E1;border:1px solid #FDE68A;border-radius:8px;font-size:12px;font-weight:600;color:#92400E;display:flex;align-items:center;justify-content:space-between;gap:10px';
+    // Voeg in vóór de module-sectie
+    const modSec = document.getElementById('mod-2000');
+    if (modSec && modSec.parentNode) {
+      modSec.parentNode.insertBefore(banner, modSec);
+    }
+  }
+  const proj = compliance.project || {};
+  const datum = proj.datum_veldwerk || '';
+  banner.innerHTML = `
+    <span>📋 Fase 1 ingeleverd (${datum}) — klaar voor fase 2</span>
+    <button onclick="_herstelFase1()" style="background:var(--am);color:white;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">Fase 2 starten</button>
+  `;
+  banner.dataset.fase1 = JSON.stringify(compliance);
+}
+
+function _herstelFase1() {
+  const banner = document.getElementById('fase1-banner');
+  if (!banner || !banner.dataset.fase1) return;
+  try {
+    const compliance = JSON.parse(banner.dataset.fase1);
+    _herstelDraft(compliance);
+    showPhase(2);
+    banner.style.display = 'none';
+    showToast('✓ Fase 1 hersteld — vul fase 2 in');
+  } catch(e) {
+    showToast('✗ Herstellen mislukt');
+  }
+}
+
+async function fase1Afronden() {
+  if (!PROJECT.projectnummer) { showToast('⚠ Geen project geselecteerd'); return; }
+  if (currentPhase !== 1) { showToast('⚠ Ga naar fase 1 om af te ronden'); return; }
+  if (!confirm('Fase 1 afronden en opslaan? Je kunt later terugkomen voor fase 2.')) return;
+  const btn = document.getElementById('btn-fase1');
+  btn.disabled = true;
+  btn.textContent = '⏳ Bezig...';
+  try {
+    const data = buildExport();
+    // Stuur als compliance maar met marker dat het fase1-only is
+    data._fase1_only = true;
+    const resp = await fetch(`${API_URL}/api/compliance`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(data)
+    });
+    const result = await resp.json();
+    if (result.ok) {
+      showToast('✓ Fase 1 opgeslagen — tot fase 2!');
+    } else {
+      showToast('✗ Fout: ' + (result.error || 'onbekend'));
+    }
+  } catch(e) {
+    showToast('✗ Verbindingsfout');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '📋 Fase 1 afronden';
   }
 }
 
