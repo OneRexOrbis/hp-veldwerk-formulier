@@ -247,6 +247,22 @@
     <div class="info" id="d-info"></div>
   </div>
 
+  <!-- ═══ FOTO'S ═══ -->
+  <div class="card no-print" id="foto-sectie">
+    <div class="card-t"><span class="ic">📷</span> Foto's uploaden</div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <label style="flex:1">
+        <input type="file" id="foto-camera" accept="image/*" capture="environment" style="display:none" onchange="fotoGekozen(this)">
+        <div class="btn btn-p" style="text-align:center;cursor:pointer" onclick="document.getElementById('foto-camera').click()">📸 Camera</div>
+      </label>
+      <label style="flex:1">
+        <input type="file" id="foto-galerij" accept="image/*" multiple style="display:none" onchange="fotoGekozen(this)">
+        <div class="btn btn-s" style="text-align:center;cursor:pointer" onclick="document.getElementById('foto-galerij').click()">🖼️ Galerij</div>
+      </label>
+    </div>
+    <div id="foto-wachtrij" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+  </div>
+
   <!-- ═══════════════════════════════════════════════
        MODULE: BRL SIKB 2000 (NEN 5740)
        ═══════════════════════════════════════════════ -->
@@ -966,7 +982,80 @@ async function definitiefMelden() {
   }
 }
 
-function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000)}
+function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
+
+// ─── FOTO'S ────────────────────────────────────────
+const FOTO_MAX_PX = 1920;
+const FOTO_KWALITEIT = 0.85;
+
+function fotoGekozen(input) {
+  if (!PROJECT.projectnummer) { showToast('⚠ Eerst een project kiezen'); input.value=''; return; }
+  Array.from(input.files).forEach(file => _fotoVerwerken(file));
+  input.value = '';
+}
+
+function _fotoVerwerken(file) {
+  const id = 'foto_' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
+  const wachtrij = document.getElementById('foto-wachtrij');
+
+  // Thumbnail kaartje aanmaken
+  const kaart = document.createElement('div');
+  kaart.id = id;
+  kaart.style.cssText = 'width:80px;text-align:center;position:relative';
+  kaart.innerHTML = `
+    <div style="width:80px;height:80px;background:var(--gy-l);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px">⏳</div>
+    <div style="font-size:9px;color:var(--gy);margin-top:3px;word-break:break-all">${file.name.slice(0,16)}</div>`;
+  wachtrij.appendChild(kaart);
+
+  // Resize via canvas, dan uploaden
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const schaal = Math.min(1, FOTO_MAX_PX / Math.max(img.width, img.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(img.width * schaal);
+      canvas.height = Math.round(img.height * schaal);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(blob => {
+        const fr2 = new FileReader();
+        fr2.onload = ev => {
+          const b64 = ev.target.result.split(',')[1];
+          _fotoUploaden(id, file.name, b64, 'image/jpeg');
+        };
+        fr2.readAsDataURL(blob);
+      }, 'image/jpeg', FOTO_KWALITEIT);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function _fotoUploaden(id, naam, b64, mimetype) {
+  try {
+    const resp = await fetch(`${API_URL}/api/foto`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ project: PROJECT.projectnummer, bestandsnaam: naam, data_base64: b64, mimetype })
+    });
+    const result = await resp.json();
+    const kaart = document.getElementById(id);
+    if (!kaart) return;
+    if (result.ok) {
+      kaart.querySelector('div').innerHTML = '✅';
+      kaart.querySelector('div').style.background = '#d1fae5';
+      showToast(`✓ ${naam} geüpload`);
+    } else {
+      kaart.querySelector('div').innerHTML = '❌';
+      kaart.querySelector('div').style.background = '#fee2e2';
+      showToast(`✗ Upload mislukt: ${result.error||'onbekend'}`);
+    }
+  } catch(e) {
+    const kaart = document.getElementById(id);
+    if (kaart) { kaart.querySelector('div').innerHTML = '❌'; kaart.querySelector('div').style.background='#fee2e2'; }
+    showToast('✗ Verbindingsfout bij foto-upload');
+  }
+}
 
 // ─── PIN ───────────────────────────────────────────
 const PIN='2026';
