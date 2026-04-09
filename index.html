@@ -225,6 +225,9 @@
       <input type="tel" maxlength="1" inputmode="numeric">
     </div>
     <div class="pin-error" id="pin-error"></div>
+    <input id="pin-naam" type="text" placeholder="Jouw naam (verplicht)"
+      style="margin-top:12px;width:100%;padding:10px 12px;border:2px solid var(--bd);border-radius:10px;font-size:14px;font-family:inherit;color:var(--dk);background:var(--gy-l);box-sizing:border-box">
+    <div id="pin-naam-error" style="font-size:12px;color:var(--rd);font-weight:600;height:16px;margin-top:4px"></div>
   </div>
 </div>
 
@@ -557,8 +560,10 @@
   <div class="actions no-print" style="border-top:2px solid var(--bd);padding-top:16px">
     <button class="btn btn-s" onclick="window.print()">🖨️ PDF bijlage</button>
     <button class="btn btn-d" onclick="doJSON()">📄 Export JSON</button>
-    <button class="btn btn-p" id="btn-opslaan" onclick="opslaanCompliance()">💾 Opslaan &amp; PDF</button>
+    <button class="btn btn-s" id="btn-draft" onclick="slaaTussentijdsOp()">💾 Tussentijds opslaan</button>
+    <button class="btn btn-p" id="btn-opslaan" onclick="definitiefMelden()">✅ Definitief melden</button>
   </div>
+  <div id="draft-status" style="text-align:center;font-size:11px;color:var(--gy);padding:6px 0 2px"></div>
 
   <div class="print-footer">
     Hopman en Peters B.V. — Utrechtseweg 230, 3818 EN Amersfoort — NC-SIK-10093<br>
@@ -883,13 +888,61 @@ function doJSON() {
   showToast('✓ JSON geëxporteerd');
 }
 
-async function opslaanCompliance() {
+// ─── DRAFT ─────────────────────────────────────────
+let _autoSaveTimer = null;
+
+function _gebruikersnaam() {
+  return sessionStorage.getItem('hp_vw_naam') || '';
+}
+
+function _draftStatusToon(tekst) {
+  const el = document.getElementById('draft-status');
+  if (el) el.textContent = tekst;
+}
+
+function _autoSaveSchedule() {
+  clearTimeout(_autoSaveTimer);
+  _autoSaveTimer = setTimeout(() => slaaTussentijdsOp(true), 30000);
+}
+
+async function slaaTussentijdsOp(stil = false) {
+  if (!PROJECT.projectnummer) return;
+  const naam = _gebruikersnaam();
+  if (!naam) { showToast('⚠ Naam onbekend — log opnieuw in'); return; }
+  const btn = document.getElementById('btn-draft');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Opslaan...'; }
+  try {
+    const resp = await fetch(`${API_URL}/api/draft`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ project: PROJECT.projectnummer, naam, data: buildExport() })
+    });
+    const result = await resp.json();
+    if (result.ok) {
+      const ts = new Date().toLocaleTimeString('nl-NL', {hour:'2-digit',minute:'2-digit'});
+      _draftStatusToon(`Tussentijds opgeslagen om ${ts} door ${naam}`);
+      if (!stil) showToast('✓ Draft opgeslagen');
+    } else if (resp.status === 423) {
+      showToast(`⛔ In gebruik door ${result.locked_by}`);
+    } else {
+      if (!stil) showToast('✗ Opslaan mislukt: ' + (result.error || 'onbekend'));
+    }
+  } catch(e) {
+    if (!stil) showToast('✗ Verbindingsfout bij opslaan');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '💾 Tussentijds opslaan'; }
+    _autoSaveSchedule();
+  }
+}
+
+async function definitiefMelden() {
   if (!PROJECT.projectnummer) { showToast('⚠ Geen project geselecteerd'); return; }
+  if (!confirm('Definitief melden? Het formulier wordt ingediend en omgezet naar PDF.')) return;
   const btn = document.getElementById('btn-opslaan');
   btn.disabled = true;
   btn.textContent = '⏳ Bezig...';
   try {
-    const data = buildExport(); // ongemaskerd — handtekening_base64 intact
+    const data = buildExport();
     const resp = await fetch(`${API_URL}/api/compliance`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
@@ -897,7 +950,11 @@ async function opslaanCompliance() {
     });
     const result = await resp.json();
     if (result.ok) {
-      showToast('✓ Opgeslagen — PDF volgt binnen 5 min');
+      // Draft verwijderen na succesvolle indiening
+      await fetch(`${API_URL}/api/draft?project=${PROJECT.projectnummer}`, { method: 'DELETE' });
+      clearTimeout(_autoSaveTimer);
+      _draftStatusToon('');
+      showToast('✓ Ingediend — PDF volgt binnen 5 min');
     } else {
       showToast('✗ Fout: ' + (result.error || 'onbekend'));
     }
@@ -905,7 +962,7 @@ async function opslaanCompliance() {
     showToast('✗ Verbindingsfout');
   } finally {
     btn.disabled = false;
-    btn.textContent = '💾 Opslaan & PDF';
+    btn.textContent = '✅ Definitief melden';
   }
 }
 
@@ -922,8 +979,18 @@ function initPin(){
       if(e.target.value&&i<3)inputs[i+1].focus();
       if(i===3&&e.target.value){
         const code=Array.from(inputs).map(x=>x.value).join('');
-        if(code===PIN){sessionStorage.setItem('hp_vw_ok','1');inputs.forEach(x=>{x.style.borderColor='var(--hp)';x.style.background='var(--hp)';x.style.color='white'});setTimeout(unlock,300)}
-        else{document.getElementById('pin-error').textContent='Onjuiste pincode';inputs.forEach(x=>x.classList.add('wrong'));setTimeout(()=>{inputs.forEach(x=>{x.classList.remove('wrong');x.value=''});inputs[0].focus();document.getElementById('pin-error').textContent=''},600)}
+        if(code===PIN){
+          const naam=(document.getElementById('pin-naam').value||'').trim();
+          if(!naam){document.getElementById('pin-naam-error').textContent='Vul eerst je naam in';document.getElementById('pin-naam').focus();inputs.forEach(x=>{x.value=''});inputs[0].focus();return}
+          sessionStorage.setItem('hp_vw_ok','1');
+          sessionStorage.setItem('hp_vw_naam',naam);
+          inputs.forEach(x=>{x.style.borderColor='var(--hp)';x.style.background='var(--hp)';x.style.color='white'});
+          setTimeout(unlock,300)
+        } else {
+          document.getElementById('pin-error').textContent='Onjuiste pincode';
+          inputs.forEach(x=>x.classList.add('wrong'));
+          setTimeout(()=>{inputs.forEach(x=>{x.classList.remove('wrong');x.value=''});inputs[0].focus();document.getElementById('pin-error').textContent=''},600)
+        }
       }
     });
     inp.addEventListener('keydown',e=>{if(e.key==='Backspace'&&!e.target.value&&i>0){inputs[i-1].focus();inputs[i-1].value=''}});
@@ -1018,10 +1085,82 @@ function selectProject(pid){
       PROJECT.partij = pf.partij || null;
       prefill();
       showForm();
+      // Draft herladen als die bestaat
+      _laadDraftIndienBeschikbaar(pid);
     })
     .catch(err => {
       results.innerHTML = `<div class="pick-empty">Laden mislukt: ${err.message}</div>`;
     });
+}
+
+async function _laadDraftIndienBeschikbaar(pid) {
+  try {
+    const resp = await fetch(`${API_URL}/api/draft?project=${pid}`);
+    if (!resp.ok) { _autoSaveSchedule(); return; }
+    const result = await resp.json();
+    if (!result.ok || !result.draft) { _autoSaveSchedule(); return; }
+    const draft = result.draft;
+    const naam = _gebruikersnaam();
+    const ouderDan30min = (Date.now()/1000 - (draft.timestamp||0)) > 1800;
+    // Geblokkeerd als iemand anders de draft heeft en die is niet verlopen
+    if (draft.naam && draft.naam !== naam && !ouderDan30min) {
+      showToast(`⛔ In gebruik door ${draft.naam}`);
+      showPicker();
+      return;
+    }
+    // Eigen draft of verlopen lock: aanbieden om te herladen
+    const ts = new Date(draft.timestamp * 1000).toLocaleString('nl-NL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+    if (confirm(`Er is een opgeslagen concept van ${draft.naam||'onbekend'} (${ts}). Verder gaan?`)) {
+      _herstelDraft(draft.data);
+      _draftStatusToon(`Concept herladen van ${ts} — ${draft.naam||''}`);
+    }
+    _autoSaveSchedule();
+  } catch(e) {
+    _autoSaveSchedule();
+  }
+}
+
+function _herstelDraft(data) {
+  if (!data) return;
+  // Simpele velden via DOM — handtekeningen worden niet hersteld (veiligheid)
+  const set = (id, val) => { const el=document.getElementById(id); if(el&&val!=null) el.value=val; };
+  try {
+    const p = data.project || data;
+    set('f-datum', p.datum_veldwerk||'');
+    set('f-datum-gw', p.datum_grondwater||'');
+    // Fase 1
+    const f1 = data.fase1 || {};
+    set('f-klic', (f1.klic||{}).ref||'');
+    set('f-klic-d', (f1.klic||{}).datum||'');
+    set('f1-afw', (f1.protocol_2001||{}).afwijkingen_toelichting||'');
+    set('f1-grond', (f1.grond||{}).overtollig||'');
+    set('f1-opm', f1.opmerkingen||'');
+    // Fase 2
+    const f2 = data.fase2 || {};
+    set('f2-afw', (f2.protocol_2002||{}).afwijkingen_toelichting||'');
+    set('f2-opm', f2.opmerkingen||'');
+    // 1001
+    const ap = data;
+    set('ap-cert', (ap.project||{}).cert_monsternemer||'');
+    set('ap-terrein-bijz', (ap.terreininspectie||{}).bijzonderheden||'');
+    set('ap-grondsoort', (ap.partijcontrole||{}).grondsoort||'');
+    set('ap-vocht', (ap.partijcontrole||{}).vocht||'');
+    set('ap-grepen', (ap.monstername||{}).aantal_grepen||'');
+    set('ap-labcode', (ap.monstername||{}).labcode||'');
+    set('ap-asb-beschr', (ap.visuele_asbestinspectie||{}).beschrijving||'');
+    set('ap-afw', (ap.afwijkingen||{}).toelichting||'');
+    set('ap-opm', ap.opmerkingen||'');
+    set('ap-ts-aanvang', (ap.tijdsbesteding||{}).aanvang||'');
+    set('ap-ts-einde', (ap.tijdsbesteding||{}).einde||'');
+    set('ap-ts-opm', (ap.tijdsbesteding||{}).opmerkingen||'');
+    // 1002
+    set('bw-pc-bijz', (ap.partijcontrole||{}).bijzonderheden||'');
+    set('bw-vi-bijz', (ap.visuele_inspectie||{}).bijzonderheden||'');
+    set('bw-labcode', (ap.monsteroverdracht||{}).labcode||'');
+    set('bw-lab', (ap.monsteroverdracht||{}).laboratorium||'');
+    set('bw-afw', (ap.afwijkingen||{}).toelichting||'');
+    set('bw-opm', ap.opmerkingen||'');
+  } catch(e) { console.warn('Draft herstel gedeeltelijk:', e); }
 }
 
 // ─── Init ──────────────────────────────────────────
