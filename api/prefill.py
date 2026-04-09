@@ -77,12 +77,14 @@ class handler(BaseHTTPRequestHandler):
                         "opdrachtgever": project.get("opdrachtgever", ""),
                         "discipline": project.get("discipline", "BRL2000"),
                         "protocollen": ["2001"],
+                        "protocol_suggestie": project.get("protocol_suggestie", "1001"),
                         "_bron": "index (geen prefill beschikbaar)",
                     }})
                     status = 200
                 else:
                     pf = dict(project["prefill"] or {})
                     pf.setdefault("discipline", project.get("discipline", ""))
+                    pf.setdefault("protocol_suggestie", project.get("protocol_suggestie", "1001"))
                     body = json.dumps({"ok": True, "prefill": pf})
                     status = 200
             except Exception as e:
