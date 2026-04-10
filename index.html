@@ -1819,31 +1819,48 @@ function _herstelFase1() {
 async function fase1Afronden() {
   if (!PROJECT.projectnummer) { showToast('⚠ Geen project geselecteerd'); return; }
   if (currentPhase !== 1) { showToast('⚠ Ga naar fase 1 om af te ronden'); return; }
-  if (!confirm('Fase 1 afronden en opslaan? Je kunt later terugkomen voor fase 2.')) return;
+  if (!confirm('Fase 1 afronden? Je gaat door naar fase 2.')) return;
   const btn = document.getElementById('btn-fase1');
   btn.disabled = true;
   btn.textContent = '⏳ Bezig...';
+
+  // 1. Altijd lokaal opslaan — ook offline werkt de overgang
+  _localSaveNu();
+
+  // 2. SharePoint best-effort (stil falen als geen netwerk)
   try {
     const data = buildExport();
-    // Stuur als compliance maar met marker dat het fase1-only is
     data._fase1_only = true;
-    const resp = await fetch(`${API_URL}/api/compliance`, {
+    await fetch(`${API_URL}/api/compliance`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(data)
     });
-    const result = await resp.json();
-    if (result.ok) {
-      showToast('✓ Fase 1 opgeslagen — tot fase 2!');
-    } else {
-      showToast('✗ Fout: ' + (result.error || 'onbekend'));
-    }
-  } catch(e) {
-    showToast('✗ Verbindingsfout');
-  } finally {
-    btn.disabled = false;
-    btn.textContent = '📋 Fase 1 afronden';
+  } catch(e) { /* offline — lokaal opgeslagen, doorgaan */ }
+
+  // 3. Altijd doorschakelen naar fase 2 + banner tonen
+  btn.disabled = false;
+  btn.textContent = '✅ Fase 1 afgerond';
+  btn.style.background = 'var(--hp-pale)';
+  btn.style.color = 'var(--hp)';
+  btn.onclick = null;
+
+  _toonFase1AfgerondBanner();
+  showPhase(2);
+  showToast('✓ Fase 1 afgerond — door naar fase 2');
+}
+
+function _toonFase1AfgerondBanner() {
+  let banner = document.getElementById('fase1-afgerond-banner');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'fase1-afgerond-banner';
+    banner.className = 'status-banner phase1-done';
+    const modSec = document.getElementById('mod-2000');
+    if (modSec && modSec.parentNode) modSec.parentNode.insertBefore(banner, modSec);
   }
+  const datum = document.getElementById('f-datum')?.value || '';
+  banner.innerHTML = `✅ Fase 1 afgerond${datum ? ' (' + datum + ')' : ''} — vul fase 2 in`;
 }
 
 function _herstelDraft(data) {
