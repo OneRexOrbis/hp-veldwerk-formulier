@@ -473,7 +473,7 @@
           <div class="fld"><label>Datum</label><input type="date" id="f1-sd"></div>
         </div>
       </div>
-      <div class="actions no-print"><button class="btn btn-p" onclick="saveFase(1)">💾 Fase 1 opslaan</button></div>
+      <div class="actions no-print"><button class="btn btn-p" id="btn-fase1" onclick="fase1Afronden()">📋 Fase 1 afronden</button></div>
     </div><!-- /phase-1 -->
 
     <!-- FASE 2 -->
@@ -527,7 +527,6 @@
           <div class="fld"><label>Datum</label><input type="date" id="f2-sd"></div>
         </div>
       </div>
-      <div class="actions no-print"><button class="btn btn-p" onclick="saveFase(2)">💾 Fase 2 opslaan</button></div>
     </div><!-- /phase-2 -->
   </div><!-- /mod-2000 -->
 
@@ -653,7 +652,6 @@
           <div class="fld"><label>Datum</label><input type="date" id="ap-pl-sd"></div>
         </div>
     </div>
-    <div class="actions no-print"><button class="btn btn-p" onclick="saveModule('1001')">💾 Opslaan</button></div>
   </div><!-- /mod-1001 -->
 
   <!-- ═══════════════════════════════════════════════
@@ -754,16 +752,12 @@
           <div class="fld"><label>Datum</label><input type="date" id="bw-pl-sd"></div>
         </div>
     </div>
-    <div class="actions no-print"><button class="btn btn-p" onclick="saveModule('1002')">💾 Opslaan</button></div>
   </div><!-- /mod-1002 -->
 
   <!-- ═══ EXPORT BAR ═══ -->
   <div class="actions no-print" style="border-top:2px solid var(--bd);padding-top:16px">
-    <button class="btn btn-s" onclick="window.print()">🖨️ PDF bijlage</button>
-    <button class="btn btn-d" onclick="doJSON()">📄 Export JSON</button>
-    <button class="btn btn-s" id="btn-draft" onclick="slaaTussentijdsOp()">💾 Tussentijds opslaan</button>
-    <button class="btn btn-s no-print" id="btn-fase1" onclick="fase1Afronden()">📋 Fase 1 afronden</button>
-    <button class="btn btn-p" id="btn-opslaan" onclick="definitiefMelden()">✅ Definitief melden</button>
+    <button class="btn btn-d" id="btn-json" onclick="doJSON()" style="display:none">📄 Export JSON</button>
+    <button class="btn btn-p" id="btn-opslaan" onclick="definitiefMelden()" disabled style="opacity:.5;cursor:not-allowed">✅ Definitief melden</button>
   </div>
   <div id="draft-status" style="text-align:center;font-size:11px;color:var(--gy);padding:6px 0 2px"></div>
 
@@ -1425,13 +1419,10 @@ function doJSON() {
   showToast('✓ JSON geëxporteerd');
 }
 
-// ─── DRAFT ─────────────────────────────────────────
-let _autoSaveTimer = null;
-
+// ─── DRAFT / AUTO-SAVE ─────────────────────────────
 function _gebruikersnaam() {
   return sessionStorage.getItem('hp_vw_naam') || '';
 }
-
 function _gebruikerObj() {
   const id = sessionStorage.getItem('hp_vw_id') || '';
   return USERS.find(u => u.id === id) || null;
@@ -1445,39 +1436,58 @@ function _draftStatusToon(tekst) {
   if (el) el.textContent = tekst;
 }
 
-function _autoSaveSchedule() {
-  clearTimeout(_autoSaveTimer);
-  _autoSaveTimer = setTimeout(() => slaaTussentijdsOp(true), 30000);
+// ─── localStorage auto-save ────────────────────────
+function _lsKey() { return 'vw_draft_' + (PROJECT.projectnummer || ''); }
+
+function _localSaveNu() {
+  if (!PROJECT.projectnummer) return;
+  try {
+    const ts = Date.now();
+    localStorage.setItem(_lsKey(), JSON.stringify({ ts, naam: _gebruikersnaam(), data: buildExport() }));
+    const tijd = new Date(ts).toLocaleTimeString('nl-NL', {hour: '2-digit', minute: '2-digit'});
+    _draftStatusToon('Automatisch opgeslagen om ' + tijd);
+  } catch(e) { /* quota — stil falen */ }
 }
 
-async function slaaTussentijdsOp(stil = false) {
-  if (!PROJECT.projectnummer) return;
-  const naam = _gebruikersnaam();
-  if (!naam) { showToast('⚠ Naam onbekend — log opnieuw in'); return; }
-  const btn = document.getElementById('btn-draft');
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ Opslaan...'; }
+let _lsTimer = null;
+function _localSaveSchedule() {
+  clearTimeout(_lsTimer);
+  _lsTimer = setTimeout(_localSaveNu, 1500);
+}
+
+function _localRestore(pid) {
   try {
-    const resp = await fetch(`${API_URL}/api/draft`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ project: PROJECT.projectnummer, naam, data: buildExport() })
-    });
-    const result = await resp.json();
-    if (result.ok) {
-      const ts = new Date().toLocaleTimeString('nl-NL', {hour:'2-digit',minute:'2-digit'});
-      _draftStatusToon(`Tussentijds opgeslagen om ${ts} door ${naam}`);
-      if (!stil) showToast('✓ Draft opgeslagen');
-    } else if (resp.status === 423) {
-      showToast(`⛔ In gebruik door ${result.locked_by}`);
-    } else {
-      if (!stil) showToast('✗ Opslaan mislukt: ' + (result.error || 'onbekend'));
+    const raw = localStorage.getItem('vw_draft_' + pid);
+    if (!raw) return false;
+    const { ts, naam, data } = JSON.parse(raw);
+    const tijd = new Date(ts).toLocaleString('nl-NL', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
+    if (confirm(`Opgeslagen concept gevonden van ${naam||'onbekend'} (${tijd}). Verder gaan?`)) {
+      _herstelDraft(data);
+      _draftStatusToon('Concept hersteld van ' + tijd);
+      return true;
     }
-  } catch(e) {
-    if (!stil) showToast('✗ Verbindingsfout bij opslaan');
-  } finally {
-    if (btn) { btn.disabled = false; btn.textContent = '💾 Tussentijds opslaan'; }
-    _autoSaveSchedule();
-  }
+  } catch(e) {}
+  return false;
+}
+
+function _localClear() {
+  if (PROJECT.projectnummer) localStorage.removeItem(_lsKey());
+}
+
+// ─── Export JSON: alleen voor eigenaar / projectleider ──
+function _toonExportJSON() {
+  const rol = _gebruikerRol();
+  const btn = document.getElementById('btn-json');
+  if (btn) btn.style.display = (rol === 'eigenaar' || rol === 'projectleider') ? '' : 'none';
+}
+
+// ─── Definitief melden knop activeren ──────────────
+function _activeerMeldenKnop() {
+  const btn = document.getElementById('btn-opslaan');
+  if (!btn) return;
+  btn.disabled = false;
+  btn.style.opacity = '';
+  btn.style.cursor = '';
 }
 
 async function definitiefMelden() {
@@ -1497,7 +1507,8 @@ async function definitiefMelden() {
     if (result.ok) {
       // Draft verwijderen na succesvolle indiening
       await fetch(`${API_URL}/api/draft?project=${PROJECT.projectnummer}`, { method: 'DELETE' });
-      clearTimeout(_autoSaveTimer);
+      _localClear();
+      clearTimeout(_lsTimer);
       _draftStatusToon('');
       showToast('✓ Ingediend — PDF volgt binnen 5 min');
     } else {
@@ -1708,6 +1719,8 @@ function selectProject(pid){
       PROJECT.protocol_suggestie = pf.protocol_suggestie || null;
       prefill();
       showForm();
+      _activeerMeldenKnop();
+      _toonExportJSON();
       // Draft herladen als die bestaat
       _laadDraftIndienBeschikbaar(pid);
       // Check of er al een fase 1 is ingeleverd (heropenen-flow BRL 2000)
@@ -1721,30 +1734,29 @@ function selectProject(pid){
 }
 
 async function _laadDraftIndienBeschikbaar(pid) {
+  // 1. Probeer localStorage eerst (snel, offline beschikbaar)
+  if (_localRestore(pid)) return;
+
+  // 2. Fallback: SharePoint draft API (cross-device sync)
   try {
     const resp = await fetch(`${API_URL}/api/draft?project=${pid}`);
-    if (!resp.ok) { _autoSaveSchedule(); return; }
+    if (!resp.ok) return;
     const result = await resp.json();
-    if (!result.ok || !result.draft) { _autoSaveSchedule(); return; }
+    if (!result.ok || !result.draft) return;
     const draft = result.draft;
     const naam = _gebruikersnaam();
     const ouderDan30min = (Date.now()/1000 - (draft.timestamp||0)) > 1800;
-    // Geblokkeerd als iemand anders de draft heeft en die is niet verlopen
     if (draft.naam && draft.naam !== naam && !ouderDan30min) {
       showToast(`⛔ In gebruik door ${draft.naam}`);
       showPicker();
       return;
     }
-    // Eigen draft of verlopen lock: aanbieden om te herladen
     const ts = new Date(draft.timestamp * 1000).toLocaleString('nl-NL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
     if (confirm(`Er is een opgeslagen concept van ${draft.naam||'onbekend'} (${ts}). Verder gaan?`)) {
       _herstelDraft(draft.data);
       _draftStatusToon(`Concept herladen van ${ts} — ${draft.naam||''}`);
     }
-    _autoSaveSchedule();
-  } catch(e) {
-    _autoSaveSchedule();
-  }
+  } catch(e) { /* stil falen */ }
 }
 
 async function _checkFase1Klaar(pid) {
@@ -1954,6 +1966,13 @@ function _herstelDraft(data) {
 document.addEventListener('DOMContentLoaded',()=>{
   initPin();
   setTimeout(()=>{initSig(1);initSig(2);initSig(3);initSig(4);initSig(5)},200);
+
+  // Auto-save op elke veldwijziging (input, select, textarea)
+  const mc = document.getElementById('main-content');
+  mc.addEventListener('input', _localSaveSchedule);
+  mc.addEventListener('change', _localSaveSchedule);
+  // Toggle-klikken (buttons in .tsw) vangen
+  mc.addEventListener('click', e => { if (e.target.closest('.tsw')) _localSaveSchedule(); });
 });
 </script>
 <script>
