@@ -1816,38 +1816,39 @@ function _herstelFase1() {
   }
 }
 
-async function fase1Afronden() {
+function fase1Afronden() {
   if (!PROJECT.projectnummer) { showToast('⚠ Geen project geselecteerd'); return; }
   if (currentPhase !== 1) { showToast('⚠ Ga naar fase 1 om af te ronden'); return; }
   if (!confirm('Fase 1 afronden? Je gaat door naar fase 2.')) return;
-  const btn = document.getElementById('btn-fase1');
-  btn.disabled = true;
-  btn.textContent = '⏳ Bezig...';
 
-  // 1. Altijd lokaal opslaan — ook offline werkt de overgang
+  // 1. Lokaal opslaan
   _localSaveNu();
 
-  // 2. SharePoint best-effort (stil falen als geen netwerk)
+  // 2. Knop markeren als afgerond
+  const btn = document.getElementById('btn-fase1');
+  if (btn) {
+    btn.textContent = '✅ Fase 1 afgerond';
+    btn.style.background = 'var(--hp-pale)';
+    btn.style.color = 'var(--hp)';
+    btn.onclick = null;
+  }
+
+  // 3. Meteen naar fase 2 — zonder wachten op API
+  _toonFase1AfgerondBanner();
+  showPhase(2);
+  window.scrollTo(0, 0);
+  showToast('✓ Fase 1 afgerond — door naar fase 2');
+
+  // 4. SharePoint op de achtergrond (fire-and-forget)
   try {
     const data = buildExport();
     data._fase1_only = true;
-    await fetch(`${API_URL}/api/compliance`, {
+    fetch(`${API_URL}/api/compliance`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(data)
-    });
-  } catch(e) { /* offline — lokaal opgeslagen, doorgaan */ }
-
-  // 3. Altijd doorschakelen naar fase 2 + banner tonen
-  btn.disabled = false;
-  btn.textContent = '✅ Fase 1 afgerond';
-  btn.style.background = 'var(--hp-pale)';
-  btn.style.color = 'var(--hp)';
-  btn.onclick = null;
-
-  _toonFase1AfgerondBanner();
-  showPhase(2);
-  showToast('✓ Fase 1 afgerond — door naar fase 2');
+    }).catch(() => {}); // stil falen
+  } catch(e) {}
 }
 
 function _toonFase1AfgerondBanner() {
