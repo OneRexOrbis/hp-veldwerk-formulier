@@ -2007,6 +2007,10 @@ function _herstelDraft(data) {
     restoreToggle('f1_conform', p01.conform); restoreToggle('f1_afgerond', p01.afgerond);
     restoreToggle('f1_fotos', p01.fotos); restoreToggle('f1_overdracht', p01.overdracht);
     restoreToggle('f1_bentoniet', p01.bentoniet); restoreToggle('f1_peilbuizen', p01.peilbuizen);
+    if (p01.peilbuizen === 'y' && p01.peilbuizen_aantal) {
+      set('f1-pb-aantal', p01.peilbuizen_aantal);
+      const cpb = document.getElementById('cond-pb-aantal'); if (cpb) cpb.style.display = 'flex';
+    }
     restoreToggle('f1_filtergrind', p01.filtergrind); restoreToggle('f1_asbest', p01.asbest);
     restoreToggle('f1_meerwerk', p01.meerwerk); restoreToggle('f1_meerwerk_akkoord', p01.meerwerk_akkoord_pl);
     restoreToggle('f1_gestaakt', p01.gestaakte_boringen); restoreToggle('f1_afwijkingen', p01.afwijkingen);
@@ -2063,9 +2067,14 @@ function _herstelDraft(data) {
     // 1001
     const ap = data;
     set('ap-cert', (ap.project||{}).cert_monsternemer||'');
+    set('ap-tonnage', (ap.project||{}).tonnage_ton||'');
+    const apTK = (ap.partij||{}).type_keuring; if (apTK) { const el=document.getElementById('ap-type-keuring'); if(el) el.value=apTK; }
     set('ap-terrein-bijz', (ap.terreininspectie||{}).bijzonderheden||'');
-    set('ap-grondsoort', (ap.partijcontrole||{}).grondsoort||'');
-    set('ap-vocht', (ap.partijcontrole||{}).vocht||'');
+    const apPc = ap.partijcontrole || {};
+    set('ap-grondsoort', apPc.grondsoort||'');
+    set('ap-vocht', apPc.vocht||'');
+    if (apPc.geur === 'y') { set('ap-geur-beschr', apPc.geur_beschrijving||''); const el=document.getElementById('ap-geur-wrap'); if(el) el.style.display='block'; }
+    if (apPc.kleur === 'y') { set('ap-kleur-beschr', apPc.kleur_beschrijving||''); const el=document.getElementById('ap-kleur-wrap'); if(el) el.style.display='block'; }
     set('ap-grepen', (ap.monstername||{}).aantal_grepen||'');
     set('ap-labcode', (ap.monstername||{}).labcode||'');
     set('ap-asb-beschr', (ap.visuele_asbestinspectie||{}).beschrijving||'');
@@ -2074,6 +2083,21 @@ function _herstelDraft(data) {
     set('ap-ts-aanvang', (ap.tijdsbesteding||{}).aanvang||'');
     set('ap-ts-einde', (ap.tijdsbesteding||{}).einde||'');
     set('ap-ts-opm', (ap.tijdsbesteding||{}).opmerkingen||'');
+    // Herstel AP04 deelpartij-rijen
+    const apDps = ap.deelpartijen || [];
+    if (apDps.length) {
+      document.querySelectorAll('#ap-dp-rijen > div').forEach(r => r.remove()); apDpNr = 0;
+      apDps.forEach(dp => {
+        apDpAdd();
+        const row = document.getElementById('ap-dp-row-' + apDpNr);
+        if (!row) return;
+        if (dp.naam) row.querySelector('[data-dp-naam]').value = dp.naam;
+        if (dp.gewicht_ton) row.querySelector('[data-dp-gewicht]').value = dp.gewicht_ton;
+        if (dp.mengmonsters) row.querySelector('[data-dp-mm]').value = dp.mengmonsters;
+        if (dp.grepen) row.querySelector('[data-dp-grepen]').value = dp.grepen;
+        if (dp.opmerking) row.querySelector('[data-dp-opm]').value = dp.opmerking;
+      });
+    }
     // 1002
     set('bw-pc-bijz', (ap.partijcontrole||{}).bijzonderheden||'');
     set('bw-vi-bijz', (ap.visuele_inspectie||{}).bijzonderheden||'');
@@ -2081,6 +2105,13 @@ function _herstelDraft(data) {
     set('bw-lab', (ap.monsteroverdracht||{}).laboratorium||'');
     set('bw-afw', (ap.afwijkingen||{}).toelichting||'');
     set('bw-opm', ap.opmerkingen||'');
+    const bwPr = ap.partijregistratie || {};
+    set('bw-d95', bwPr.d95_mm||'');
+    set('bw-d95-door', bwPr.d95_bepaald_door||'');
+    set('bw-greep-kg', bwPr.greepgrootte_kg||'');
+    set('bw-monsters-n', bwPr.aantal_monsters||'');
+    set('bw-ts-aanvang', (ap.tijdsbesteding||{}).aanvang||'');
+    set('bw-ts-einde', (ap.tijdsbesteding||{}).einde||'');
   } catch(e) { console.warn('Draft herstel gedeeltelijk:', e); }
 }
 
@@ -2099,7 +2130,29 @@ document.addEventListener('DOMContentLoaded',()=>{
 </script>
 <script>
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js');
+  navigator.serviceWorker.register('/sw.js').then(reg => {
+    reg.addEventListener('updatefound', () => {
+      const newSW = reg.installing;
+      if (newSW) {
+        newSW.addEventListener('statechange', () => {
+          if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+            _toonUpdateBanner();
+          }
+        });
+      }
+    });
+  });
+  navigator.serviceWorker.addEventListener('message', e => {
+    if (e.data && e.data.type === 'SW_UPDATED') _toonUpdateBanner();
+  });
+}
+function _toonUpdateBanner() {
+  if (document.getElementById('sw-update-banner')) return;
+  const b = document.createElement('div');
+  b.id = 'sw-update-banner';
+  b.style = 'position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#1a5276;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;z-index:9999;box-shadow:0 2px 12px rgba(0,0,0,.3);display:flex;gap:12px;align-items:center';
+  b.innerHTML = '🔄 Nieuwe versie beschikbaar — <button onclick="location.reload()" style="background:#fff;color:#1a5276;border:none;border-radius:5px;padding:4px 10px;font-weight:700;cursor:pointer;font-size:13px">Vernieuwen</button>';
+  document.body.appendChild(b);
 }
 </script>
 </body>
