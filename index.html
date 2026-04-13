@@ -362,7 +362,8 @@
         <div class="trow"><span class="tl">Foto's genomen?</span><div class="tsw" data-f="f1_fotos"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
         <div class="trow"><span class="tl">Monsteroverdracht grond?</span><div class="tsw" data-f="f1_overdracht"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
         <div class="trow"><span class="tl">Boorgaten afgewerkt (bentoniet)?</span><div class="tsw" data-f="f1_bentoniet"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
-        <div class="trow"><span class="tl">Peilbuizen geplaatst + voorgepompt?</span><div class="tsw" data-f="f1_peilbuizen"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button><button onclick="tw(this,'v')">N.v.t.</button></div></div>
+        <div class="trow"><span class="tl">Peilbuizen geplaatst + voorgepompt?</span><div class="tsw" data-f="f1_peilbuizen"><button onclick="tw(this,'y');document.getElementById('cond-pb-aantal').style.display='flex'">Ja</button><button onclick="tw(this,'n');document.getElementById('cond-pb-aantal').style.display='none'">Nee</button><button onclick="tw(this,'v');document.getElementById('cond-pb-aantal').style.display='none'">N.v.t.</button></div></div>
+        <div class="fld" id="cond-pb-aantal" style="display:none;margin:2px 0 4px"><label>Aantal peilbuizen geplaatst</label><input type="number" id="f1-pb-aantal" min="1" placeholder="bijv. 3"></div>
         <div class="trow"><span class="tl">Filters omstort met filtergrind?</span><div class="tsw" data-f="f1_filtergrind"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button><button onclick="tw(this,'v')">N.v.t.</button></div></div>
         <div class="trow"><span class="tl">Asbest aangetroffen?</span><div class="tsw" data-f="f1_asbest"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
         <div class="trow"><span class="tl">Meerwerk uitgevoerd?</span><div class="tsw" data-f="f1_meerwerk"><button onclick="tw(this,'y');document.getElementById('cond-meerwerk').style.display='flex'">Ja</button><button onclick="tw(this,'n');document.getElementById('cond-meerwerk').style.display='none'">Nee</button></div></div>
@@ -502,8 +503,15 @@
         <div class="trow" style="margin-top:6px"><span class="tl">Meerwerk uitgevoerd?</span><div class="tsw" data-f="f2_meerwerk"><button onclick="tw(this,'y');document.getElementById('cond-meerwerk2').style.display='flex'">Ja</button><button onclick="tw(this,'n');document.getElementById('cond-meerwerk2').style.display='none'">Nee</button></div></div>
         <div class="trow" id="cond-meerwerk2" style="display:none;background:#FFF8E1"><span class="tl">Meerwerk akkoord projectleider?</span><div class="tsw" data-f="f2_meerwerk_akkoord"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
       </div>
+      <div class="card">
+        <div class="card-t"><span class="ic">🔄</span>Voorpompen per peilbuis (Protocol 2002 §7.3)</div>
+        <p style="font-size:11px;color:var(--gy);margin-bottom:6px">Registreer per peilbuis het voorpompvolume, de duur en of stabilisatie is bereikt.</p>
+        <div id="vp-rijen"></div>
+        <button type="button" onclick="addVpRij()" style="margin-top:8px;padding:6px 12px;border:1px solid #1a4e3a;color:#1a4e3a;background:white;border-radius:6px;cursor:pointer;font-size:12px">+ Peilbuis toevoegen</button>
+      </div>
       <div class="card" id="pb-meetwaarden-card">
         <div class="card-t"><span class="ic">📊</span>Peilbuizen — gemeten waarden (Protocol 2002)</div>
+        <p style="font-size:11px;color:var(--gy);margin-bottom:4px">Filt. m-mv = filterstelling (bijv. 2.0-3.0)</p>
         <div id="pb-metingen"></div>
         <button type="button" onclick="addPbRij()" style="margin-top:8px;padding:6px 12px;border:1px solid #1a4e3a;color:#1a4e3a;background:white;border-radius:6px;cursor:pointer;font-size:12px">+ Peilbuis toevoegen</button>
       </div>
@@ -523,7 +531,7 @@
           <input type="hidden" id="sig2-b64">
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
-          <div class="fld"><label>Naam</label><input id="f2-sn" class="prefilled"></div>
+          <div class="fld"><label>Naam</label><input id="f2-sn" class="prefilled" placeholder="n.v.t. bij solo-veldwerk"></div>
           <div class="fld"><label>Datum</label><input type="date" id="f2-sd"></div>
         </div>
       </div>
@@ -542,9 +550,20 @@
     </div>
     <div class="card">
       <div class="card-t"><span class="ic">📋</span>Partijgegevens aanvullend</div>
-      <div class="fld"><label>Type keuring (doelstelling)</label><select id="ap-type-keuring"><option value="">— kies —</option><option value="1">Doelstelling 1 — hergebruik</option><option value="2">Doelstelling 2 — depot</option><option value="3">Doelstelling 3 — stort</option></select></div>
+      <div class="fld"><label>Type keuring (doelstelling)</label><select id="ap-type-keuring"><option value="">— kies —</option><option value="Doelstelling 1 — hergebruik">Doelstelling 1 — hergebruik</option><option value="Doelstelling 2 — depot">Doelstelling 2 — depot</option><option value="Doelstelling 3 — stort">Doelstelling 3 — stort</option></select></div>
       <div class="fld"><label>Herkomst partij</label><input id="ap-herkomst" placeholder="bijv. slooplocatie, grondwerkzaamheden"></div>
-      <div class="fld"><label>Certificaatnummer monsternemer</label><input id="ap-cert" placeholder="bijv. BRL2000-12345"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+        <div class="fld"><label>Dichtheid (ton/m³)</label><input type="number" id="ap-dichtheid" step="0.01" value="1.65" placeholder="1.65" oninput="apBerekenTonnage()"></div>
+        <div class="fld"><label>Tonnage (ton) <span style="font-size:10px;color:#888">auto</span></label><input type="number" id="ap-tonnage" step="0.1" placeholder="auto"></div>
+        <div class="fld"><label>Erkenning monsternemer (BRL SIKB 1000)</label><input id="ap-cert" placeholder="bijv. NC-SIK-10093"></div>
+      </div>
+    </div>
+
+    <div class="section-title"><span>📦</span> Deelpartij-indeling</div>
+    <div class="card">
+      <div style="font-size:11px;color:#888;margin-bottom:6px">Min. 1 deelpartij verplicht. Bij &gt;10.000 ton meerdere deelpartijen (§3 Protocol 1001).</div>
+      <div id="ap-dp-rijen"></div>
+      <button class="dp-add" onclick="apDpAdd()" style="margin-top:6px">＋ Deelpartij toevoegen</button>
     </div>
 
     <div class="section-title"><span>🗺️</span> Terreininspectie</div>
@@ -569,8 +588,10 @@
     <div class="section-title"><span>🔍</span> Partijcontrole</div>
     <div class="card">
       <div class="trow"><span class="tl">Partij homogeen van samenstelling?</span><div class="tsw" data-f="ap_pc_homogeen"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
-      <div class="trow"><span class="tl">Chemische geur aanwezig?</span><div class="tsw" data-f="ap_pc_geur"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
-      <div class="trow"><span class="tl">Afwijkende kleur?</span><div class="tsw" data-f="ap_pc_kleur"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+      <div class="trow"><span class="tl">Chemische geur aanwezig?</span><div class="tsw" data-f="ap_pc_geur"><button onclick="tw(this,'y');document.getElementById('ap-geur-wrap').style.display='block'">Ja</button><button onclick="tw(this,'n');document.getElementById('ap-geur-wrap').style.display='none'">Nee</button></div></div>
+      <div id="ap-geur-wrap" style="display:none;padding:2px 0 4px"><div class="fld"><label>Beschrijving geur</label><input id="ap-geur-beschr" placeholder="bijv. licht chemisch, olieachtig"></div></div>
+      <div class="trow"><span class="tl">Afwijkende kleur?</span><div class="tsw" data-f="ap_pc_kleur"><button onclick="tw(this,'y');document.getElementById('ap-kleur-wrap').style.display='block'">Ja</button><button onclick="tw(this,'n');document.getElementById('ap-kleur-wrap').style.display='none'">Nee</button></div></div>
+      <div id="ap-kleur-wrap" style="display:none;padding:2px 0 4px"><div class="fld"><label>Beschrijving kleur</label><input id="ap-kleur-beschr" placeholder="bijv. donkergrijs, roestbruin"></div></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
         <div class="fld"><label>Grondsoort</label><select id="ap-grondsoort"><option value="">—</option><option>Zand</option><option>Klei</option><option>Leem</option><option>Veen</option><option>Gemengd</option></select></div>
         <div class="fld"><label>Vochtgehalte</label><select id="ap-vocht"><option value="">—</option><option>Droog</option><option>Matig vochtig</option><option>Vochtig</option><option>Nat</option></select></div>
@@ -598,7 +619,9 @@
       <div class="trow"><span class="tl">Monsters gekoeld bewaard en gelabeld?</span><div class="tsw" data-f="ap_mn_bewaard"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
       <div class="trow"><span class="tl">Monsteroverdracht conform procedure?</span><div class="tsw" data-f="ap_mn_overdracht"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
-        <div class="fld"><label>Aantal grepen per monster</label><input type="number" id="ap-grepen" min="1" placeholder="10"></div>
+        <div class="fld"><label>Aantal mengmonsters <span class="req">*</span></label><input type="number" id="ap-mengmonsters" min="1" placeholder="2" oninput="apBerekenGrepen()"></div>
+        <div class="fld"><label>Totaal aantal grepen</label><input type="number" id="ap-grepen-totaal" min="1" placeholder="20" oninput="apBerekenGrepen()"></div>
+        <div class="fld"><label>Grepen per mengmonster (auto)</label><input id="ap-grepen-per-mm" readonly placeholder="auto" style="background:var(--gy-l);color:var(--gy)"></div>
         <div class="fld"><label>Labcode</label><input id="ap-labcode" placeholder="L-2026-XXXX"></div>
         <div class="fld"><label>Greepgewicht emmer A (gram)</label><input type="number" id="ap-greep-a" min="0" placeholder="180"></div>
         <div class="fld"><label>Greepgewicht emmer B (gram)</label><input type="number" id="ap-greep-b" min="0" placeholder="180"></div>
@@ -613,8 +636,11 @@
       <div class="fld"><label>Opmerkingen</label><textarea id="ap-ts-opm" rows="2" placeholder="bijv. wachttijden, weersomstandigheden"></textarea></div>
     </div>
     <div class="card">
-      <div class="card-t"><span class="ic">📷</span>Foto's &amp; Inmeting</div>
-      <div class="trow"><span class="tl">Foto's genomen?</span><div class="tsw" data-f="ap_fotos"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+      <div class="card-t"><span class="ic">📷</span>Foto's &amp; Situatieschets (Bijlage 6 Protocol 1001)</div>
+      <div class="trow"><span class="tl">Foto's genomen (min. 2 met referentieobject)?</span><div class="tsw" data-f="ap_fotos"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+      <div class="fld" style="margin-top:4px"><label>Aantal foto's gemaakt</label><input type="number" id="ap-fotos-aantal" min="0" placeholder="2"></div>
+      <div class="trow" style="margin-top:4px"><span class="tl">Foto's geüpload naar projectmap?</span><div class="tsw" data-f="ap_fotos_upload"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
+      <div class="trow" style="margin-top:8px"><span class="tl">Situatieschets partij bijgevoegd (op schaal, met noordpijl)?</span><div class="tsw" data-f="ap_situatieschets"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
       <div class="trow"><span class="tl">Aanduiding indeling in veld achtergelaten?</span><div class="tsw" data-f="ap_aanduiding"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button><button onclick="tw(this,'v')">N.v.t.</button></div></div>
     </div>
 
@@ -681,6 +707,17 @@
         <div class="fld"><label>D95 bepaald door</label><input id="bw-d95-door" placeholder="bijv. opgave producent"></div>
       </div>
       <div class="fld" style="margin-top:4px"><label>Producent / leverancier</label><input id="bw-producent" class="prefilled" placeholder=""></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+        <div class="fld"><label>Effectieve greepgrootte (kg)</label><input type="number" id="bw-greep-kg" step="0.1" placeholder="auto"></div>
+        <div class="fld"><label>Erkenning monsternemer (BRL SIKB 1000)</label><input id="bw-cert" placeholder="bijv. NC-SIK-10093"></div>
+      </div>
+      <div class="fld" style="margin-top:4px"><label>Doel van de keuring</label><select id="bw-doel"><option value="">— kies —</option><option value="bepaling_bouwstof">Bepaling bouwstof (3 monsters × 4 grepen)</option><option value="partijkeuring">Partijkeuring (2 monsters × 6 grepen)</option><option value="toelatingsonderzoek">Toelatingsonderzoek</option><option value="productiecontrole">Productiecontrole</option></select></div>
+      <div class="fld" style="margin-top:4px"><label>Bemonsteringsmethode</label><select id="bw-methode"><option value="">— kies —</option><option value="6.2.3">§6.2.3 — Handmatig gestratificeerd aselect</option><option value="6.2.4">§6.2.4 — Mechanisch uit materiaalstroom</option><option value="6.2.5">§6.2.5 — Handmatig stilstaande band</option><option value="6.2.6">§6.2.6 — Uit stortstroom</option><option value="6.2.7">§6.2.7 — Via aselect gekozen ladingen</option></select></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px">
+        <div class="fld"><label>Aantal monsters</label><input type="number" id="bw-monsters-n" min="1" placeholder="2"></div>
+        <div class="fld"><label>Grepen per monster</label><input type="number" id="bw-grepen-per-m" min="1" placeholder="6"></div>
+        <div class="fld"><label>Totaal grepen (auto)</label><input id="bw-grepen-totaal" readonly placeholder="auto" style="background:var(--gy-l);color:var(--gy)" oninput="bwBerekenGrepen()"></div>
+      </div>
     </div>
 
     <div class="section-title"><span>🛡️</span> LMRA</div>
@@ -726,6 +763,13 @@
       </div>
     </div>
 
+    <div class="card">
+      <div class="card-t"><span class="ic">⏱️</span>Tijdsbesteding monsterneming</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div class="fld"><label>Aanvang</label><input type="time" id="bw-ts-aanvang"></div>
+        <div class="fld"><label>Einde</label><input type="time" id="bw-ts-einde"></div>
+      </div>
+    </div>
     <div class="card">
       <div class="card-t"><span class="ic">📝</span>Afwijkingen &amp; Opmerkingen</div>
       <div class="trow"><span class="tl">Afwijkingen t.o.v. protocol?</span><div class="tsw" data-f="bw_afwijkingen"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
@@ -1053,12 +1097,65 @@ function dpGetData() {
   }).filter(Boolean);
 }
 
+// ─── Deelpartijen (AP04 / Protocol 1001) ───────────
+let apDpNr = 0;
+function apDpAdd() {
+  apDpNr++;
+  const nr = apDpNr;
+  const c = document.getElementById('ap-dp-rijen');
+  const div = document.createElement('div');
+  div.id = 'ap-dp-row-' + nr;
+  div.style = 'display:flex;gap:6px;align-items:flex-start;margin-bottom:6px;flex-wrap:wrap;border:1px solid #e0e0e0;border-radius:4px;padding:6px 8px;background:#fafafa';
+  div.innerHTML = `<span style="font-size:10pt;font-weight:bold;color:#1a4e3a;line-height:28px;min-width:16px">${nr}</span>`
+    + `<input data-dp-naam placeholder="Naam deelpartij" style="flex:2;min-width:90px;padding:4px 6px;font-size:12px;border:1px solid #ccc;border-radius:3px">`
+    + `<input type="number" data-dp-gewicht placeholder="Gewicht (ton)" step="0.1" style="width:90px;padding:4px 6px;font-size:12px;border:1px solid #ccc;border-radius:3px">`
+    + `<input type="number" data-dp-mm placeholder="Mengmon." min="1" style="width:72px;padding:4px 6px;font-size:12px;border:1px solid #ccc;border-radius:3px">`
+    + `<input type="number" data-dp-grepen placeholder="Grepen" min="1" style="width:64px;padding:4px 6px;font-size:12px;border:1px solid #ccc;border-radius:3px">`
+    + `<input data-dp-opm placeholder="Opmerking" style="flex:2;min-width:80px;padding:4px 6px;font-size:12px;border:1px solid #ccc;border-radius:3px">`
+    + `<button onclick="document.getElementById('ap-dp-row-${nr}').remove()" style="color:#c0392b;background:none;border:none;cursor:pointer;font-size:16px;line-height:1;padding:0 2px">✕</button>`;
+  c.appendChild(div);
+}
+function apDpGetData() {
+  return Array.from(document.querySelectorAll('#ap-dp-rijen > div')).map((r, i) => ({
+    nr: i + 1,
+    naam: r.querySelector('[data-dp-naam]')?.value || null,
+    gewicht_ton: parseFloat(r.querySelector('[data-dp-gewicht]')?.value) || null,
+    mengmonsters: parseInt(r.querySelector('[data-dp-mm]')?.value) || null,
+    grepen: parseInt(r.querySelector('[data-dp-grepen]')?.value) || null,
+    opmerking: r.querySelector('[data-dp-opm]')?.value || null,
+  })).filter(r => r.naam || r.gewicht_ton);
+}
+
 // ─── Tonnage berekening (BRL 1002) ─────────────────
 function bwBereken() {
   const m3 = parseFloat(document.getElementById('bw-m3')?.value) || 0;
   const sg = parseFloat(document.getElementById('bw-sg')?.value) || 0;
   const el = document.getElementById('bw-tonnage');
   if (el) el.value = (m3 && sg) ? (m3 * sg).toFixed(1) + ' ton' : '';
+}
+
+// ─── Tonnage berekening AP04 (volume × dichtheid) ───
+function apBerekenTonnage() {
+  const dicht = parseFloat(document.getElementById('ap-dichtheid')?.value) || 0;
+  const vol = parseFloat((PROJECT.partij || {}).volume_m3 || 0);
+  const el = document.getElementById('ap-tonnage');
+  if (el && dicht && vol && !el.value) {
+    el.value = Math.round(vol * dicht * 10) / 10;
+  }
+}
+
+// ─── Grepen berekeningen ────────────────────────────
+function apBerekenGrepen() {
+  const mm = parseInt(document.getElementById('ap-mengmonsters')?.value) || 0;
+  const tot = parseInt(document.getElementById('ap-grepen-totaal')?.value) || 0;
+  const el = document.getElementById('ap-grepen-per-mm');
+  if (el) el.value = (mm && tot) ? Math.round(tot / mm) + ' grepen/mm' : '';
+}
+function bwBerekenGrepen() {
+  const n = parseInt(document.getElementById('bw-monsters-n')?.value) || 0;
+  const g = parseInt(document.getElementById('bw-grepen-per-m')?.value) || 0;
+  const el = document.getElementById('bw-grepen-totaal');
+  if (el) el.value = (n && g) ? (n * g) + ' grepen' : '';
 }
 
 // ─── Stored signatures ─────────────────────────────
@@ -1201,6 +1298,8 @@ function prefill() {
       const u = _gebruikerObj();
       if (u) { document.getElementById('ap-sn').value = u.naam; }
     }
+    apDpAdd(); // standaard 1 deelpartij
+    apBerekenTonnage(); // auto-fill tonnage als volume bekend
   }
 
   if (mod === '1002') {
@@ -1317,9 +1416,11 @@ function buildExport() {
   return buildExport2000();
 }
 
-function pbGetData(){return Array.from(document.querySelectorAll('.pb-meetrij')).map(function(r){return {id:r.querySelector('[data-pb-id]').value||null,gws:r.querySelector('[data-pb-gws]').value||null,ph:r.querySelector('[data-pb-ph]').value||null,ec:r.querySelector('[data-pb-ec]').value||null,ntu:r.querySelector('[data-pb-ntu]').value||null,kleur_geur:r.querySelector('[data-pb-kg]').value||null};}).filter(function(r){return r.id;});}
+function pbGetData(){return Array.from(document.querySelectorAll('.pb-meetrij')).map(function(r){return {id:r.querySelector('[data-pb-id]').value||null,filterstelling:r.querySelector('[data-pb-filt]')?.value||null,gws:r.querySelector('[data-pb-gws]').value||null,ph:r.querySelector('[data-pb-ph]').value||null,ec:r.querySelector('[data-pb-ec]').value||null,ntu:r.querySelector('[data-pb-ntu]').value||null,kleur_geur:r.querySelector('[data-pb-kg]').value||null};}).filter(function(r){return r.id;});}
+function voorpompGetData(){return Array.from(document.querySelectorAll('.vp-rij')).map(function(r){return {id:r.querySelector('[data-vp-id]').value||null,volume_l:r.querySelector('[data-vp-vol]').value||null,duur_min:r.querySelector('[data-vp-dur]').value||null,stabiel:r.querySelector('[data-vp-stab]').value||null};}).filter(function(r){return r.id;});}
 function vbGetData(){return {grond_herkenbaar:S.f1_vb_grond||null,verontreiniging_zintuiglijk:S.f1_vb_verontr||null,puin_bijmenging:S.f1_vb_puin||null,onverwachte_situatie:S.f1_vb_onverwacht||null};}
-function addPbRij(){var c=document.getElementById('pb-metingen');var n=c.children.length+1;var row=document.createElement('div');row.className='pb-meetrij';row.style='display:flex;gap:4px;margin-top:4px;align-items:center;flex-wrap:wrap';[['data-pb-id','PB-ID','60px'],['data-pb-gws','GWS m-mv','80px'],['data-pb-ph','pH','50px'],['data-pb-ec','EC mS/m','65px'],['data-pb-ntu','NTU','55px'],['data-pb-kg','kleur/geur','90px']].forEach(function(cfg){var inp=document.createElement('input');inp.setAttribute(cfg[0],'');inp.placeholder=cfg[1];inp.style='width:'+cfg[2]+';padding:4px;font-size:12px';row.appendChild(inp);});c.appendChild(row);}
+function addPbRij(){var c=document.getElementById('pb-metingen');var row=document.createElement('div');row.className='pb-meetrij';row.style='display:flex;gap:4px;margin-top:4px;align-items:center;flex-wrap:wrap';[['data-pb-id','PB-ID','60px'],['data-pb-filt','Filt. m-mv','80px'],['data-pb-gws','GWS m-mv','80px'],['data-pb-ph','pH','50px'],['data-pb-ec','EC mS/m','65px'],['data-pb-ntu','NTU','55px'],['data-pb-kg','kleur/geur','90px']].forEach(function(cfg){var inp=document.createElement('input');inp.setAttribute(cfg[0],'');inp.placeholder=cfg[1];inp.style='width:'+cfg[2]+';padding:4px;font-size:12px';row.appendChild(inp);});c.appendChild(row);}
+function addVpRij(){var c=document.getElementById('vp-rijen');var row=document.createElement('div');row.className='vp-rij';row.style='display:flex;gap:4px;margin-top:4px;align-items:center;flex-wrap:wrap';[['data-vp-id','PB-ID','60px'],['data-vp-vol','Volume (l)','80px'],['data-vp-dur','Duur (min)','75px'],['data-vp-stab','Stabiel?','70px']].forEach(function(cfg){var inp=document.createElement('input');inp.setAttribute(cfg[0],'');inp.placeholder=cfg[1];inp.style='width:'+cfg[2]+';padding:4px;font-size:12px';row.appendChild(inp);});c.appendChild(row);}
 
 function buildExport2000() {
   const data = {
@@ -1340,7 +1441,7 @@ function buildExport2000() {
       lmra:{veilig:S.f1_lmra_veilig||null,toegang:S.f1_lmra_toegang||null,toestemming:S.f1_lmra_toestemming||null,tekening:S.f1_lmra_tekening||null},
       klic:{ref:document.getElementById('f-klic').value||null,datum:document.getElementById('f-klic-d').value||null},
       veldbevindingen:vbGetData(),
-      protocol_2001:{conform:S.f1_conform||null,afgerond:S.f1_afgerond||null,fotos:S.f1_fotos||null,overdracht:S.f1_overdracht||null,bentoniet:S.f1_bentoniet||null,peilbuizen:S.f1_peilbuizen||null,filtergrind:S.f1_filtergrind||null,asbest:S.f1_asbest||null,meerwerk:S.f1_meerwerk||null,meerwerk_akkoord_pl:S.f1_meerwerk_akkoord||null,gestaakte_boringen:S.f1_gestaakt||null,gestaakte_boringen_toelichting:document.getElementById('f1-gestaakt-toel').value||null,afwijkingen:S.f1_afwijkingen||null,afwijkingen_toelichting:document.getElementById('f1-afw').value||null},
+      protocol_2001:{conform:S.f1_conform||null,afgerond:S.f1_afgerond||null,fotos:S.f1_fotos||null,overdracht:S.f1_overdracht||null,bentoniet:S.f1_bentoniet||null,peilbuizen:S.f1_peilbuizen||null,peilbuizen_aantal:parseInt(document.getElementById('f1-pb-aantal')?.value)||null,filtergrind:S.f1_filtergrind||null,asbest:S.f1_asbest||null,meerwerk:S.f1_meerwerk||null,meerwerk_akkoord_pl:S.f1_meerwerk_akkoord||null,gestaakte_boringen:S.f1_gestaakt||null,gestaakte_boringen_toelichting:document.getElementById('f1-gestaakt-toel').value||null,afwijkingen:S.f1_afwijkingen||null,afwijkingen_toelichting:document.getElementById('f1-afw').value||null},
       grond:{overtollig:document.getElementById('f1-grond').value||null},
       opmerkingen:document.getElementById('f1-opm').value||null,
       conformiteitsverklaring:{ondertekend:sigs[1]?.hasDraw()||false,naam:document.getElementById('f1-sn').value,datum:document.getElementById('f1-sd').value,handtekening_base64:sigs[1]?.hasDraw()?sigs[1].canvas.toDataURL('image/png'):null}
@@ -1363,6 +1464,7 @@ function buildExport2000() {
   if (PROJECT.protocollen.includes('2002')) {
     data.fase2={lmra:{veilig:S.f2_lmra_veilig||null,toegang:S.f2_lmra_toegang||null,tekening:S.f2_lmra_tekening||null},protocol_2002:{conform:S.f2_conform||null,afgerond:S.f2_afgerond||null,wachttijd:S.f2_wachttijd||null,drijflaag:S.f2_drijflaag||null,beluchting:S.f2_beluchting||null,filtratie:S.f2_filtratie||null,ec_aanvang:S.f2_ec_aanvang||null,ec_stabiel:S.f2_ec_stabiel||null,o2_gemeten:S.f2_o2||null,ntu_ph_gemeten:S.f2_ntu_ph||null,overdracht:S.f2_overdracht||null,zintuiglijk:document.getElementById('f2-zintuig').value||null,meerwerk:S.f2_meerwerk||null,meerwerk_akkoord_pl:S.f2_meerwerk_akkoord||null,afwijkingen:S.f2_afwijkingen||null,afwijkingen_toelichting:document.getElementById('f2-afw').value||null},opmerkingen:document.getElementById('f2-opm').value||null,conformiteitsverklaring:{ondertekend:sigs[2]?.hasDraw()||false,naam:document.getElementById('f2-sn').value,datum:document.getElementById('f2-sd').value,handtekening_base64:sigs[2]?.hasDraw()?sigs[2].canvas.toDataURL('image/png'):null}};
   data.fase2.peilbuizen_metingen = pbGetData();
+  data.fase2.voorpompen = voorpompGetData();
   }
   return data;
 }
@@ -1371,14 +1473,15 @@ function buildExport1001() {
   return {
     _meta:{schema:'hp_veldwerk_1001_v1',generated:new Date().toISOString(),app:'HP Veldwerk Compliance v3.0',ingevuld_door:_gebruikersnaam()||null,gebruiker_id:sessionStorage.getItem('hp_vw_id')||null,sessie_start:sessionStorage.getItem('hp_vw_sessie_start')||null},
     protocol_selectie:{gesuggereerd:_protocolSuggestie,gekozen:'1001',gewijzigd:_protocolSuggestie!=='1001',gewijzigd_door:_gebruikersnaam()||null,reden:document.getElementById('proto-reden')?.value||null},
-    project:{...PROJECT,cert_monsternemer:document.getElementById('ap-cert').value||null},
+    project:{...PROJECT,cert_monsternemer:document.getElementById('ap-cert').value||null,tonnage_ton:parseFloat(document.getElementById('ap-tonnage')?.value)||null},
     partij:{...(PROJECT.partij||{}),type_keuring:document.getElementById('ap-type-keuring').value||null,herkomst:document.getElementById('ap-herkomst').value||null},
+    deelpartijen:apDpGetData(),
     terreininspectie:{toegankelijk:S.ap_terrein_toegang||null,veilig:S.ap_terrein_veilig||null,bereikbaar:S.ap_terrein_bereikbaar||null,bijzonderheden:document.getElementById('ap-terrein-bijz').value||null},
     lmra:{veilig:S.ap_lmra_veilig||null,gevaren:S.ap_lmra_gevaren||null,pbm:S.ap_lmra_pbm||null},
-    partijcontrole:{homogeen:S.ap_pc_homogeen||null,geur:S.ap_pc_geur||null,kleur:S.ap_pc_kleur||null,grondsoort:document.getElementById('ap-grondsoort').value||null,vocht:document.getElementById('ap-vocht').value||null},
+    partijcontrole:{homogeen:S.ap_pc_homogeen||null,geur:S.ap_pc_geur||null,geur_beschrijving:document.getElementById('ap-geur-beschr')?.value||null,kleur:S.ap_pc_kleur||null,kleur_beschrijving:document.getElementById('ap-kleur-beschr')?.value||null,grondsoort:document.getElementById('ap-grondsoort').value||null,vocht:document.getElementById('ap-vocht').value||null},
     bijmenging:{aangetroffen:S.ap_bij_aangetr||null,puin_pct:parseInt(document.getElementById('bij-puin').value)||0,steenachtigen_pct:parseInt(document.getElementById('bij-steen').value)||0,plastic_pct:parseInt(document.getElementById('bij-plastic').value)||0,hout_pct:parseInt(document.getElementById('bij-hout').value)||0,overig_pct:parseInt(document.getElementById('bij-overig').value)||0,overig_toelichting:document.getElementById('bij-overig-toel').value||null},
-    monstername:{conform:S.ap_mn_conform||null,grepen_representatief:S.ap_mn_grepen||null,greepcontrole:S.ap_greepcontrole||null,greepgewicht_a_gram:parseInt(document.getElementById('ap-greep-a').value)||null,greepgewicht_b_gram:parseInt(document.getElementById('ap-greep-b').value)||null,monsters_bewaard:S.ap_mn_bewaard||null,overdracht:S.ap_mn_overdracht||null,binnen_24u:S.ap_mn_24u||null,aantal_grepen:parseInt(document.getElementById('ap-grepen').value)||null,labcode:document.getElementById('ap-labcode').value||null},
-    fotos_inmeting:{fotos:S.ap_fotos||null,aanduiding_indeling:S.ap_aanduiding||null},
+    monstername:{conform:S.ap_mn_conform||null,grepen_representatief:S.ap_mn_grepen||null,greepcontrole:S.ap_greepcontrole||null,greepgewicht_a_gram:parseInt(document.getElementById('ap-greep-a').value)||null,greepgewicht_b_gram:parseInt(document.getElementById('ap-greep-b').value)||null,monsters_bewaard:S.ap_mn_bewaard||null,overdracht:S.ap_mn_overdracht||null,binnen_24u:S.ap_mn_24u||null,aantal_mengmonsters:parseInt(document.getElementById('ap-mengmonsters')?.value)||null,aantal_grepen:parseInt(document.getElementById('ap-grepen-totaal')?.value)||null,labcode:document.getElementById('ap-labcode').value||null},
+    fotos_inmeting:{fotos:S.ap_fotos||null,fotos_aantal:parseInt(document.getElementById('ap-fotos-aantal')?.value)||null,fotos_upload:S.ap_fotos_upload||null,situatieschets:S.ap_situatieschets||null,aanduiding_indeling:S.ap_aanduiding||null},
     bijmenging_aangetroffen:S.ap_bij_aangetr||null,
     visuele_asbestinspectie:{aangetroffen:S.ap_asb_aangetroffen||null,plaatmateriaal:S.ap_asb_plaat||null,pijpfragmenten:S.ap_asb_pijp||null,beschrijving:document.getElementById('ap-asb-beschr').value||null},
     afwijkingen:{aanwezig:S.ap_afwijkingen||null,toelichting:document.getElementById('ap-afw').value||null},
@@ -1392,14 +1495,15 @@ function buildExport1002() {
   return {
     _meta:{schema:'hp_veldwerk_1002_v1',generated:new Date().toISOString(),app:'HP Veldwerk Compliance v3.0',ingevuld_door:_gebruikersnaam()||null,gebruiker_id:sessionStorage.getItem('hp_vw_id')||null,sessie_start:sessionStorage.getItem('hp_vw_sessie_start')||null},
     protocol_selectie:{gesuggereerd:_protocolSuggestie,gekozen:'1002',gewijzigd:_protocolSuggestie!=='1002',gewijzigd_door:_gebruikersnaam()||null,reden:document.getElementById('proto-reden')?.value||null},
-    project:{...PROJECT},
+    project:{...PROJECT,cert_monsternemer:document.getElementById('bw-cert')?.value||null},
     partij: PROJECT.partij || {},
-    partijregistratie:{begintijd:document.getElementById('bw-start')?.value||null,eindtijd:document.getElementById('bw-eind')?.value||null,grootte_m3:parseFloat(document.getElementById('bw-m3')?.value)||null,grootte_bepaald_door:document.getElementById('bw-grootte-door')?.value||null,soortelijk_gewicht:parseFloat(document.getElementById('bw-sg')?.value)||null,materiaalsoort:document.getElementById('bw-materiaalsoort')?.value||null,d95:document.getElementById('bw-d95')?.value||null,d95_bepaald_door:document.getElementById('bw-d95-door')?.value||null,producent:document.getElementById('bw-producent')?.value||null},
+    partijregistratie:{begintijd:document.getElementById('bw-start')?.value||null,eindtijd:document.getElementById('bw-eind')?.value||null,grootte_m3:parseFloat(document.getElementById('bw-m3')?.value)||null,grootte_bepaald_door:document.getElementById('bw-grootte-door')?.value||null,soortelijk_gewicht:parseFloat(document.getElementById('bw-sg')?.value)||null,materiaalsoort:document.getElementById('bw-materiaalsoort')?.value||null,d95:document.getElementById('bw-d95')?.value||null,d95_bepaald_door:document.getElementById('bw-d95-door')?.value||null,producent:document.getElementById('bw-producent')?.value||null,doel_keuring:document.getElementById('bw-doel')?.value||null,bemonsteringsmethode:document.getElementById('bw-methode')?.value||null,greepgrootte_kg:parseFloat(document.getElementById('bw-greep-kg')?.value)||null,aantal_monsters:parseInt(document.getElementById('bw-monsters-n')?.value)||null,grepen_per_monster:parseInt(document.getElementById('bw-grepen-per-m')?.value)||null},
     lmra:{veilig:S.bw_lmra_veilig||null,toegang:S.bw_lmra_toegang||null,pbm:S.bw_lmra_pbm||null,vallend:S.bw_lmra_val||null},
     partijcontrole:{homogeen:S.bw_pc_homogeen||null,type_correct:S.bw_pc_type||null,korrel_correct:S.bw_pc_korrel||null,vreemde_fractie:S.bw_pc_vreemd||null,verontreiniging:S.bw_pc_veront||null,bijzonderheden:document.getElementById('bw-pc-bijz').value||null},
     deelpartijen: dpGetData(),
     visuele_inspectie:{overeenkomstig:S.bw_vi_overeenk||null,asbest:S.bw_vi_asbest||null,kleur_afwijkend:S.bw_vi_kleur||null,bijzonderheden:document.getElementById('bw-vi-bijz').value||null},
     monsteroverdracht:{overdracht:S.bw_mo_overdracht||null,verzegeld:S.bw_mo_verzegeld||null,binnen_24u:S.bw_mo_24u||null,labcode:document.getElementById('bw-labcode').value||null,laboratorium:document.getElementById('bw-lab').value||null},
+    tijdsbesteding:{aanvang:document.getElementById('bw-ts-aanvang')?.value||null,einde:document.getElementById('bw-ts-einde')?.value||null},
     afwijkingen:{aanwezig:S.bw_afwijkingen||null,toelichting:document.getElementById('bw-afw').value||null},
     opmerkingen:document.getElementById('bw-opm').value||null,
     conformiteit:{ondertekend:sigs[4]?.hasDraw()||false,naam:document.getElementById('bw-sn').value,datum:document.getElementById('bw-sd').value,handtekening_base64:sigs[4]?.hasDraw()?sigs[4].canvas.toDataURL('image/png'):null}
