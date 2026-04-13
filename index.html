@@ -448,7 +448,7 @@
         <div class="card">
           <div class="card-t"><span class="ic">✍️</span>Handtekening projectleider</div>
           <div class="fld">
-            <div id="sig5-stored" class="sig-stored-panel"><img class="sig-stored-img" src=""><div class="sig-stored-lbl"><span>Handtekening <span class="sig-stored-naam"></span></span><button onclick="_handmatigTekenen(5)">Zelf tekenen</button></div></div>
+            <div id="sig5-stored" class="sig-stored-panel"><img class="sig-stored-img" src=""><div class="sig-stored-lbl"><span>Handtekening <span class="sig-stored-naam"></span></span></div></div>
             <div id="sig5-canvas-wrap"><div class="sig-box" id="sig5-box"><canvas id="sig5-cv"></canvas><span class="sig-hint" id="sig5-h">Teken hier</span><button class="sig-clr no-print" onclick="clrSig(5)">Wis</button></div></div>
             <input type="hidden" id="sig5-b64">
           </div>
@@ -466,7 +466,7 @@
       <div class="card">
         <p style="font-size:11px;color:var(--gy);margin-bottom:10px;line-height:1.5">Door ondertekening verklaart de geregistreerde boormeester dat het veldwerk <b>onafhankelijk van de opdrachtgever</b> is uitgevoerd conform BRL SIKB 2000 met protocol 2001.</p>
         <div class="fld"><label>Handtekening boormeester</label>
-          <div id="sig1-stored" class="sig-stored-panel"><img class="sig-stored-img" src=""><div class="sig-stored-lbl"><span>Handtekening <span class="sig-stored-naam"></span></span><button onclick="_handmatigTekenen(1)">Zelf tekenen</button></div></div>
+          <div id="sig1-stored" class="sig-stored-panel"><img class="sig-stored-img" src=""><div class="sig-stored-lbl"><span>Handtekening <span class="sig-stored-naam"></span></span></div></div>
           <div id="sig1-canvas-wrap"><div class="sig-box" id="sig1-box"><canvas id="sig1-cv"></canvas><span class="sig-hint" id="sig1-h">Teken hier</span><button class="sig-clr no-print" onclick="clrSig(1)">Wis</button></div></div>
           <input type="hidden" id="sig1-b64">
         </div>
@@ -527,7 +527,7 @@
       <div class="card">
         <p style="font-size:11px;color:var(--gy);margin-bottom:10px;line-height:1.5">Door ondertekening verklaart de monsternemer dat de grondwatermonstername <b>onafhankelijk van de opdrachtgever</b> is uitgevoerd conform BRL SIKB 2000 met protocol 2002 en NEN 5744.</p>
         <div class="fld"><label>Handtekening monsternemer</label>
-          <div id="sig2-stored" class="sig-stored-panel"><img class="sig-stored-img" src=""><div class="sig-stored-lbl"><span>Handtekening <span class="sig-stored-naam"></span></span><button onclick="_handmatigTekenen(2)">Zelf tekenen</button></div></div>
+          <div id="sig2-stored" class="sig-stored-panel"><img class="sig-stored-img" src=""><div class="sig-stored-lbl"><span>Handtekening <span class="sig-stored-naam"></span></span></div></div>
           <div id="sig2-canvas-wrap"><div class="sig-box" id="sig2-box"><canvas id="sig2-cv"></canvas><span class="sig-hint" id="sig2-h">Teken hier</span><button class="sig-clr no-print" onclick="clrSig(2)">Wis</button></div></div>
           <input type="hidden" id="sig2-b64">
         </div>
@@ -666,7 +666,7 @@
     <div class="card">
       <p style="font-size:11px;color:var(--gy);margin-bottom:10px;line-height:1.5">Het procescertificaat van Hopman en Peters B.V. (NC-SIK-10093) is uitsluitend van toepassing op de activiteiten betreffende de monsterneming en overdracht aan een erkend laboratorium. Met de ondertekening verklaart de gekwalificeerde monsternemer de partijkeuring <b>onafhankelijk</b> te hebben uitgevoerd t.o.v. de opdrachtgever.</p>
       <div class="fld"><label>Handtekening monsternemer</label>
-        <div id="sig3-stored" class="sig-stored-panel"><img class="sig-stored-img" src=""><div class="sig-stored-lbl"><span>Handtekening <span class="sig-stored-naam"></span></span><button onclick="_handmatigTekenen(3)">Zelf tekenen</button></div></div>
+        <div id="sig3-stored" class="sig-stored-panel"><img class="sig-stored-img" src=""><div class="sig-stored-lbl"><span>Handtekening <span class="sig-stored-naam"></span></span></div></div>
         <div id="sig3-canvas-wrap"><div class="sig-box" id="sig3-box"><canvas id="sig3-cv"></canvas><span class="sig-hint" id="sig3-h">Teken hier</span><button class="sig-clr no-print" onclick="clrSig(3)">Wis</button></div></div>
         <input type="hidden" id="sig3-b64">
       </div>
@@ -784,7 +784,7 @@
     <div class="card">
       <p style="font-size:11px;color:var(--gy);margin-bottom:10px;line-height:1.5">Door ondertekening verklaart de erkende monsternemer dat de partijkeuring <b>onafhankelijk van de opdrachtgever</b> is uitgevoerd conform BRL SIKB 1000 met Protocol 1002.</p>
       <div class="fld"><label>Handtekening monsternemer</label>
-        <div id="sig4-stored" class="sig-stored-panel"><img class="sig-stored-img" src=""><div class="sig-stored-lbl"><span>Handtekening <span class="sig-stored-naam"></span></span><button onclick="_handmatigTekenen(4)">Zelf tekenen</button></div></div>
+        <div id="sig4-stored" class="sig-stored-panel"><img class="sig-stored-img" src=""><div class="sig-stored-lbl"><span>Handtekening <span class="sig-stored-naam"></span></span></div></div>
         <div id="sig4-canvas-wrap"><div class="sig-box" id="sig4-box"><canvas id="sig4-cv"></canvas><span class="sig-hint" id="sig4-h">Teken hier</span><button class="sig-clr no-print" onclick="clrSig(4)">Wis</button></div></div>
         <input type="hidden" id="sig4-b64">
       </div>
@@ -1178,15 +1178,6 @@ function _laadOpgeslagenHandtekening(sigNr) {
   return true;
 }
 
-function _handmatigTekenen(sigNr) {
-  if (!SIGNATURES[sessionStorage.getItem('hp_vw_id') || '']) return;
-  const panel = document.getElementById('sig' + sigNr + '-stored');
-  const canvasWrap = document.getElementById('sig' + sigNr + '-canvas-wrap');
-  if (panel) panel.classList.remove('vis');
-  if (canvasWrap) { canvasWrap.style.display = ''; initSig(sigNr); }
-  const b64El = document.getElementById('sig' + sigNr + '-b64');
-  if (b64El) b64El.value = '';
-}
 
 // ─── Signatures ────────────────────────────────────
 function initSig(n) {
@@ -1363,7 +1354,6 @@ function prefill(forceMod) {
         sp.classList.add('vis');
         sp.querySelector('img').style.display = 'none';
         sp.querySelector('.sig-stored-naam').textContent = 'wordt ingevuld door boormeester';
-        sp.querySelector('button').style.display = 'none';
       }
     }
   });
