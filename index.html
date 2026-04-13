@@ -505,16 +505,11 @@
         <div class="trow" id="cond-meerwerk2" style="display:none;background:#FFF8E1"><span class="tl">Meerwerk akkoord projectleider?</span><div class="tsw" data-f="f2_meerwerk_akkoord"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
       </div>
       <div class="card">
-        <div class="card-t"><span class="ic">🔄</span>Voorpompen per peilbuis (Protocol 2002 §7.3)</div>
-        <p style="font-size:11px;color:var(--gy);margin-bottom:6px">Registreer per peilbuis het voorpompvolume, de duur en of stabilisatie is bereikt.</p>
-        <div id="vp-rijen"></div>
-        <button type="button" onclick="addVpRij()" style="margin-top:8px;padding:6px 12px;border:1px solid #1a4e3a;color:#1a4e3a;background:white;border-radius:6px;cursor:pointer;font-size:12px">+ Peilbuis toevoegen</button>
-      </div>
-      <div class="card" id="pb-meetwaarden-card">
-        <div class="card-t"><span class="ic">📊</span>Peilbuizen — gemeten waarden (Protocol 2002)</div>
-        <p style="font-size:11px;color:var(--gy);margin-bottom:4px">Filt. m-mv = filterstelling (bijv. 2.0-3.0)</p>
-        <div id="pb-metingen"></div>
-        <button type="button" onclick="addPbRij()" style="margin-top:8px;padding:6px 12px;border:1px solid #1a4e3a;color:#1a4e3a;background:white;border-radius:6px;cursor:pointer;font-size:12px">+ Peilbuis toevoegen</button>
+        <div class="card-t"><span class="ic">🔄</span>Voorpompen (Protocol 2002)</div>
+        <div class="trow"><span class="tl">Voorpompen conform NEN 5744 §6.4 uitgevoerd?</span><div class="tsw" data-f="f2_vp_conform"><button onclick="tw(this,'y');document.getElementById('cond-vp-afw').style.display='none'">Ja</button><button onclick="tw(this,'n');document.getElementById('cond-vp-afw').style.display='block'">Nee</button></div></div>
+        <div class="trow"><span class="tl">EC gestabiliseerd vóór monstername?</span><div class="tsw" data-f="f2_ec_gestab"><button onclick="tw(this,'y');document.getElementById('cond-ec-afw').style.display='none'">Ja</button><button onclick="tw(this,'n');document.getElementById('cond-ec-afw').style.display='block'">Nee</button></div></div>
+        <div id="cond-vp-afw" style="display:none;padding:4px 0"><div class="fld"><label>Toelichting afwijking voorpompen</label><textarea id="f2-vp-afw" placeholder="Beschrijf de afwijking..."></textarea></div></div>
+        <div id="cond-ec-afw" style="display:none;padding:4px 0"><div class="fld"><label>Toelichting afwijking EC</label><textarea id="f2-ec-afw" placeholder="Beschrijf de afwijking..."></textarea></div></div>
       </div>
       <div class="card">
         <div class="card-t"><span class="ic">📝</span>Afwijkingen Protocol 2002 / NEN 5744</div>
@@ -1407,11 +1402,7 @@ function buildExport() {
   return buildExport2000();
 }
 
-function pbGetData(){return Array.from(document.querySelectorAll('.pb-meetrij')).map(function(r){return {id:r.querySelector('[data-pb-id]').value||null,filterstelling:r.querySelector('[data-pb-filt]')?.value||null,gws:r.querySelector('[data-pb-gws]').value||null,ph:r.querySelector('[data-pb-ph]').value||null,ec:r.querySelector('[data-pb-ec]').value||null,ntu:r.querySelector('[data-pb-ntu]').value||null,kleur_geur:r.querySelector('[data-pb-kg]').value||null};}).filter(function(r){return r.id;});}
-function voorpompGetData(){return Array.from(document.querySelectorAll('.vp-rij')).map(function(r){return {id:r.querySelector('[data-vp-id]').value||null,volume_l:r.querySelector('[data-vp-vol]').value||null,duur_min:r.querySelector('[data-vp-dur]').value||null,stabiel:r.querySelector('[data-vp-stab]').value||null};}).filter(function(r){return r.id;});}
 function vbGetData(){return {grond_herkenbaar:S.f1_vb_grond||null,verontreiniging_zintuiglijk:S.f1_vb_verontr||null,puin_bijmenging:S.f1_vb_puin||null,onverwachte_situatie:S.f1_vb_onverwacht||null};}
-function addPbRij(){var c=document.getElementById('pb-metingen');var row=document.createElement('div');row.className='pb-meetrij';row.style='display:flex;gap:4px;margin-top:4px;align-items:center;flex-wrap:wrap';[['data-pb-id','PB-ID','60px'],['data-pb-filt','Filt. m-mv','80px'],['data-pb-gws','GWS m-mv','80px'],['data-pb-ph','pH','50px'],['data-pb-ec','EC mS/m','65px'],['data-pb-ntu','NTU','55px'],['data-pb-kg','kleur/geur','90px']].forEach(function(cfg){var inp=document.createElement('input');inp.setAttribute(cfg[0],'');inp.placeholder=cfg[1];inp.style='width:'+cfg[2]+';padding:4px;font-size:12px';row.appendChild(inp);});c.appendChild(row);}
-function addVpRij(){var c=document.getElementById('vp-rijen');var row=document.createElement('div');row.className='vp-rij';row.style='display:flex;gap:4px;margin-top:4px;align-items:center;flex-wrap:wrap';[['data-vp-id','PB-ID','60px'],['data-vp-vol','Volume (l)','80px'],['data-vp-dur','Duur (min)','75px'],['data-vp-stab','Stabiel?','70px']].forEach(function(cfg){var inp=document.createElement('input');inp.setAttribute(cfg[0],'');inp.placeholder=cfg[1];inp.style='width:'+cfg[2]+';padding:4px;font-size:12px';row.appendChild(inp);});c.appendChild(row);}
 
 function buildExport2000() {
   const data = {
@@ -1454,8 +1445,10 @@ function buildExport2000() {
   }
   if (PROJECT.protocollen.includes('2002')) {
     data.fase2={lmra:{veilig:S.f2_lmra_veilig||null,toegang:S.f2_lmra_toegang||null,tekening:S.f2_lmra_tekening||null},protocol_2002:{conform:S.f2_conform||null,afgerond:S.f2_afgerond||null,wachttijd:S.f2_wachttijd||null,drijflaag:S.f2_drijflaag||null,beluchting:S.f2_beluchting||null,filtratie:S.f2_filtratie||null,ec_aanvang:S.f2_ec_aanvang||null,ec_stabiel:S.f2_ec_stabiel||null,o2_gemeten:S.f2_o2||null,ntu_ph_gemeten:S.f2_ntu_ph||null,overdracht:S.f2_overdracht||null,zintuiglijk:document.getElementById('f2-zintuig').value||null,meerwerk:S.f2_meerwerk||null,meerwerk_akkoord_pl:S.f2_meerwerk_akkoord||null,afwijkingen:S.f2_afwijkingen||null,afwijkingen_toelichting:document.getElementById('f2-afw').value||null},opmerkingen:document.getElementById('f2-opm').value||null,conformiteitsverklaring:{ondertekend:sigs[2]?.hasDraw()||false,naam:document.getElementById('f2-sn').value,datum:document.getElementById('f2-sd').value,handtekening_base64:sigs[2]?.hasDraw()?sigs[2].canvas.toDataURL('image/png'):null}};
-  data.fase2.peilbuizen_metingen = pbGetData();
-  data.fase2.voorpompen = voorpompGetData();
+  data.fase2.voorpompen_conform = S.f2_vp_conform || null;
+  data.fase2.ec_gestabiliseerd = S.f2_ec_gestab || null;
+  data.fase2.voorpompen_afw = document.getElementById('f2-vp-afw')?.value || null;
+  data.fase2.ec_afw = document.getElementById('f2-ec-afw')?.value || null;
   }
   return data;
 }
