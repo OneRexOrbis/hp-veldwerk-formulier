@@ -330,7 +330,8 @@
         </div>
         <div class="fld"><label>Betreft / onderzoekstype</label><select id="f-onderzoekstype"><option value="">— kies —</option><option value="VO">VO — Verkennend Onderzoek</option><option value="NO">NO — Nader Onderzoek</option><option value="AO">AO — Aanvullend Onderzoek</option></select></div>
         <div class="fld"><label>Laboratorium</label><input id="f-laboratorium" placeholder="Naam laboratorium"></div>
-        <div class="fld"><label>Verharding</label><select id="f-verharding"><option value="">— kies —</option><option>Bebouwd</option><option>Klinkers</option><option>Asfalt</option><option>Beton</option><option>Puin</option><option>Onverhard</option></select></div>
+        <div class="fld"><label>Verharding</label><select id="f-verharding" onchange="document.getElementById('cond-verharding-anders').style.display=this.value==='Anders'?'block':'none'"><option value="">— kies —</option><option>Bebouwd</option><option>Klinkers</option><option>Asfalt</option><option>Beton</option><option>Puin</option><option>Onverhard</option><option>Gras</option><option>Grond</option><option>Anders</option></select></div>
+        <div id="cond-verharding-anders" style="display:none"><div class="fld"><label>Verharding — omschrijving</label><input id="f-verharding-anders" placeholder="bijv. grindpad, tegels, zand"></div></div>
         <div class="fld"><label>Fysieke toegankelijkheid</label><select id="f-toegankelijkheid"><option value="">— kies —</option><option>Goed</option><option>Beperkt</option><option>Slecht</option><option>N.v.t.</option></select></div>
         <div class="fld"><label>Inmeetmethode</label><select id="f-inmeetmethode"><option value="">— kies —</option><option>Kaart</option><option>GPS</option><option>dGPS</option><option>TerraIndex</option></select></div>
         <div class="fld"><label>Risico-documentatie aanwezig</label><select id="f-risico-doc"><option value="">— kies —</option><option value="werkomschrijving">Werkomschrijving</option><option value="pva">PvA</option><option value="vg">V&amp;G plan</option><option value="geen">Geen</option></select></div>
@@ -1377,7 +1378,7 @@ function restoreState(saved) {
     if(vw.contactpersoon_tel) document.getElementById('f-contact-tel').value=vw.contactpersoon_tel;
     if(vw.onderzoekstype) document.getElementById('f-onderzoekstype').value=vw.onderzoekstype;
     if(vw.laboratorium) document.getElementById('f-laboratorium').value=vw.laboratorium;
-    if(vw.verharding) document.getElementById('f-verharding').value=vw.verharding;
+    if(vw.verharding){const sel=document.getElementById('f-verharding');const known=['Bebouwd','Klinkers','Asfalt','Beton','Puin','Onverhard','Gras','Grond','Anders'];if(known.includes(vw.verharding)){sel.value=vw.verharding;}else{sel.value='Anders';document.getElementById('f-verharding-anders').value=vw.verharding;document.getElementById('cond-verharding-anders').style.display='block';}}
     if(vw.toegankelijkheid) document.getElementById('f-toegankelijkheid').value=vw.toegankelijkheid;
     if(vw.inmeetmethode) document.getElementById('f-inmeetmethode').value=vw.inmeetmethode;
     if(vw.risico_documentatie) document.getElementById('f-risico-doc').value=vw.risico_documentatie;
@@ -1432,7 +1433,7 @@ function buildExport2000() {
       contactpersoon_tel:document.getElementById('f-contact-tel').value||null,
       onderzoekstype:document.getElementById('f-onderzoekstype').value||null,
       laboratorium:document.getElementById('f-laboratorium').value||null,
-      verharding:document.getElementById('f-verharding').value||null,
+      verharding:(()=>{const v=document.getElementById('f-verharding').value;return v==='Anders'?(document.getElementById('f-verharding-anders').value||'Anders'):v||null;})(),
       toegankelijkheid:document.getElementById('f-toegankelijkheid').value||null,
       inmeetmethode:document.getElementById('f-inmeetmethode').value||null,
       risico_documentatie:document.getElementById('f-risico-doc').value||null,
@@ -1982,7 +1983,7 @@ function _herstelDraft(data) {
     set('f-contact-tel', vw.contactpersoon_tel||'');
     set('f-onderzoekstype', vw.onderzoekstype||'');
     set('f-laboratorium', vw.laboratorium||'');
-    set('f-verharding', vw.verharding||'');
+    if(vw.verharding){const sel=document.getElementById('f-verharding');const known=['Bebouwd','Klinkers','Asfalt','Beton','Puin','Onverhard','Gras','Grond','Anders'];if(known.includes(vw.verharding)){sel.value=vw.verharding;}else{sel.value='Anders';document.getElementById('f-verharding-anders').value=vw.verharding;document.getElementById('cond-verharding-anders').style.display='block';}}
     set('f-toegankelijkheid', vw.toegankelijkheid||'');
     set('f-inmeetmethode', vw.inmeetmethode||'');
     set('f-risico-doc', vw.risico_documentatie||'');
