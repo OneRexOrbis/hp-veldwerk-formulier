@@ -902,7 +902,6 @@ function activateModule(mod) {
 let _protocolSuggestie = '2000';
 
 function switchProtocol(mod) {
-  activateModule(mod);
   // Highlight selected radio label
   document.querySelectorAll('.proto-opt').forEach(el => {
     el.classList.toggle('selected', el.querySelector('input').value === mod);
@@ -910,8 +909,8 @@ function switchProtocol(mod) {
   // Toon reden-veld als afwijkend van suggestie
   const gewijzigd = mod !== _protocolSuggestie;
   document.getElementById('proto-reden-wrap').style.display = gewijzigd ? 'block' : 'none';
-  // Herlaad prefill voor nieuw module
-  prefill();
+  // Herlaad prefill voor nieuw module — forceMod voorkomt dat detectModule() de keuze overschrijft
+  prefill(mod);
 }
 
 function _setProtocolSuggestie(mod) {
@@ -1208,14 +1207,15 @@ function initSig(n) {
 function clrSig(n){const cv=document.getElementById('sig'+n+'-cv');cv.getContext('2d').clearRect(0,0,cv.width,cv.height);document.getElementById('sig'+n+'-h').style.display='';if(sigs[n])sigs[n].hasDraw=()=>false}
 
 // ─── Prefill ───────────────────────────────────────
-function prefill() {
+function prefill(forceMod) {
   // Server-side protocol_suggestie heeft prioriteit boven lokale detectModule()
   const psToMod = {'2001':'2000','2002':'2000','2018':'2000','1001':'1001','1002':'1002'};
-  const mod = PROJECT.protocol_suggestie
+  const autoMod = PROJECT.protocol_suggestie
     ? (psToMod[String(PROJECT.protocol_suggestie)] || detectModule())
     : detectModule();
+  const mod = forceMod || autoMod;
   activateModule(mod);
-  _setProtocolSuggestie(mod);
+  if (!forceMod) _setProtocolSuggestie(autoMod); // suggestie alleen zetten bij initiële load
 
   document.getElementById('d-pid').textContent = PROJECT.projectnummer;
   document.getElementById('d-addr').textContent = PROJECT.adres;
@@ -1298,7 +1298,7 @@ function prefill() {
       const u = _gebruikerObj();
       if (u) { document.getElementById('ap-sn').value = u.naam; }
     }
-    apDpAdd(); // standaard 1 deelpartij
+    if (!document.querySelector('#ap-dp-rijen > div')) apDpAdd(); // standaard 1 deelpartij (alleen als leeg)
     apBerekenTonnage(); // auto-fill tonnage als volume bekend
   }
 
@@ -1323,7 +1323,7 @@ function prefill() {
       el.setAttribute('readonly', '');
       el.classList.add('prefilled');
     }
-    dpAdd(); dpAdd(); // standaard 2 deelpartijen
+    if (!document.querySelector('#dp-kaarten > div')) { dpAdd(); dpAdd(); } // standaard 2 deelpartijen (alleen als leeg)
     if (PROJECT.projectleider) {
       const el = document.getElementById('bw-pl-sn');
       el.value = PROJECT.projectleider;
