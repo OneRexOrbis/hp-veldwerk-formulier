@@ -96,7 +96,7 @@
 
   /* ─── Protocol kiezer ─── */
   .proto-opt{display:flex;align-items:center;gap:10px;cursor:pointer;padding:9px 12px;border-radius:7px;border:1.5px solid var(--bd);transition:.15s}
-  .proto-opt input[type=radio]{width:16px;height:16px;accent-color:var(--mod-c);flex-shrink:0}
+  .proto-opt input[type=radio],.proto-opt input[type=checkbox]{width:16px;height:16px;accent-color:var(--mod-c);flex-shrink:0}
   .proto-opt.selected{border-color:var(--mod-c);background:var(--mod-bg)}
   .proto-lbl{font-size:13px}
 
@@ -274,17 +274,38 @@
   <!-- ═══ FOTO'S ═══ -->
   <div class="card no-print" id="foto-sectie">
     <div class="card-t"><span class="ic">📷</span> Foto's uploaden</div>
-    <div style="display:flex;gap:8px;margin-bottom:10px">
-      <label style="flex:1">
-        <input type="file" id="foto-camera" accept="image/*" capture="environment" style="display:none" onchange="fotoGekozen(this)">
-        <div class="btn btn-p" style="text-align:center;cursor:pointer" onclick="document.getElementById('foto-camera').click()">📸 Camera</div>
-      </label>
-      <label style="flex:1">
-        <input type="file" id="foto-galerij" accept="image/*" multiple style="display:none" onchange="fotoGekozen(this)">
-        <div class="btn btn-s" style="text-align:center;cursor:pointer" onclick="document.getElementById('foto-galerij').click()">🖼️ Galerij</div>
-      </label>
+
+    <!-- Rapport foto's → Foto's/ → bijlage -->
+    <div style="border:1.5px solid var(--hp);border-radius:8px;padding:10px;margin-bottom:10px">
+      <div style="font-size:12px;font-weight:600;color:var(--hp);margin-bottom:8px">📋 Rapport — komen in bijlage</div>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <label style="flex:1">
+          <input type="file" id="foto-camera-rapport" accept="image/*" capture="environment" style="display:none" onchange="fotoGekozen(this,'rapport')">
+          <div class="btn btn-p" style="text-align:center;cursor:pointer" onclick="document.getElementById('foto-camera-rapport').click()">📸 Camera</div>
+        </label>
+        <label style="flex:1">
+          <input type="file" id="foto-galerij-rapport" accept="image/*" multiple style="display:none" onchange="fotoGekozen(this,'rapport')">
+          <div class="btn btn-s" style="text-align:center;cursor:pointer" onclick="document.getElementById('foto-galerij-rapport').click()">🖼️ Galerij</div>
+        </label>
+      </div>
+      <div id="foto-wachtrij-rapport" style="display:flex;flex-wrap:wrap;gap:8px"></div>
     </div>
-    <div id="foto-wachtrij" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+
+    <!-- Verificatie foto's → Foto's verificatie/ → niet in rapport -->
+    <div style="border:1.5px solid var(--bd);border-radius:8px;padding:10px">
+      <div style="font-size:12px;font-weight:600;color:var(--gy);margin-bottom:8px">🔍 Verificatie — niet in rapport</div>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <label style="flex:1">
+          <input type="file" id="foto-camera-verif" accept="image/*" capture="environment" style="display:none" onchange="fotoGekozen(this,'verificatie')">
+          <div class="btn btn-s" style="text-align:center;cursor:pointer" onclick="document.getElementById('foto-camera-verif').click()">📸 Camera</div>
+        </label>
+        <label style="flex:1">
+          <input type="file" id="foto-galerij-verif" accept="image/*" multiple style="display:none" onchange="fotoGekozen(this,'verificatie')">
+          <div class="btn btn-s" style="text-align:center;cursor:pointer" onclick="document.getElementById('foto-galerij-verif').click()">🖼️ Galerij</div>
+        </label>
+      </div>
+      <div id="foto-wachtrij-verif" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+    </div>
   </div>
 
   <!-- ═══ PROTOCOL KIEZER ═══ -->
@@ -302,6 +323,13 @@
       <label class="proto-opt" id="pr-2000">
         <input type="radio" name="proto" value="2000" onchange="switchProtocol('2000')">
         <span class="proto-lbl"><b>BRL 2000</b> — Bodemonderzoek</span>
+      </label>
+    </div>
+    <!-- Protocol 2018 add-on — alleen zichtbaar bij BRL 2000 -->
+    <div id="proto-2018-wrap" style="display:none;border-top:1px solid var(--hp-pale);padding-top:8px;margin-top:4px">
+      <label class="proto-opt" id="pr-2018" style="background:var(--hp-bg)">
+        <input type="checkbox" id="cb-2018" onchange="toggle2018(this.checked)">
+        <span class="proto-lbl"><b>+ Protocol 2018</b> — Asbestonderzoek in grond (NEN 5707)</span>
       </label>
     </div>
     <div id="proto-hint" style="font-size:11px;color:var(--gy);margin-top:8px">ℹ️ Gesuggereerd op basis van projectgegevens. Wijzig indien het materiaal anders is.</div>
@@ -892,6 +920,12 @@ function activateModule(mod) {
   document.getElementById('hdr-badge').textContent = badge;
   document.getElementById('hdr-titel').textContent = titel;
   document.getElementById('hdr-sub').textContent = sub;
+  // Protocol 2018 add-on alleen tonen bij BRL 2000
+  document.getElementById('proto-2018-wrap').style.display = mod === '2000' ? 'block' : 'none';
+  if (mod !== '2000') {
+    document.getElementById('cb-2018').checked = false;
+    document.getElementById('sec-2018').classList.remove('vis');
+  }
 }
 
 // ─── Protocol kiezer ───────────────────────────────
@@ -907,6 +941,17 @@ function switchProtocol(mod) {
   document.getElementById('proto-reden-wrap').style.display = gewijzigd ? 'block' : 'none';
   // Herlaad prefill voor nieuw module — forceMod voorkomt dat detectModule() de keuze overschrijft
   prefill(mod);
+}
+
+function toggle2018(checked) {
+  // Toon / verberg Protocol 2018 sectie
+  document.getElementById('sec-2018').classList.toggle('vis', checked);
+  // Sync PROJECT.protocollen in-memory
+  if (checked) {
+    if (!PROJECT.protocollen.includes('2018')) PROJECT.protocollen.push('2018');
+  } else {
+    PROJECT.protocollen = PROJECT.protocollen.filter(p => p !== '2018');
+  }
 }
 
 function _setProtocolSuggestie(mod) {
@@ -1238,6 +1283,7 @@ function prefill(forceMod) {
     }
     if (PROJECT.protocollen.includes('2018')) {
       document.getElementById('sec-2018').classList.add('vis');
+      document.getElementById('cb-2018').checked = true;
       if (PROJECT.projectleider) {
         const el = document.getElementById('f-asb-pl-sn');
         el.value = PROJECT.projectleider;
@@ -1616,15 +1662,17 @@ function showToast(m){const t=document.getElementById('toast');t.textContent=m;t
 const FOTO_MAX_PX = 1920;
 const FOTO_KWALITEIT = 0.85;
 
-function fotoGekozen(input) {
+function fotoGekozen(input, categorie) {
   if (!PROJECT.projectnummer) { showToast('⚠ Eerst een project kiezen'); input.value=''; return; }
-  Array.from(input.files).forEach(file => _fotoVerwerken(file));
+  Array.from(input.files).forEach(file => _fotoVerwerken(file, categorie || 'rapport'));
   input.value = '';
 }
 
-function _fotoVerwerken(file) {
+function _fotoVerwerken(file, categorie) {
   const id = 'foto_' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
-  const wachtrij = document.getElementById('foto-wachtrij');
+  const wachtrij = document.getElementById(
+    categorie === 'verificatie' ? 'foto-wachtrij-verif' : 'foto-wachtrij-rapport'
+  );
 
   // Thumbnail kaartje aanmaken
   const kaart = document.createElement('div');
@@ -1649,7 +1697,7 @@ function _fotoVerwerken(file) {
         const fr2 = new FileReader();
         fr2.onload = ev => {
           const b64 = ev.target.result.split(',')[1];
-          _fotoUploaden(id, file.name, b64, 'image/jpeg');
+          _fotoUploaden(id, file.name, b64, 'image/jpeg', categorie);
         };
         fr2.readAsDataURL(blob);
       }, 'image/jpeg', FOTO_KWALITEIT);
@@ -1659,12 +1707,12 @@ function _fotoVerwerken(file) {
   reader.readAsDataURL(file);
 }
 
-async function _fotoUploaden(id, naam, b64, mimetype) {
+async function _fotoUploaden(id, naam, b64, mimetype, categorie) {
   try {
     const resp = await fetch(`${API_URL}/api/foto`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ project: PROJECT.projectnummer, bestandsnaam: naam, data_base64: b64, mimetype })
+      body: JSON.stringify({ project: PROJECT.projectnummer, bestandsnaam: naam, data_base64: b64, mimetype, categorie: categorie || 'rapport' })
     });
     const result = await resp.json();
     const kaart = document.getElementById(id);

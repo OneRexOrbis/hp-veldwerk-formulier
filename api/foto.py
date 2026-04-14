@@ -23,9 +23,10 @@ import urllib.parse
 from datetime import datetime
 from http.server import BaseHTTPRequestHandler
 
-INDEX_SP_PATH = "General/HP Automatiseringen/veldwerk_projects_index.json"
-FOTOS_MAP     = "Foto's"
-MAX_MB        = 20
+INDEX_SP_PATH   = "General/HP Automatiseringen/veldwerk_projects_index.json"
+FOTOS_MAP       = "Foto's"
+FOTOS_VERIF_MAP = "Foto's verificatie"
+MAX_MB          = 20
 
 _cache = {"token": None, "token_ts": 0, "index": None, "index_ts": 0}
 INDEX_TTL = 300
@@ -117,6 +118,7 @@ class handler(BaseHTTPRequestHandler):
         bestandsnaam = (body.get("bestandsnaam") or "foto.jpg").strip()
         data_b64     = body.get("data_base64", "")
         mimetype     = body.get("mimetype", "image/jpeg")
+        categorie    = (body.get("categorie") or "rapport").strip().lower()
 
         if not pid or not data_b64:
             return self._json(400, {"ok": False, "error": "project en data_base64 zijn verplicht"})
@@ -131,12 +133,13 @@ class handler(BaseHTTPRequestHandler):
             if not folder:
                 return self._json(404, {"ok": False, "error": f"Project {pid} niet gevonden"})
 
+            submap = FOTOS_VERIF_MAP if categorie == "verificatie" else FOTOS_MAP
             ts = datetime.now().strftime("%Y%m%d_%H%M%S")
             sp_naam = f"{ts}_{bestandsnaam}"
-            sp_pad  = f"{folder}/{FOTOS_MAP}/{sp_naam}"
+            sp_pad  = f"{folder}/{submap}/{sp_naam}"
 
             _upload(sp_pad, foto_bytes, mimetype)
-            self._json(200, {"ok": True, "bestandsnaam": sp_naam})
+            self._json(200, {"ok": True, "bestandsnaam": sp_naam, "map": submap})
 
         except Exception as e:
             self._json(500, {"ok": False, "error": str(e)})
