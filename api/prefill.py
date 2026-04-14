@@ -12,6 +12,7 @@ from http.server import BaseHTTPRequestHandler
 
 _cache = {"token": None, "token_ts": 0, "index": None, "index_ts": 0}
 INDEX_SP_PATH = "General/HP Automatiseringen/veldwerk_projects_index.json"
+PREFILL_DIR = "General/HP Automatiseringen/prefills"
 INDEX_TTL = 300
 
 
@@ -53,6 +54,47 @@ def _get_index() -> list:
     return projecten
 
 
+def _fetch_sp_file(path: str) -> dict | None:
+    """Haal een JSON-bestand op van SharePoint. Retourneert None bij 404/fout."""
+    drive_id = os.environ["DRIVE_ID"]
+    token = _get_token()
+    url = (
+        f"https://graph.microsoft.com/v1.0/drives/{drive_id}/root:/"
+        f"{urllib.parse.quote(path, safe='/')}:/content"
+    )
+    req = urllib.request.Request(url, headers={"Authorization": f"Bearer {token}"})
+    try:
+        resp = urllib.request.urlopen(req, timeout=10)
+        return json.loads(resp.read())
+    except urllib.error.HTTPError:
+        return None
+
+
+def _compute_protocol_suggestie(pf: dict) -> tuple[str, list[str]]:
+    """Bereken protocol_suggestie en protocollen op basis van discipline en velden.
+
+    Returns: (suggestie, protocollen)
+    """
+    discipline = (pf.get("discipline") or pf.get("project_type") or "").upper()
+    peilbuizen = int(pf.get("peilbuizen") or 0)
+    analysepakket = (pf.get("analysepakket") or "").lower()
+
+    # BRL 1000 disciplines
+    if discipline in ("AP", "AP04", "BRL1000", "BRL1001", "1001"):
+        return "1001", ["1001"]
+    if discipline in ("BRL1002", "1002"):
+        return "1002", ["1002"]
+
+    # BRL 2000 disciplines (VE=verkennend, VO=vooronderzoek, default)
+    protocollen = ["2001"]
+    if peilbuizen > 0:
+        protocollen.append("2002")
+    if "asbest" in analysepakket:
+        protocollen.append("2018")
+
+    return "2001", protocollen
+
+
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
         parsed = urllib.parse.urlparse(self.path)
@@ -66,25 +108,30 @@ class handler(BaseHTTPRequestHandler):
             try:
                 projecten = _get_index()
                 project = next((p for p in projecten if p.get("projectnummer") == pid), None)
+
                 if project is None:
                     body = json.dumps({"ok": False, "error": f"Project {pid} niet gevonden"})
                     status = 404
-                elif not project.get("prefill"):
-                    # Geen prefill beschikbaar — stuur minimale data terug
-                    body = json.dumps({"ok": True, "prefill": {
-                        "projectnummer": project["projectnummer"],
-                        "adres": project.get("adres", ""),
-                        "opdrachtgever": project.get("opdrachtgever", ""),
-                        "discipline": project.get("discipline", "BRL2000"),
-                        "protocollen": ["2001"],
-                        "protocol_suggestie": project.get("protocol_suggestie", "1001"),
-                        "_bron": "index (geen prefill beschikbaar)",
-                    }})
-                    status = 200
                 else:
-                    pf = dict(project["prefill"] or {})
-                    pf.setdefault("discipline", project.get("discipline", ""))
-                    pf.setdefault("protocol_suggestie", project.get("protocol_suggestie", "1001"))
+                    pf = dict(project.get("prefill") or {})
+
+                    # Fallback: als index geen prefill heeft, probeer individueel bestand
+                    if not pf:
+                        sp_prefill = _fetch_sp_file(f"{PREFILL_DIR}/{pid}_prefill.json")
+                        if sp_prefill:
+                            pf = sp_prefill
+                            pf["_bron"] = "prefills/{pid}_prefill.json"
+
+                    # Merge index-velden als fallback voor ontbrekende prefill-velden
+                    for key in ("projectnummer", "adres", "opdrachtgever", "discipline"):
+                        pf.setdefault(key, project.get(key, ""))
+                    pf.setdefault("projectnummer", pid)
+
+                    # Bereken protocol-suggestie op basis van discipline/velden
+                    suggestie, protocollen = _compute_protocol_suggestie(pf)
+                    pf.setdefault("protocol_suggestie", suggestie)
+                    pf.setdefault("protocollen", protocollen)
+
                     body = json.dumps({"ok": True, "prefill": pf})
                     status = 200
             except Exception as e:
