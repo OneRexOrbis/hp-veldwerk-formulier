@@ -246,7 +246,7 @@
     </select>
     <div id="pin-naam-error" style="font-size:12px;color:var(--rd);font-weight:600;height:16px;margin-top:4px"></div>
     <label class="pin-user-label" for="pin-code" style="margin-top:14px">Pincode</label>
-    <input type="password" id="pin-code" maxlength="4" inputmode="numeric" pattern="[0-9]*"
+    <input type="tel" id="pin-code" maxlength="4" inputmode="numeric" pattern="[0-9]*"
            placeholder="••••" autocomplete="off"
            style="width:160px;height:56px;border:2px solid var(--bd);border-radius:10px;text-align:center;font-size:28px;font-weight:700;font-family:inherit;color:var(--dk);background:var(--gy-l);display:block;margin:8px auto 0">
     <div class="pin-error" id="pin-error" style="margin-top:6px"></div>
@@ -1855,7 +1855,7 @@ function _pinHerstelSessie() {
   });
 }
 
-const PIN_MAX_AGE_MS = 12 * 60 * 60 * 1000; // 12 uur
+const PIN_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 dagen
 
 function initPin() {
   // Controleer persistent login met expiry-check
