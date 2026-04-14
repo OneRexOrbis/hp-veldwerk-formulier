@@ -1697,13 +1697,82 @@ function showToast(m){const t=document.getElementById('toast');t.textContent=m;t
 const FOTO_MAX_PX = 1920;
 const FOTO_KWALITEIT = 0.85;
 
+/**
+ * Lees EXIF DateTimeOriginal (tag 0x9003) uit eerste 64 KB van een JPEG.
+ * Geeft "YYYYMMDD_HHMMSS" terug, of null als niet beschikbaar.
+ */
+function _leesExifDatum(file) {
+  return new Promise(resolve => {
+    if (!file.type.includes('jpeg') && !file.name.match(/\.(jpg|jpeg)$/i)) return resolve(null);
+    const reader = new FileReader();
+    reader.onerror = () => resolve(null);
+    reader.onload = e => {
+      try {
+        const buf = e.target.result;
+        const view = new DataView(buf);
+        if (view.getUint16(0) !== 0xFFD8) return resolve(null);
+        let offset = 2;
+        while (offset < buf.byteLength - 4) {
+          const marker = view.getUint16(offset);
+          const len    = view.getUint16(offset + 2);
+          if (marker === 0xFFE1) {
+            // APP1: check "Exif\0\0"
+            if (view.getUint32(offset + 4) === 0x45786966 && view.getUint16(offset + 8) === 0x0000) {
+              const t = offset + 10; // TIFF header start
+              const le = view.getUint16(t) === 0x4949; // 'II' = little-endian
+              const u16 = o => view.getUint16(t + o, le);
+              const u32 = o => view.getUint32(t + o, le);
+              // IFD0 → zoek ExifIFD pointer (tag 0x8769)
+              const ifd0 = u32(4);
+              const n0   = u16(ifd0);
+              let exifOfs = null;
+              for (let i = 0; i < n0; i++) {
+                const p = ifd0 + 2 + i * 12;
+                if (u16(p) === 0x8769) { exifOfs = u32(p + 8); break; }
+              }
+              if (exifOfs === null) return resolve(null);
+              // ExifIFD → zoek DateTimeOriginal (tag 0x9003)
+              const nE = u16(exifOfs);
+              for (let i = 0; i < nE; i++) {
+                const p = exifOfs + 2 + i * 12;
+                if (u16(p) === 0x9003) {
+                  const valOfs = u32(p + 8);
+                  let s = '';
+                  for (let j = 0; j < 19; j++) s += String.fromCharCode(view.getUint8(t + valOfs + j));
+                  // "YYYY:MM:DD HH:MM:SS"
+                  const m = s.match(/^(\d{4}):(\d{2}):(\d{2}) (\d{2}):(\d{2}):(\d{2})$/);
+                  return resolve(m ? `${m[1]}${m[2]}${m[3]}_${m[4]}${m[5]}${m[6]}` : null);
+                }
+              }
+            }
+          }
+          if (marker === 0xFFDA) break; // SOS-marker: geen metadata meer
+          offset += 2 + len;
+        }
+      } catch(_) {}
+      resolve(null);
+    };
+    reader.readAsArrayBuffer(file.slice(0, 65536));
+  });
+}
+
+function _datumVanFile(file) {
+  // Fallback: lastModified van het bestand
+  const d = new Date(file.lastModified);
+  return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}_${String(d.getHours()).padStart(2,'0')}${String(d.getMinutes()).padStart(2,'0')}${String(d.getSeconds()).padStart(2,'0')}`;
+}
+
 function fotoGekozen(input, categorie) {
   if (!PROJECT.projectnummer) { showToast('⚠ Eerst een project kiezen'); input.value=''; return; }
   Array.from(input.files).forEach(file => _fotoVerwerken(file, categorie || 'rapport'));
   input.value = '';
 }
 
-function _fotoVerwerken(file, categorie) {
+async function _fotoVerwerken(file, categorie) {
+  // EXIF opnamedatum lezen vóór resize (werkt op ongewijzigde bytes)
+  const exifDatum = await _leesExifDatum(file);
+  const opnamedatum = exifDatum || _datumVanFile(file);
+
   const id = 'foto_' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
   const wachtrij = document.getElementById(
     categorie === 'verificatie' ? 'foto-wachtrij-verif' : 'foto-wachtrij-rapport'
@@ -1732,7 +1801,7 @@ function _fotoVerwerken(file, categorie) {
         const fr2 = new FileReader();
         fr2.onload = ev => {
           const b64 = ev.target.result.split(',')[1];
-          _fotoUploaden(id, file.name, b64, 'image/jpeg', categorie);
+          _fotoUploaden(id, file.name, b64, 'image/jpeg', categorie, opnamedatum);
         };
         fr2.readAsDataURL(blob);
       }, 'image/jpeg', FOTO_KWALITEIT);
@@ -1742,12 +1811,19 @@ function _fotoVerwerken(file, categorie) {
   reader.readAsDataURL(file);
 }
 
-async function _fotoUploaden(id, naam, b64, mimetype, categorie) {
+async function _fotoUploaden(id, naam, b64, mimetype, categorie, opnamedatum) {
   try {
     const resp = await fetch(`${API_URL}/api/foto`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ project: PROJECT.projectnummer, bestandsnaam: naam, data_base64: b64, mimetype, categorie: categorie || 'rapport' })
+      body: JSON.stringify({
+        project:      PROJECT.projectnummer,
+        bestandsnaam: naam,
+        data_base64:  b64,
+        mimetype,
+        categorie:    categorie || 'rapport',
+        opnamedatum:  opnamedatum || null,
+      })
     });
     const result = await resp.json();
     const kaart = document.getElementById(id);

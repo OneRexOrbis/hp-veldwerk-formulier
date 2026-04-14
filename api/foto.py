@@ -119,6 +119,7 @@ class handler(BaseHTTPRequestHandler):
         data_b64     = body.get("data_base64", "")
         mimetype     = body.get("mimetype", "image/jpeg")
         categorie    = (body.get("categorie") or "rapport").strip().lower()
+        opnamedatum  = (body.get("opnamedatum") or "").strip()
 
         if not pid or not data_b64:
             return self._json(400, {"ok": False, "error": "project en data_base64 zijn verplicht"})
@@ -134,7 +135,13 @@ class handler(BaseHTTPRequestHandler):
                 return self._json(404, {"ok": False, "error": f"Project {pid} niet gevonden"})
 
             submap = FOTOS_VERIF_MAP if categorie == "verificatie" else FOTOS_MAP
-            ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+            # Gebruik EXIF opnamedatum als die is meegegeven en geldig is (YYYYMMDD_HHMMSS),
+            # anders server-tijdstip. Zo sorteert de bijlage op opnametijd, niet uploadtijd.
+            import re as _re
+            if opnamedatum and _re.fullmatch(r'\d{8}_\d{6}', opnamedatum):
+                ts = opnamedatum
+            else:
+                ts = datetime.now().strftime("%Y%m%d_%H%M%S")
             sp_naam = f"{ts}_{bestandsnaam}"
             sp_pad  = f"{folder}/{submap}/{sp_naam}"
 
