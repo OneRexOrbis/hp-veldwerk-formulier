@@ -231,14 +231,7 @@
   <div class="pin-box">
     <div class="pin-logo">H&P</div>
     <h2>Hopman en Peters B.V.</h2>
-    <p>Veldwerk Compliance — voer pincode in</p>
-    <div class="pin-digits" id="pin-digits">
-      <input type="tel" maxlength="1" inputmode="numeric" autofocus>
-      <input type="tel" maxlength="1" inputmode="numeric">
-      <input type="tel" maxlength="1" inputmode="numeric">
-      <input type="tel" maxlength="1" inputmode="numeric">
-    </div>
-    <div class="pin-error" id="pin-error"></div>
+    <p>Veldwerk Compliance</p>
     <label class="pin-user-label" for="pin-naam-sel">Wie ben je?</label>
     <select id="pin-naam-sel" class="pin-user-sel">
       <option value="">— Kies je naam —</option>
@@ -252,6 +245,12 @@
       <option value="rdekker">Rosalie Dekker</option>
     </select>
     <div id="pin-naam-error" style="font-size:12px;color:var(--rd);font-weight:600;height:16px;margin-top:4px"></div>
+    <label class="pin-user-label" for="pin-code" style="margin-top:14px">Pincode</label>
+    <input type="tel" id="pin-code" maxlength="4" inputmode="numeric" pattern="[0-9]*"
+           placeholder="••••" autocomplete="one-time-code"
+           style="width:160px;height:56px;border:2px solid var(--bd);border-radius:10px;text-align:center;font-size:28px;font-weight:700;font-family:inherit;color:var(--dk);background:var(--gy-l);display:block;margin:8px auto 0">
+    <div class="pin-error" id="pin-error" style="margin-top:6px"></div>
+    <button onclick="pinBevestig()" style="margin-top:14px;width:160px;padding:12px;background:var(--hp);color:white;border:none;border-radius:10px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;display:block;margin-left:auto;margin-right:auto">Inloggen</button>
   </div>
 </div>
 
@@ -262,6 +261,7 @@
     <div><h1 id="hdr-titel">Veldwerk Compliance</h1><p id="hdr-sub">BRL SIKB 2000 — Protocol 2001 / 2002 / 2018</p></div>
     <span class="mod-badge" id="hdr-badge">BRL 2000</span>
     <button class="back-btn no-print" onclick="showPicker()" title="Ander project kiezen">&#8592; Project</button>
+    <button class="back-btn no-print" onclick="uitloggen()" title="Uitloggen" style="margin-left:4px;background:none;border:1px solid rgba(255,255,255,.4);font-size:11px">⎋ Uitlog</button>
   </div>
 
   <!-- ═══ PROJECT BANNER ═══ -->
@@ -1590,14 +1590,14 @@ function doJSON() {
 
 // ─── DRAFT / AUTO-SAVE ─────────────────────────────
 function _gebruikersnaam() {
-  return sessionStorage.getItem('hp_vw_naam') || '';
+  return sessionStorage.getItem('hp_vw_naam') || localStorage.getItem('hp_vw_naam') || '';
 }
 function _gebruikerObj() {
-  const id = sessionStorage.getItem('hp_vw_id') || '';
+  const id = sessionStorage.getItem('hp_vw_id') || localStorage.getItem('hp_vw_id') || '';
   return USERS.find(u => u.id === id) || null;
 }
 function _gebruikerRol() {
-  return sessionStorage.getItem('hp_vw_rol') || '';
+  return sessionStorage.getItem('hp_vw_rol') || localStorage.getItem('hp_vw_rol') || '';
 }
 
 function _draftStatusToon(tekst) {
@@ -1770,37 +1770,75 @@ async function _fotoUploaden(id, naam, b64, mimetype, categorie) {
 
 // ─── PIN ───────────────────────────────────────────
 const PIN='2026';
-function initPin(){
-  if(sessionStorage.getItem('hp_vw_ok')==='1'){unlock();return}
-  const inputs=document.querySelectorAll('#pin-digits input');
-  inputs.forEach((inp,i)=>{
-    inp.addEventListener('input',e=>{
-      e.target.value=e.target.value.replace(/\D/g,'');
-      if(e.target.value&&i<3)inputs[i+1].focus();
-      if(i===3&&e.target.value){
-        const code=Array.from(inputs).map(x=>x.value).join('');
-        if(code===PIN){
-          const userId=document.getElementById('pin-naam-sel').value;
-          if(!userId){document.getElementById('pin-naam-error').textContent='Kies eerst wie je bent';document.getElementById('pin-naam-sel').focus();inputs.forEach(x=>{x.value=''});inputs[0].focus();return}
-          const user=USERS.find(u=>u.id===userId);
-          sessionStorage.setItem('hp_vw_ok','1');
-          sessionStorage.setItem('hp_vw_naam',user.naam);
-          sessionStorage.setItem('hp_vw_id',user.id);
-          sessionStorage.setItem('hp_vw_rol',user.rol);
-          sessionStorage.setItem('hp_vw_sessie_start',new Date().toISOString());
-          inputs.forEach(x=>{x.style.borderColor='var(--hp)';x.style.background='var(--hp)';x.style.color='white'});
-          setTimeout(unlock,300)
-        } else {
-          document.getElementById('pin-error').textContent='Onjuiste pincode';
-          inputs.forEach(x=>x.classList.add('wrong'));
-          setTimeout(()=>{inputs.forEach(x=>{x.classList.remove('wrong');x.value=''});inputs[0].focus();document.getElementById('pin-error').textContent=''},600)
-        }
-      }
-    });
-    inp.addEventListener('keydown',e=>{if(e.key==='Backspace'&&!e.target.value&&i>0){inputs[i-1].focus();inputs[i-1].value=''}});
-    inp.addEventListener('paste',e=>{e.preventDefault();const p=(e.clipboardData.getData('text')||'').replace(/\D/g,'').slice(0,4);p.split('').forEach((c,ci)=>{if(inputs[ci])inputs[ci].value=c});if(p.length>=4){inputs[3].focus();inputs[3].dispatchEvent(new Event('input'))}});
+
+function _pinHerstelSessie() {
+  // Herstel sessie-waarden uit localStorage zodat bestaande sessionStorage-code blijft werken
+  ['hp_vw_naam','hp_vw_id','hp_vw_rol','hp_vw_sessie_start'].forEach(k => {
+    const v = localStorage.getItem(k);
+    if (v && !sessionStorage.getItem(k)) sessionStorage.setItem(k, v);
   });
-  setTimeout(()=>inputs[0]?.focus(),100);
+}
+
+function initPin() {
+  // Persistent login via localStorage
+  if (localStorage.getItem('hp_vw_ok') === '1') {
+    _pinHerstelSessie();
+    unlock();
+    return;
+  }
+  // Onthoud laatste gebruiker
+  const lastUser = localStorage.getItem('hp_vw_last_user');
+  if (lastUser) {
+    const sel = document.getElementById('pin-naam-sel');
+    if (sel) sel.value = lastUser;
+  }
+  const inp = document.getElementById('pin-code');
+  if (!inp) return;
+  // Schoon numeriek houden
+  inp.addEventListener('input', e => {
+    e.target.value = e.target.value.replace(/\D/g, '');
+    // Auto-submit na 4 cijfers (als naam al gekozen)
+    if (e.target.value.length === 4 && document.getElementById('pin-naam-sel').value) {
+      pinBevestig();
+    }
+  });
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') pinBevestig(); });
+  setTimeout(() => inp.focus(), 200);
+}
+
+function uitloggen() {
+  ['hp_vw_ok','hp_vw_naam','hp_vw_id','hp_vw_rol','hp_vw_sessie_start'].forEach(k => {
+    localStorage.removeItem(k); sessionStorage.removeItem(k);
+  });
+  location.reload();
+}
+
+function pinBevestig() {
+  const inp = document.getElementById('pin-code');
+  const code = (inp?.value || '').replace(/\D/g, '');
+  const userId = document.getElementById('pin-naam-sel').value;
+  document.getElementById('pin-naam-error').textContent = '';
+  document.getElementById('pin-error').textContent = '';
+
+  if (!userId) {
+    document.getElementById('pin-naam-error').textContent = 'Kies eerst wie je bent';
+    document.getElementById('pin-naam-sel').focus();
+    return;
+  }
+  if (code !== PIN) {
+    document.getElementById('pin-error').textContent = 'Onjuiste pincode';
+    inp.classList.add('wrong');
+    setTimeout(() => { inp.classList.remove('wrong'); inp.value = ''; inp.focus(); document.getElementById('pin-error').textContent = ''; }, 600);
+    return;
+  }
+  const user = USERS.find(u => u.id === userId);
+  const nu = new Date().toISOString();
+  // Opslaan in localStorage (persistent) én sessionStorage (bestaande code)
+  const data = { hp_vw_ok:'1', hp_vw_naam:user.naam, hp_vw_id:user.id, hp_vw_rol:user.rol, hp_vw_sessie_start:nu };
+  Object.entries(data).forEach(([k,v]) => { localStorage.setItem(k,v); sessionStorage.setItem(k,v); });
+  localStorage.setItem('hp_vw_last_user', user.id);
+  inp.style.cssText += ';border-color:var(--hp);background:var(--hp);color:white';
+  setTimeout(unlock, 300);
 }
 function unlock(){
   document.getElementById('pin-overlay').classList.add('unlocked');
