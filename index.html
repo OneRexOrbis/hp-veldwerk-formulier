@@ -2862,10 +2862,10 @@ function _herstelDraft(data) {
     // Fase
     if (data._meta?.fase) _twSet('eq_fase', String(data._meta.fase));
     // Tweede veldbezoek
-    const tv = data.tweede_veldbezoek || {};
-    if (tv.nodig) { _twSet('eq_tv_nodig', tv.nodig); const det = document.getElementById('eq-tv-detail'); if (det) det.style.display = tv.nodig === 'y' ? 'block' : 'none'; }
-    if (tv.reden)       { const el = document.getElementById('eq-tv-reden'); if (el) el.value = tv.reden; }
-    if (tv.datum_fase2) { const el = document.getElementById('eq-tv-datum'); if (el) el.value = tv.datum_fase2; }
+    const vb = data.tweede_veldbezoek || {};
+    if (vb.nodig) { _twSet('eq_tv_nodig', vb.nodig); const det = document.getElementById('eq-tv-detail'); if (det) det.style.display = vb.nodig === 'y' ? 'block' : 'none'; }
+    if (vb.reden)       { const el = document.getElementById('eq-tv-reden'); if (el) el.value = vb.reden; }
+    if (vb.datum_fase2) { const el = document.getElementById('eq-tv-datum'); if (el) el.value = vb.datum_fase2; }
     if (Array.isArray(data.fotos)) _eqFotos = data.fotos;
   }
 } catch(e) { console.warn('Draft herstel gedeeltelijk:', e); }
