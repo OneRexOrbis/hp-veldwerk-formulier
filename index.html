@@ -1463,7 +1463,7 @@ function clrSig(n){const cv=document.getElementById('sig'+n+'-cv');cv.getContext
 // ─── Prefill ───────────────────────────────────────
 function prefill(forceMod) {
   // Server-side protocol_suggestie heeft prioriteit boven lokale detectModule()
-  const psToMod = {'2001':'2000','2002':'2000','2018':'2000','1001':'1001','1002':'1002'};
+  const psToMod = {'2001':'2000','2002':'2000','2018':'2000','1001':'1001','1002':'1002','eq':'eq'};
   const autoMod = PROJECT.protocol_suggestie
     ? (psToMod[String(PROJECT.protocol_suggestie)] || detectModule())
     : detectModule();
@@ -1610,26 +1610,32 @@ function prefill(forceMod) {
     if (el) el.textContent = locNaam;
     const eli = document.getElementById('eq-locatie-info');
     if (eli) eli.textContent = locInfo;
-    // Datum voorinvullen
+    // Datum + tijdstip voorinvullen
     const datEl = document.getElementById('eq-datum');
     if (datEl && !datEl.value) {
       datEl.value = (PROJECT.datum_veldbezoek || new Date().toISOString().slice(0,10));
       _eqBroedseizoenCheck();
+    }
+    const tijdEl = document.getElementById('eq-tijdstip');
+    if (tijdEl && !tijdEl.value) {
+      const nu = new Date();
+      tijdEl.value = nu.toTimeString().slice(0,5);
     }
     // BAG bouwjaar prefill
     if (PROJECT.bouwjaar) {
       const bjEl = document.getElementById('eq-bouwjaar');
       if (bjEl && !bjEl.value) bjEl.value = PROJECT.bouwjaar;
     }
-    // N2K afstand prefill
+    // N2K afstand + AERIUS prefill
     if (PROJECT.n2k_afstand_m != null) {
       const n2kEl = document.getElementById('eq-n2k-afstand');
       if (n2kEl && !n2kEl.value) n2kEl.value = PROJECT.n2k_afstand_m;
-      // Auto-toggle nabij als < 3000 m
       if (!S.eq_n2k_nabij) {
-        const nabij = PROJECT.n2k_afstand_m < 3000 ? 'y' : 'n';
-        const twEl = document.querySelector('[data-f="eq_n2k_nabij"]');
-        if (twEl) { twEl.querySelectorAll('button').forEach(b => { b.classList.toggle('active', (b.dataset.v||b.textContent.trim().toLowerCase()[0]) === nabij); }); S.eq_n2k_nabij = nabij; }
+        _twSet('eq_n2k_nabij', PROJECT.n2k_afstand_m < 3000 ? 'y' : 'n');
+      }
+      // AERIUS: als N2K binnen 3 km → waarschijnlijk rekenplichtig
+      if (!S.eq_aerius && PROJECT.n2k_afstand_m < 3000) {
+        _twSet('eq_aerius', 'y');
       }
     }
     // Provincie prefill
@@ -1663,6 +1669,8 @@ function prefill(forceMod) {
     }
     // Soortgroepen genereren (met soorten_hints meegeven)
     _eqInitSoortgroepen();
+    // Weerdata ophalen op de achtergrond (lat/lon uit harvest)
+    if (PROJECT.lat && PROJECT.lon) _eqWeatherOphalen();
     return;
   }
 
@@ -1978,6 +1986,32 @@ const _EQ_GPS_TTL = 5 * 60 * 1000;  // 5 minuten
 // EQ foto metadata: [{id, bestandsnaam, beschrijving, soortgroep, lat, lon}]
 let _eqFotos = [];
 
+async function _eqWeatherOphalen() {
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${PROJECT.lat}&longitude=${PROJECT.lon}`
+      + `&current=temperature_2m,wind_speed_10m,wind_direction_10m,cloud_cover,precipitation`
+      + `&wind_speed_unit=ms&timezone=Europe%2FAmsterdam`;
+    const resp = await fetch(url);
+    const json = await resp.json();
+    const c = json.current;
+    if (!c) return;
+    const set = (id, val) => { const el = document.getElementById(id); if (el && !el.value) el.value = val; };
+    set('eq-temp',      Math.round(c.temperature_2m));
+    set('eq-wind-bft',  _msToBft(c.wind_speed_10m));
+    set('eq-windrichting', _degToRichting(c.wind_direction_10m));
+    set('eq-bewolking', c.cloud_cover);
+    const mm = c.precipitation || 0;
+    set('eq-neerslag', mm === 0 ? 'Geen' : mm < 1.5 ? 'Licht' : mm < 7.5 ? 'Matig' : 'Zwaar');
+  } catch(e) { console.warn('Weerdata niet beschikbaar:', e); }
+}
+function _msToBft(ms) {
+  const tbl = [0.3,1.6,3.4,5.5,8.0,10.8,13.9,17.2,20.8,24.5,28.5,32.7];
+  return tbl.findIndex(t => ms < t) === -1 ? 12 : tbl.findIndex(t => ms < t);
+}
+function _degToRichting(deg) {
+  return ['N','NO','O','ZO','Z','ZW','W','NW'][Math.round((deg % 360) / 45) % 8];
+}
+
 function _eqInitSoortgroepen() {
   const container = document.getElementById('eq-soortgroepen');
   if (!container) return;
@@ -1996,16 +2030,6 @@ function _eqInitSoortgroepen() {
           '</div></div>',
         '<div class="fld"><label>Waarnemingen</label>',
           '<textarea id="eq-' + sg.key + '-waarn" rows="2" placeholder="bijv. geen waarnemingen / sporen van vleermuizen gezien..."></textarea>',
-        '</div>',
-        '<div class="trow"><span class="tl">Vervolgonderzoek nodig?</span>',
-          '<div class="tsw" data-f="eq_' + sg.key + '_vervolg"',
-               ' onchange="document.getElementById(\'eq-' + sg.key + '-toel\').style.display=S[\'eq_' + sg.key + '_vervolg\']=== \'y\'?\'block\':\'none\'">',
-            '<button onclick="tw(this,\'y\')">Ja</button>',
-            '<button onclick="tw(this,\'n\')">Nee</button>',
-          '</div></div>',
-        '<div class="fld" id="eq-' + sg.key + '-toel" style="display:none">',
-          '<label>Toelichting vervolgonderzoek</label>',
-          '<textarea rows="1" id="eq-' + sg.key + '-toelta"></textarea>',
         '</div>',
       '</div>',
     ].join('');
@@ -2117,8 +2141,6 @@ function buildExportEQ() {
     soortgroepen[sg.key] = {
       habitat_geschikt:  S['eq_' + sg.key + '_hab']    || null,
       waarnemingen:      (document.getElementById('eq-' + sg.key + '-waarn')?.value || '').trim() || null,
-      vervolgonderzoek:  S['eq_' + sg.key + '_vervolg'] || null,
-      toelichting:       (document.getElementById('eq-' + sg.key + '-toelta')?.value || '').trim() || null,
     };
   });
   const datum = document.getElementById('eq-datum')?.value || null;
@@ -2885,11 +2907,8 @@ function _herstelDraft(data) {
     const sg = data.soortgroepen || {};
     EQ_SOORTGROEPEN.forEach(grp => {
       const g = sg[grp.key] || {};
-      if (g.habitat_geschikt) _twSet('eq_' + grp.key + '_hab',    g.habitat_geschikt);
-      if (g.vervolgonderzoek) _twSet('eq_' + grp.key + '_vervolg', g.vervolgonderzoek);
-      const waEl = document.getElementById('eq-'+grp.key+'-waarn');  if (waEl && g.waarnemingen) waEl.value = g.waarnemingen;
-      const toEl = document.getElementById('eq-'+grp.key+'-toelta'); if (toEl && g.toelichting)  toEl.value = g.toelichting;
-      if (g.vervolgonderzoek === 'y') { const toel = document.getElementById('eq-'+grp.key+'-toel'); if (toel) toel.style.display = 'block'; }
+      if (g.habitat_geschikt) _twSet('eq_' + grp.key + '_hab', g.habitat_geschikt);
+      const waEl = document.getElementById('eq-'+grp.key+'-waarn'); if (waEl && g.waarnemingen) waEl.value = g.waarnemingen;
     });
     // Houtopstanden, stikstof
     const ho = data.houtopstanden || {}, st = data.stikstof || {};
