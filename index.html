@@ -1836,12 +1836,19 @@ function buildExport2000() {
       handtekening_pl:{ondertekend:sigs[5]?.hasDraw()||!!document.getElementById('sig5-b64')?.value,naam:_v('f-asb-pl-sn'),datum:_v('f-asb-pl-sd'),handtekening_base64:sigs[5]?.hasDraw()?sigs[5].canvas.toDataURL('image/png'):(document.getElementById('sig5-b64')?.value||null)},
     };
   }
-  if (PROJECT.protocollen.includes('2002')) {
+  // Fase 2 meenemen als protocol 2002 actief is ÓÓF als fase 2 daadwerkelijk ingevuld werd
+  // (peilbuizen geplaatst, LMRA ingevuld, of tab zichtbaar)
+  const _heeft2002 = PROJECT.protocollen.includes('2002') || PROJECT.peilbuizen > 0
+    || S.f2_lmra_veilig || S.f2_conform || S.f1_peilbuizen === 'y'
+    || document.getElementById('ptab2')?.style.display !== 'none';
+  if (_heeft2002) {
+    if (!PROJECT.protocollen.includes('2002')) PROJECT.protocollen.push('2002');
+    data.project.protocollen = [...PROJECT.protocollen];
     data.fase2={lmra:{veilig:S.f2_lmra_veilig||null,toegang:S.f2_lmra_toegang||null,tekening:S.f2_lmra_tekening||null},protocol_2002:{conform:S.f2_conform||null,afgerond:S.f2_afgerond||null,wachttijd:S.f2_wachttijd||null,drijflaag:S.f2_drijflaag||null,beluchting:S.f2_beluchting||null,filtratie:S.f2_filtratie||null,ec_aanvang:S.f2_ec_aanvang||null,ec_stabiel:S.f2_ec_stabiel||null,o2_gemeten:S.f2_o2||null,ntu_ph_gemeten:S.f2_ntu_ph||null,overdracht:S.f2_overdracht||null,zintuiglijk:document.getElementById('f2-zintuig').value||null,meerwerk:S.f2_meerwerk||null,meerwerk_akkoord_pl:S.f2_meerwerk_akkoord||null,afwijkingen:S.f2_afwijkingen||null,afwijkingen_toelichting:document.getElementById('f2-afw').value||null},opmerkingen:document.getElementById('f2-opm').value||null,conformiteitsverklaring:{ondertekend:sigs[2]?.hasDraw()||!!document.getElementById('sig2-b64')?.value,naam:document.getElementById('f2-sn').value,datum:document.getElementById('f2-sd').value,handtekening_base64:sigs[2]?.hasDraw()?sigs[2].canvas.toDataURL('image/png'):(document.getElementById('sig2-b64')?.value||null)}};
-  data.fase2.voorpompen_conform = S.f2_vp_conform || null;
-  data.fase2.ec_gestabiliseerd = S.f2_ec_gestab || null;
-  data.fase2.voorpompen_afw = document.getElementById('f2-vp-afw')?.value || null;
-  data.fase2.ec_afw = document.getElementById('f2-ec-afw')?.value || null;
+    data.fase2.voorpompen_conform = S.f2_vp_conform || null;
+    data.fase2.ec_gestabiliseerd = S.f2_ec_gestab || null;
+    data.fase2.voorpompen_afw = document.getElementById('f2-vp-afw')?.value || null;
+    data.fase2.ec_afw = document.getElementById('f2-ec-afw')?.value || null;
   }
   return data;
 }
