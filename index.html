@@ -2507,6 +2507,19 @@ function selectProject(pid){
       PROJECT.datum_monstername = pf.datum_monstername || '';
       PROJECT.partij = pf.partij || null;
       PROJECT.protocol_suggestie = pf.protocol_suggestie || null;
+      // EQ-specifieke prefill velden (uit harvest: locatie.json + soortendata.json)
+      PROJECT.ecoloog                = pf.ecoloog                || '';
+      PROJECT.provincie              = pf.provincie              || '';
+      PROJECT.gemeente               = pf.gemeente               || '';
+      PROJECT.lat                    = pf.lat                    ?? null;
+      PROJECT.lon                    = pf.lon                    ?? null;
+      PROJECT.bouwjaar               = pf.bouwjaar               ?? null;
+      PROJECT.n2k_afstand_m          = pf.n2k_afstand_m          ?? null;
+      PROJECT.n2k_naam               = pf.n2k_naam               || null;
+      PROJECT.in_nnn                 = pf.in_nnn                 ?? null;
+      PROJECT.gebouwbewoners_risico  = pf.gebouwbewoners_risico  || false;
+      PROJECT.relevante_soortgroepen = pf.relevante_soortgroepen || [];
+      PROJECT.soorten_hints          = pf.soorten_hints          || null;
       prefill();
       showForm();
       _activeerMeldenKnop();
