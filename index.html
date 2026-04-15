@@ -1525,6 +1525,14 @@ function prefill(forceMod) {
       const u = _gebruikerObj();
       if (u) { document.getElementById('f1-sn').value = u.naam; }
     }
+    // Inmeetmethode: TerraIndex als default
+    const inmEl = document.getElementById('f-inmeetmethode');
+    if (inmEl && !inmEl.value) inmEl.value = 'TerraIndex';
+    // Asbest PL datum: vandaag als 2018 actief en nog leeg
+    if (PROJECT.protocollen.includes('2018')) {
+      const asbDat = document.getElementById('f-asb-pl-sd');
+      if (asbDat && !asbDat.value) asbDat.value = new Date().toISOString().slice(0,10);
+    }
   }
 
   if (mod === '1001') {
@@ -1560,7 +1568,23 @@ function prefill(forceMod) {
       if (u) { document.getElementById('ap-sn').value = u.naam; }
     }
     if (!document.querySelector('#ap-dp-rijen > div')) apDpAdd(); // standaard 1 deelpartij (alleen als leeg)
-    apBerekenTonnage(); // auto-fill tonnage als volume bekend
+    // Erkenning monsternemer HP vast
+    const apCertEl = document.getElementById('ap-cert');
+    if (apCertEl && !apCertEl.value) apCertEl.value = 'NC-SIK-10093';
+    // Aantal mengmonsters default 2
+    const apMmEl = document.getElementById('ap-mengmonsters');
+    if (apMmEl && !apMmEl.value) { apMmEl.value = '2'; apBerekenGrepen(); }
+    // Dichtheid: afleiden uit partijtype (alleen als nog op default 1.65)
+    const apDichtEl = document.getElementById('ap-dichtheid');
+    if (apDichtEl && apDichtEl.value === '1.65') {
+      const t = ((PROJECT.partij||{}).type||'').toLowerCase();
+      const d = t.includes('bagger')||t.includes('slib') ? '1.50'
+              : t.includes('veen') ? '1.30'
+              : t.includes('klei') ? '1.75'
+              : t.includes('zand') ? '1.65' : null;
+      if (d) { apDichtEl.value = d; }
+    }
+    apBerekenTonnage();
   }
 
   if (mod === '1002') {
@@ -1600,6 +1624,23 @@ function prefill(forceMod) {
       const u = _gebruikerObj();
       if (u) { document.getElementById('bw-sn').value = u.naam; }
     }
+    // Erkenning monsternemer HP vast
+    const bwCertEl = document.getElementById('bw-cert');
+    if (bwCertEl && !bwCertEl.value) bwCertEl.value = 'NC-SIK-10093';
+    // Grootte bepaald door: default opgave opdrachtgever
+    const bwGrEl = document.getElementById('bw-grootte-door');
+    if (bwGrEl && !bwGrEl.value) bwGrEl.value = 'Opgave opdrachtgever';
+    // Doel: partijkeuring als default (meest voorkomend)
+    const bwDoelEl = document.getElementById('bw-doel');
+    if (bwDoelEl && !bwDoelEl.value) bwDoelEl.value = 'partijkeuring';
+    // Bemonsteringsmethode: §6.2.3 als default
+    const bwMethEl = document.getElementById('bw-methode');
+    if (bwMethEl && !bwMethEl.value) bwMethEl.value = '6.2.3';
+    // Monsters en grepen: 2 × 6 = partijkeuring standaard
+    const bwMnEl = document.getElementById('bw-monsters-n');
+    if (bwMnEl && !bwMnEl.value) bwMnEl.value = '2';
+    const bwGpEl = document.getElementById('bw-grepen-per-m');
+    if (bwGpEl && !bwGpEl.value) { bwGpEl.value = '6'; bwBerekenGrepen(); }
   }
   // ─── EQ prefill ───────────────────────────────────────────
   if (mod === 'eq') {
