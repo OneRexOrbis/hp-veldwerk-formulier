@@ -171,6 +171,10 @@
   .pick-search input{width:100%;padding:10px 12px;border:1.5px solid var(--bd);border-radius:8px;font-size:14px;font-family:inherit;background:var(--gy-l)}
   .pick-search input:focus{outline:none;border-color:var(--hp);background:white;box-shadow:0 0 0 3px rgba(45,106,79,.1)}
   .pick-hint{font-size:11px;color:var(--gy);margin-top:8px;text-align:center}
+  .pick-filters{display:flex;gap:6px;padding:6px 12px 4px}
+  .pfbtn{flex:1;padding:7px 4px;border:1.5px solid var(--bd);border-radius:7px;background:white;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;color:var(--gy);transition:all .15s}
+  .pfbtn.active{background:var(--hp);border-color:var(--hp);color:white}
+  .pfbtn.pf-eq.active{background:var(--eq);border-color:var(--eq)}
   .pick-result{background:white;margin:0 12px 8px;border-radius:10px;padding:13px 15px;border-left:4px solid var(--hp);box-shadow:0 1px 3px rgba(0,0,0,.06);cursor:pointer;transition:background .15s}
   .pick-result:active{background:var(--hp-bg)}
   .pick-result .pr-pid{color:var(--hp);font-weight:700;font-size:12px}
@@ -224,6 +228,11 @@
     <input type="search" id="pick-q" placeholder="P2600125 of Arendsweg 36..." autocomplete="off"
            oninput="pickSearch(this.value)" onfocus="if(!this.value)pickSearch('')">
     <div class="pick-hint" id="pick-hint">Recente projecten worden getoond — typ om te zoeken</div>
+  </div>
+  <div class="pick-filters">
+    <button class="pfbtn active" id="pf-all"   onclick="pickFilterSet(null)">Alles</button>
+    <button class="pfbtn"        id="pf-bodem" onclick="pickFilterSet('bodem')">🪨 Bodem</button>
+    <button class="pfbtn pf-eq"  id="pf-eq"   onclick="pickFilterSet('eq')">🌱 EQ</button>
   </div>
   <div id="pick-results"></div>
 </div>
@@ -2431,6 +2440,8 @@ function unlock(){
 function showPicker(){
   document.getElementById('picker-screen').classList.add('vis');
   document.getElementById('main-content').classList.remove('vis');
+  // Filter resetten
+  pickFilterSet(null);
   // Laad recente projecten direct
   const q = document.getElementById('pick-q');
   if (q) { q.value = ''; pickSearch(''); setTimeout(()=>q.focus(),100); }
@@ -2443,6 +2454,54 @@ function showForm(){
 }
 
 let _pickTimer = null;
+let _pickFilter = null;
+let _pickLastResults = [];
+
+function pickFilterSet(f) {
+  _pickFilter = f;
+  ['all','bodem','eq'].forEach(k => {
+    const btn = document.getElementById('pf-' + k);
+    if (btn) btn.classList.toggle('active', k === (f || 'all'));
+  });
+  _renderPickResults(_pickLastResults);
+}
+
+function _isPickEQ(p) {
+  const d = (p.discipline || '').toUpperCase();
+  return d === 'EQ' || d.includes('ECOLOG') || String(p.protocol_suggestie) === 'eq';
+}
+
+function _renderPickResults(resultaten) {
+  const results = document.getElementById('pick-results');
+  if (!results) return;
+  let filtered = resultaten;
+  if (_pickFilter === 'eq')    filtered = resultaten.filter(p =>  _isPickEQ(p));
+  if (_pickFilter === 'bodem') filtered = resultaten.filter(p => !_isPickEQ(p));
+  if (!filtered.length) {
+    const q = document.getElementById('pick-q')?.value || '';
+    const cat = _pickFilter === 'eq' ? 'EQ-' : _pickFilter === 'bodem' ? 'bodem-' : '';
+    results.innerHTML = `<div class="pick-empty">Geen ${cat}projecten gevonden${q?' voor "'+q+'"':''}</div>`;
+    return;
+  }
+  results.innerHTML = filtered.map(p => {
+    const isEQ = _isPickEQ(p);
+    const disc = (p.discipline || 'BRL2000').toUpperCase();
+    const cls = isEQ ? 'eq' :
+      disc.includes('1001') || disc === 'AP04' || disc === 'BRL1000' ? 'brl1001' :
+      disc.includes('1002') ? 'brl1002' :
+      disc === 'BRL6000' || disc.includes('6000') ? 'brl6000' : 'brl2000';
+    const label = isEQ ? 'EQ' :
+      disc.includes('1001') || disc === 'AP04' || disc === 'BRL1000' ? 'AP04' :
+      disc.includes('1002') ? '1002' :
+      disc === 'BRL6000' || disc.includes('6000') ? '6000' : '2000';
+    return `<div class="pick-result" onclick="selectProject('${p.projectnummer}')">
+      <div class="pr-header"><span class="pr-pid">${p.projectnummer}</span><span class="pick-badge ${cls}">${label}</span></div>
+      <div class="pr-addr">${p.adres||'—'}</div>
+      <div class="pr-info">${p.opdrachtgever||''}</div>
+    </div>`;
+  }).join('');
+}
+
 function pickSearch(q){
   clearTimeout(_pickTimer);
   _pickTimer = setTimeout(()=>_doPickSearch(q.trim()), q ? 300 : 0);
@@ -2459,24 +2518,13 @@ function _doPickSearch(q){
     .then(data => {
       if (!data.ok || !data.resultaten.length) {
         results.innerHTML = `<div class="pick-empty">Geen projecten gevonden${q?' voor "'+q+'"':''}</div>`;
+        _pickLastResults = [];
         return;
       }
-      results.innerHTML = data.resultaten.map(p => {
-        const disc = (p.discipline||'BRL2000').toUpperCase();
-const cls = disc.includes('1001')||disc==='AP04'||disc==='BRL1000' ? 'brl1001' :
-          disc.includes('1002') ? 'brl1002' :
-          disc==='BRL6000'||disc.includes('6000') ? 'brl6000' : 'brl2000';
-const label = disc.includes('1001')||disc==='AP04'||disc==='BRL1000' ? 'AP04' :
-          disc.includes('1002') ? '1002' :
-          disc==='BRL6000'||disc.includes('6000') ? '6000' : '2000';
-        return `<div class="pick-result" onclick="selectProject('${p.projectnummer}')">
-          <div class="pr-header"><span class="pr-pid">${p.projectnummer}</span><span class="mod-badge ${cls}">${label}</span></div>
-          <div class="pr-addr">${p.adres||'—'}</div>
-          <div class="pr-info">${p.opdrachtgever||''}</div>
-        </div>`;
-      }).join('');
+      _pickLastResults = data.resultaten;
+      _renderPickResults(_pickLastResults);
     })
-    .catch(err => {
+    .catch(() => {
       results.innerHTML = `<div class="pick-empty">API niet bereikbaar<br><small style="font-size:10px;color:#999">Zorg dat de Veldwerk API draait (Tailscale vereist)</small></div>`;
     });
 }
