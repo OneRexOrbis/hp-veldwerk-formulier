@@ -252,7 +252,7 @@
       <option value="tveen">Tieme Veen</option>
       <option value="cverwoerd">Cor Verwoerd</option>
       <option value="jcortus">Joyce Cortus</option>
-      <option value="rvanhattum">Roan van Hattum</option>
+      <option value="rvanhattum">Roan van Hattem</option>
       <option value="qmeijer">Quinn Meijer</option>
       <option value="kwensing">Kyra Wensing</option>
       <option value="rdekker">Rosalie Dekker</option>
@@ -759,9 +759,9 @@
       <div class="fld" style="margin-top:4px"><label>Doel van de keuring</label><select id="bw-doel"><option value="">— kies —</option><option value="bepaling_bouwstof">Bepaling bouwstof (3 monsters × 4 grepen)</option><option value="partijkeuring">Partijkeuring (2 monsters × 6 grepen)</option><option value="toelatingsonderzoek">Toelatingsonderzoek</option><option value="productiecontrole">Productiecontrole</option></select></div>
       <div class="fld" style="margin-top:4px"><label>Bemonsteringsmethode</label><select id="bw-methode"><option value="">— kies —</option><option value="6.2.3">§6.2.3 — Handmatig gestratificeerd aselect</option><option value="6.2.4">§6.2.4 — Mechanisch uit materiaalstroom</option><option value="6.2.5">§6.2.5 — Handmatig stilstaande band</option><option value="6.2.6">§6.2.6 — Uit stortstroom</option><option value="6.2.7">§6.2.7 — Via aselect gekozen ladingen</option></select></div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px">
-        <div class="fld"><label>Aantal monsters</label><input type="number" id="bw-monsters-n" min="1" placeholder="2"></div>
-        <div class="fld"><label>Grepen per monster</label><input type="number" id="bw-grepen-per-m" min="1" placeholder="6"></div>
-        <div class="fld"><label>Totaal grepen (auto)</label><input id="bw-grepen-totaal" readonly placeholder="auto" style="background:var(--gy-l);color:var(--gy)" oninput="bwBerekenGrepen()"></div>
+        <div class="fld"><label>Aantal monsters</label><input type="number" id="bw-monsters-n" min="1" placeholder="2" oninput="bwBerekenGrepen()"></div>
+        <div class="fld"><label>Grepen per monster</label><input type="number" id="bw-grepen-per-m" min="1" placeholder="6" oninput="bwBerekenGrepen()"></div>
+        <div class="fld"><label>Totaal grepen (auto)</label><input id="bw-grepen-totaal" readonly placeholder="auto" style="background:var(--gy-l);color:var(--gy)"></div>
       </div>
     </div>
 
@@ -914,7 +914,7 @@
           </select>
         </div>
         <div class="trow"><span class="tl">Gebouw(en) aanwezig?</span>
-          <div class="tsw" data-f="eq_gebouw" onchange="document.getElementById('eq-gebouw-detail').style.display=S.eq_gebouw==='y'?'block':'none'"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div>
+          <div class="tsw" data-f="eq_gebouw"><button onclick="tw(this,'y');document.getElementById('eq-gebouw-detail').style.display='block'">Ja</button><button onclick="tw(this,'n');document.getElementById('eq-gebouw-detail').style.display='none'">Nee</button></div>
         </div>
         <div id="eq-gebouw-detail" style="display:none;padding:4px 0 4px 4px">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
@@ -993,8 +993,8 @@
       <div class="card-t"><span class="ic">&#128197;</span>Tweede veldbezoek</div>
       <div class="sections">
         <div class="trow"><span class="tl">Tweede veldbezoek nodig?</span>
-          <div class="tsw" data-f="eq_tv_nodig" onchange="document.getElementById('eq-tv-detail').style.display=S.eq_tv_nodig==='y'?'block':'none'">
-            <button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button>
+          <div class="tsw" data-f="eq_tv_nodig">
+            <button onclick="tw(this,'y');document.getElementById('eq-tv-detail').style.display='block'">Ja</button><button onclick="tw(this,'n');document.getElementById('eq-tv-detail').style.display='none'">Nee</button>
           </div>
         </div>
         <div id="eq-tv-detail" style="display:none;padding:4px 0 0 4px">
@@ -1138,7 +1138,8 @@ function switchProtocol(mod) {
   });
   // Toon reden-veld als afwijkend van suggestie
   const gewijzigd = mod !== _protocolSuggestie;
-  document.getElementById('proto-reden-wrap').style.display = gewijzigd ? 'block' : 'none';
+  const _prw = document.getElementById('proto-reden-wrap');
+  if (_prw) _prw.style.display = gewijzigd ? 'block' : 'none';
   // Herlaad prefill voor nieuw module — forceMod voorkomt dat detectModule() de keuze overschrijft
   prefill(mod);
 }
@@ -1183,7 +1184,7 @@ function tw(btn, val) {
   const sw = btn.parentElement;
   sw.querySelectorAll('button').forEach(b => b.className = '');
   btn.className = val === 'y' ? 'y' : val === 'n' ? 'n' : 'v';
-  S[sw.dataset.f] = val === 'y' ? 'ja' : val === 'n' ? 'nee' : 'n.v.t.';
+  S[sw.dataset.f] = val;
 }
 function restoreToggle(field, value) {
   if (!value) return;
@@ -1192,7 +1193,9 @@ function restoreToggle(field, value) {
   const map = {'ja':'y','nee':'n','n.v.t.':'v'};
   const code = map[value] || value; // accept both 'ja'/'nee' and 'y'/'n'/'v'
   sw.querySelectorAll('button').forEach(b => {
-    if ((code==='y'&&b.textContent==='Ja')||(code==='n'&&b.textContent==='Nee')||(code==='v'&&b.textContent==='N.v.t.')) b.className = code;
+    const m = (b.getAttribute('onclick')||'').match(/tw\(this,'([^']+)'\)/);
+    const bval = m ? m[1] : null;
+    if (bval === code) b.className = code === 'y' ? 'y' : code === 'n' ? 'n' : 'v';
     else b.className = '';
   });
   S[field] = code;
@@ -1462,7 +1465,7 @@ function initSig(n) {
   cv.addEventListener('touchstart',st,{passive:false});cv.addEventListener('touchmove',mv,{passive:false});cv.addEventListener('touchend',en);
   sigs[n] = { canvas:cv, hasDraw:()=>hasDraw };
 }
-function clrSig(n){const cv=document.getElementById('sig'+n+'-cv');cv.getContext('2d').clearRect(0,0,cv.width,cv.height);document.getElementById('sig'+n+'-h').style.display='';if(sigs[n])sigs[n].hasDraw=()=>false}
+function clrSig(n){const cv=document.getElementById('sig'+n+'-cv');cv.getContext('2d').clearRect(0,0,cv.width,cv.height);document.getElementById('sig'+n+'-h').style.display='';if(sigs[n])sigs[n].hasDraw=()=>false;const hid=document.getElementById('sig'+n+'-b64');if(hid)hid.value=''}
 
 // ─── Prefill ───────────────────────────────────────
 function prefill(forceMod) {
@@ -1566,7 +1569,7 @@ function prefill(forceMod) {
       el.classList.add('prefilled');
     }
     const plan1001 = PROJECT.plan || {};
-    if (plan1001.aantal_grepen) document.getElementById('ap-grepen').value = plan1001.aantal_grepen;
+    if (plan1001.aantal_grepen) document.getElementById('ap-grepen-totaal').value = plan1001.aantal_grepen;
     if (!PROJECT.monsternemer && !PROJECT.boormeester && _gebruikerRol() === 'boormeester') {
       const u = _gebruikerObj();
       if (u) { document.getElementById('ap-sn').value = u.naam; }
@@ -1704,7 +1707,7 @@ function prefill(forceMod) {
     // N2K naam hint in toelichting
     if (PROJECT.n2k_naam) {
       const tlEl = document.getElementById('eq-n2k-toelichting');
-      if (tlEl && !tlEl.value) tlEl.value = 'Dichtstbijzijnd gebied: ' + PROJECT.n2k_naam;
+      if (tlEl && !tlEl.value) tlEl.value = 'Dichtstbijzijnde gebied: ' + PROJECT.n2k_naam;
     }
     // Gebouwbewoners risico: auto-toggle gebouw aanwezig
     if (PROJECT.gebouwbewoners_risico && !S.eq_gebouw) {
@@ -1860,18 +1863,17 @@ function buildExport1001() {
     project:{...PROJECT,cert_monsternemer:document.getElementById('ap-cert').value||null,tonnage_ton:parseFloat(document.getElementById('ap-tonnage')?.value)||null},
     partij:{...(PROJECT.partij||{}),type_keuring:document.getElementById('ap-type-keuring').value||null,herkomst:document.getElementById('ap-herkomst').value||null},
     deelpartijen:apDpGetData(),
-    terreininspectie:{toegankelijk:S.ap_terrein_toegang||null,veilig:S.ap_terrein_veilig||null,bereikbaar:S.ap_terrein_bereikbaar||null,bijzonderheden:document.getElementById('ap-terrein-bijz').value||null},
-    lmra:{veilig:S.ap_lmra_veilig||null,gevaren:S.ap_lmra_gevaren||null,pbm:S.ap_lmra_pbm||null},
-    partijcontrole:{homogeen:S.ap_pc_homogeen||null,geur:S.ap_pc_geur||null,geur_beschrijving:document.getElementById('ap-geur-beschr')?.value||null,kleur:S.ap_pc_kleur||null,kleur_beschrijving:document.getElementById('ap-kleur-beschr')?.value||null,grondsoort:document.getElementById('ap-grondsoort').value||null,vocht:document.getElementById('ap-vocht').value||null},
+    terreininspectie:{toegankelijk:S.ap_terrein_toegang||null,veilig:S.ap_terrein_veilig||null,nen_5725:S.ap_terrein_nen||null,bijzonderheden:document.getElementById('ap-terrein-bijz').value||null,uitgevoerd_door:document.getElementById('ap-terrein-door')?.value||null},
+    lmra:{veilig:S.ap_lmra_veilig||null,gevaren:S.ap_lmra_gevaren||null,pbm:S.ap_lmra_pbm||null,aanvullende_maatregelen:S.ap_lmra_maatr||null,maatregelen_toelichting:document.getElementById('ap-lmra-maatr')?.value||null},
+    partijcontrole:{homogeen:S.ap_pc_homogeen||null,geur:S.ap_pc_geur||null,geur_beschrijving:document.getElementById('ap-geur-beschr')?.value||null,kleur:S.ap_pc_kleur||null,kleur_beschrijving:document.getElementById('ap-kleur-beschr')?.value||null,grondsoort:document.getElementById('ap-grondsoort').value||null,vocht:document.getElementById('ap-vocht').value||null,ligging_conform:S.ap_pc_ligging||null,grootte_conform:S.ap_pc_grootte||null},
     bijmenging:{aangetroffen:S.ap_bij_aangetr||null,puin_pct:parseInt(document.getElementById('bij-puin').value)||0,steenachtigen_pct:parseInt(document.getElementById('bij-steen').value)||0,plastic_pct:parseInt(document.getElementById('bij-plastic').value)||0,hout_pct:parseInt(document.getElementById('bij-hout').value)||0,overig_pct:parseInt(document.getElementById('bij-overig').value)||0,overig_toelichting:document.getElementById('bij-overig-toel').value||null},
     monstername:{conform:S.ap_mn_conform||null,grepen_representatief:S.ap_mn_grepen||null,greepcontrole:S.ap_greepcontrole||null,greepgewicht_a_gram:parseInt(document.getElementById('ap-greep-a').value)||null,greepgewicht_b_gram:parseInt(document.getElementById('ap-greep-b').value)||null,monsters_bewaard:S.ap_mn_bewaard||null,overdracht:S.ap_mn_overdracht||null,binnen_24u:S.ap_mn_24u||null,aantal_mengmonsters:parseInt(document.getElementById('ap-mengmonsters')?.value)||null,aantal_grepen:parseInt(document.getElementById('ap-grepen-totaal')?.value)||null,labcode:document.getElementById('ap-labcode').value||null},
     fotos_inmeting:{fotos:S.ap_fotos||null,fotos_aantal:parseInt(document.getElementById('ap-fotos-aantal')?.value)||null,fotos_upload:S.ap_fotos_upload||null,situatieschets:S.ap_situatieschets||null,aanduiding_indeling:S.ap_aanduiding||null},
-    bijmenging_aangetroffen:S.ap_bij_aangetr||null,
     visuele_asbestinspectie:{aangetroffen:S.ap_asb_aangetroffen||null,beschrijving:document.getElementById('ap-asb-beschr').value||null},
     afwijkingen:{aanwezig:S.ap_afwijkingen||null,toelichting:document.getElementById('ap-afw').value||null},
     opmerkingen:document.getElementById('ap-opm').value||null,
     tijdsbesteding:{aanvang:document.getElementById('ap-ts-aanvang').value||null,einde:document.getElementById('ap-ts-einde').value||null,opmerkingen:document.getElementById('ap-ts-opm').value||null},
-    conformiteit:{ondertekend:sigs[3]?.hasDraw()||!!document.getElementById('sig3-b64')?.value,naam:document.getElementById('ap-sn').value,datum:document.getElementById('ap-sd').value,handtekening_base64:sigs[3]?.hasDraw()?sigs[3].canvas.toDataURL('image/png'):(document.getElementById('sig3-b64')?.value||null)}
+    conformiteit:{ondertekend:sigs[3]?.hasDraw()||!!document.getElementById('sig3-b64')?.value,naam:document.getElementById('ap-sn').value,datum:document.getElementById('ap-sd').value,handtekening_base64:sigs[3]?.hasDraw()?sigs[3].canvas.toDataURL('image/png'):(document.getElementById('sig3-b64')?.value||null),projectleider_naam:document.getElementById('ap-pl-sn')?.value||null,projectleider_datum:document.getElementById('ap-pl-sd')?.value||null}
   };
 }
 
@@ -1881,7 +1883,7 @@ function buildExport1002() {
     protocol_selectie:{gesuggereerd:_protocolSuggestie,gekozen:'1002',gewijzigd:_protocolSuggestie!=='1002',gewijzigd_door:_gebruikersnaam()||null,reden:document.getElementById('proto-reden')?.value||null},
     project:{...PROJECT,cert_monsternemer:document.getElementById('bw-cert')?.value||null},
     partij: PROJECT.partij || {},
-    partijregistratie:{begintijd:document.getElementById('bw-start')?.value||null,eindtijd:document.getElementById('bw-eind')?.value||null,grootte_m3:parseFloat(document.getElementById('bw-m3')?.value)||null,grootte_bepaald_door:document.getElementById('bw-grootte-door')?.value||null,soortelijk_gewicht:parseFloat(document.getElementById('bw-sg')?.value)||null,materiaalsoort:document.getElementById('bw-materiaalsoort')?.value||null,d95:document.getElementById('bw-d95')?.value||null,d95_bepaald_door:document.getElementById('bw-d95-door')?.value||null,producent:document.getElementById('bw-producent')?.value||null,doel_keuring:document.getElementById('bw-doel')?.value||null,bemonsteringsmethode:document.getElementById('bw-methode')?.value||null,greepgrootte_kg:parseFloat(document.getElementById('bw-greep-kg')?.value)||null,aantal_monsters:parseInt(document.getElementById('bw-monsters-n')?.value)||null,grepen_per_monster:parseInt(document.getElementById('bw-grepen-per-m')?.value)||null},
+    partijregistratie:{begintijd:document.getElementById('bw-start')?.value||null,eindtijd:document.getElementById('bw-eind')?.value||null,grootte_m3:parseFloat(document.getElementById('bw-m3')?.value)||null,grootte_bepaald_door:document.getElementById('bw-grootte-door')?.value||null,soortelijk_gewicht:parseFloat(document.getElementById('bw-sg')?.value)||null,tonnage_ton:parseFloat(document.getElementById('bw-tonnage')?.value)||null,materiaalsoort:document.getElementById('bw-materiaalsoort')?.value||null,d95:document.getElementById('bw-d95')?.value||null,d95_bepaald_door:document.getElementById('bw-d95-door')?.value||null,producent:document.getElementById('bw-producent')?.value||null,doel_keuring:document.getElementById('bw-doel')?.value||null,bemonsteringsmethode:document.getElementById('bw-methode')?.value||null,greepgrootte_kg:parseFloat(document.getElementById('bw-greep-kg')?.value)||null,aantal_monsters:parseInt(document.getElementById('bw-monsters-n')?.value)||null,grepen_per_monster:parseInt(document.getElementById('bw-grepen-per-m')?.value)||null},
     lmra:{veilig:S.bw_lmra_veilig||null,toegang:S.bw_lmra_toegang||null,pbm:S.bw_lmra_pbm||null,vallend:S.bw_lmra_val||null},
     partijcontrole:{homogeen:S.bw_pc_homogeen||null,type_correct:S.bw_pc_type||null,korrel_correct:S.bw_pc_korrel||null,vreemde_fractie:S.bw_pc_vreemd||null,verontreiniging:S.bw_pc_veront||null,bijzonderheden:document.getElementById('bw-pc-bijz').value||null},
     deelpartijen: dpGetData(),
@@ -1890,7 +1892,7 @@ function buildExport1002() {
     tijdsbesteding:{aanvang:document.getElementById('bw-ts-aanvang')?.value||null,einde:document.getElementById('bw-ts-einde')?.value||null},
     afwijkingen:{aanwezig:S.bw_afwijkingen||null,toelichting:document.getElementById('bw-afw').value||null},
     opmerkingen:document.getElementById('bw-opm').value||null,
-    conformiteit:{ondertekend:sigs[4]?.hasDraw()||!!document.getElementById('sig4-b64')?.value,naam:document.getElementById('bw-sn').value,datum:document.getElementById('bw-sd').value,handtekening_base64:sigs[4]?.hasDraw()?sigs[4].canvas.toDataURL('image/png'):(document.getElementById('sig4-b64')?.value||null)}
+    conformiteit:{ondertekend:sigs[4]?.hasDraw()||!!document.getElementById('sig4-b64')?.value,naam:document.getElementById('bw-sn').value,datum:document.getElementById('bw-sd').value,handtekening_base64:sigs[4]?.hasDraw()?sigs[4].canvas.toDataURL('image/png'):(document.getElementById('sig4-b64')?.value||null),projectleider_naam:document.getElementById('bw-pl-sn')?.value||null,projectleider_datum:document.getElementById('bw-pl-sd')?.value||null}
   };
 }
 
@@ -2095,8 +2097,8 @@ function _eqInitSoortgroepen() {
     // Relevante soortgroep markeren (habitattype uit harvest)
     const relevanteGroepen = PROJECT.relevante_soortgroepen || [];
     // soortendata gebruikt andere keys: map naar EQ-keys
-    const _relevanteMap = {vleermuizen:'vleermuizen',vogels:'vogels_jaarrond',
-      vogels:'broedvogels',amfibieen:'amfibieen',zoogdieren:'grondgeb_zoogdieren',
+    const _relevanteMap = {vleermuizen:'vleermuizen',vogels_jaarrond:'vogels_jaarrond',
+      vogels:'broedvogels',broedvogels:'broedvogels',amfibieen:'amfibieen',zoogdieren:'grondgeb_zoogdieren',
       reptielen:'reptielen',vaatplanten:'planten'};
     const isRelevant = relevanteGroepen.some(r => r === sg.key || _relevanteMap[r] === sg.key);
     if (isRelevant) {
@@ -2177,12 +2179,15 @@ function _num(id) {
 
 function _twSet(field, val) {
   if (val == null) return;
-  S[field] = String(val);
+  const v = String(val);
+  S[field] = v;
   const sw = document.querySelector(`.tsw[data-f="${field}"]`);
   if (!sw) return;
   sw.querySelectorAll('button').forEach(b => {
-    const bv = b.dataset.v || b.textContent.trim().toLowerCase()[0];
-    b.classList.toggle('active', bv === String(val));
+    const m = (b.getAttribute('onclick')||'').match(/tw\(this,'([^']+)'\)/);
+    const bval = m ? m[1] : null;
+    if (bval === v) b.className = v === 'y' ? 'y' : v === 'n' ? 'n' : 'v';
+    else b.className = '';
   });
 }
 
@@ -2854,6 +2859,12 @@ function _herstelDraft(data) {
     restoreToggle('f2_overdracht', p02.overdracht);
     restoreToggle('f2_meerwerk', p02.meerwerk); restoreToggle('f2_meerwerk_akkoord', p02.meerwerk_akkoord_pl);
     restoreToggle('f2_afwijkingen', p02.afwijkingen);
+    restoreToggle('f2_vp_conform', f2.voorpompen_conform);
+    restoreToggle('f2_ec_gestab', f2.ec_gestabiliseerd);
+    set('f2-vp-afw', f2.voorpompen_afw||'');
+    set('f2-ec-afw', f2.ec_afw||'');
+    if (f2.voorpompen_conform==='n'||f2.voorpompen_conform==='nee') { const el=document.getElementById('cond-vp-afw'); if(el) el.style.display='block'; }
+    if (f2.ec_gestabiliseerd==='n'||f2.ec_gestabiliseerd==='nee') { const el=document.getElementById('cond-ec-afw'); if(el) el.style.display='block'; }
     // Protocol 2018
     const p18 = f1.protocol_2018 || {};
     const p18w = p18.weer || {};
@@ -2898,7 +2909,7 @@ function _herstelDraft(data) {
     set('ap-vocht', apPc.vocht||'');
     if (apPc.geur === 'y') { set('ap-geur-beschr', apPc.geur_beschrijving||''); const el=document.getElementById('ap-geur-wrap'); if(el) el.style.display='block'; }
     if (apPc.kleur === 'y') { set('ap-kleur-beschr', apPc.kleur_beschrijving||''); const el=document.getElementById('ap-kleur-wrap'); if(el) el.style.display='block'; }
-    set('ap-grepen', (ap.monstername||{}).aantal_grepen||'');
+    set('ap-grepen-totaal', (ap.monstername||{}).aantal_grepen||'');
     set('ap-labcode', (ap.monstername||{}).labcode||'');
     set('ap-asb-beschr', (ap.visuele_asbestinspectie||{}).beschrijving||'');
     set('ap-afw', (ap.afwijkingen||{}).toelichting||'');
@@ -2906,6 +2917,43 @@ function _herstelDraft(data) {
     set('ap-ts-aanvang', (ap.tijdsbesteding||{}).aanvang||'');
     set('ap-ts-einde', (ap.tijdsbesteding||{}).einde||'');
     set('ap-ts-opm', (ap.tijdsbesteding||{}).opmerkingen||'');
+    // Herstel AP04 toggles
+    const apTerr = ap.terreininspectie || {};
+    restoreToggle('ap_terrein_toegang', apTerr.toegankelijk);
+    restoreToggle('ap_terrein_veilig', apTerr.veilig);
+    restoreToggle('ap_terrein_nen', apTerr.nen_5725);
+    set('ap-terrein-door', apTerr.uitgevoerd_door||'');
+    const apLmra = ap.lmra || {};
+    restoreToggle('ap_lmra_veilig', apLmra.veilig);
+    restoreToggle('ap_lmra_gevaren', apLmra.gevaren);
+    restoreToggle('ap_lmra_pbm', apLmra.pbm);
+    restoreToggle('ap_lmra_maatr', apLmra.aanvullende_maatregelen);
+    if (apLmra.aanvullende_maatregelen==='y') { set('ap-lmra-maatr', apLmra.maatregelen_toelichting||''); const el=document.getElementById('ap-lmra-maatr-wrap'); if(el) el.style.display='block'; }
+    restoreToggle('ap_pc_homogeen', apPc.homogeen);
+    restoreToggle('ap_pc_geur', apPc.geur);
+    restoreToggle('ap_pc_kleur', apPc.kleur);
+    restoreToggle('ap_pc_ligging', apPc.ligging_conform);
+    restoreToggle('ap_pc_grootte', apPc.grootte_conform);
+    restoreToggle('ap_bij_aangetr', (ap.bijmenging||{}).aangetroffen);
+    const apMn = ap.monstername || {};
+    restoreToggle('ap_mn_conform', apMn.conform);
+    restoreToggle('ap_mn_grepen', apMn.grepen_representatief);
+    restoreToggle('ap_mn_bewaard', apMn.gekoeld_gelabeld);
+    restoreToggle('ap_mn_overdracht', apMn.overdracht_conform);
+    restoreToggle('ap_greepcontrole', apMn.greepcontrole);
+    restoreToggle('ap_mn_24u', apMn.binnen_24u);
+    restoreToggle('ap_fotos', (ap.fotos_inmeting||{}).fotos);
+    restoreToggle('ap_fotos_upload', (ap.fotos_inmeting||{}).fotos_upload);
+    restoreToggle('ap_situatieschets', (ap.fotos_inmeting||{}).situatieschets);
+    restoreToggle('ap_aanduiding', (ap.fotos_inmeting||{}).aanduiding_indeling);
+    restoreToggle('ap_asb_aangetroffen', (ap.visuele_asbestinspectie||{}).aangetroffen);
+    restoreToggle('ap_afwijkingen', (ap.afwijkingen||{}).afwijkingen);
+    set('ap-mengmonsters', apMn.aantal_mengmonsters||'');
+    set('ap-greep-a', apMn.greepgewicht_a||'');
+    set('ap-greep-b', apMn.greepgewicht_b||'');
+    set('ap-fotos-aantal', (ap.fotos_inmeting||{}).fotos_aantal||'');
+    set('ap-herkomst', (ap.project||{}).herkomst||'');
+    set('ap-dichtheid', (ap.project||{}).dichtheid||'');
     // Herstel AP04 deelpartij-rijen
     const apDps = ap.deelpartijen || [];
     if (apDps.length) {
@@ -2929,10 +2977,41 @@ function _herstelDraft(data) {
     set('bw-afw', (ap.afwijkingen||{}).toelichting||'');
     set('bw-opm', ap.opmerkingen||'');
     const bwPr = ap.partijregistratie || {};
-    set('bw-d95', bwPr.d95_mm||'');
+    set('bw-d95', bwPr.d95||bwPr.d95_mm||'');
     set('bw-d95-door', bwPr.d95_bepaald_door||'');
     set('bw-greep-kg', bwPr.greepgrootte_kg||'');
     set('bw-monsters-n', bwPr.aantal_monsters||'');
+    set('bw-grepen-per-m', bwPr.grepen_per_monster||'');
+    set('bw-start', bwPr.begintijd||'');
+    set('bw-eind', bwPr.eindtijd||'');
+    set('bw-m3', bwPr.grootte_m3||'');
+    set('bw-sg', bwPr.soortelijk_gewicht||'');
+    set('bw-grootte-door', bwPr.grootte_bepaald_door||'');
+    set('bw-materiaalsoort', bwPr.materiaalsoort||'');
+    set('bw-producent', bwPr.producent||'');
+    set('bw-doel', bwPr.doel_keuring||'');
+    set('bw-methode', bwPr.bemonsteringsmethode||'');
+    set('bw-cert', bwPr.cert_monsternemer||ap.cert_monsternemer||'');
+    bwBereken(); bwBerekenGrepen();
+    // 1002 toggles
+    const bwLmra = ap.lmra || {};
+    restoreToggle('bw_lmra_veilig', bwLmra.veilig);
+    restoreToggle('bw_lmra_toegang', bwLmra.toegang);
+    restoreToggle('bw_lmra_pbm', bwLmra.pbm);
+    restoreToggle('bw_lmra_val', bwLmra.vallend);
+    const bwPcT = ap.partijcontrole || {};
+    restoreToggle('bw_pc_homogeen', bwPcT.homogeen);
+    restoreToggle('bw_pc_type', bwPcT.type_overeenkomstig);
+    restoreToggle('bw_pc_korrel', bwPcT.korrelgrootte_conform);
+    restoreToggle('bw_pc_vreemd', bwPcT.vreemde_fractie);
+    restoreToggle('bw_pc_veront', bwPcT.verontreiniging);
+    restoreToggle('bw_vi_overeenk', (ap.visuele_inspectie||{}).materiaal_overeenkomstig);
+    restoreToggle('bw_vi_asbest', (ap.visuele_inspectie||{}).asbest);
+    restoreToggle('bw_vi_kleur', (ap.visuele_inspectie||{}).kleur_afwijkend);
+    restoreToggle('bw_mo_overdracht', (ap.monsteroverdracht||{}).overdracht);
+    restoreToggle('bw_mo_verzegeld', (ap.monsteroverdracht||{}).verzegeld);
+    restoreToggle('bw_mo_24u', (ap.monsteroverdracht||{}).binnen_24u);
+    restoreToggle('bw_afwijkingen', (ap.afwijkingen||{}).afwijkingen);
     set('bw-ts-aanvang', (ap.tijdsbesteding||{}).aanvang||'');
     set('bw-ts-einde', (ap.tijdsbesteding||{}).einde||'');
   
@@ -2949,9 +3028,10 @@ function _herstelDraft(data) {
     if (wv.datum) _eqBroedseizoenCheck();
     // Terreinvelden
     const tv = data.terreinbeschrijving || {};
-    ['huidig-gebruik','vegetatie','water'].forEach(k => {
+    ['huidig-gebruik','vegetatie'].forEach(k => {
       const el = document.getElementById('eq-'+k); if (el) el.value = tv[k.replace('-','_')] || '';
     });
+    { const el = document.getElementById('eq-water'); if (el) el.value = tv.waterpartijen || tv.water || ''; }
     if (tv.terreintype)      { const el = document.getElementById('eq-terreintype');      if (el) el.value = tv.terreintype; }
     if (tv.toegankelijkheid) { const el = document.getElementById('eq-toegankelijkheid'); if (el) el.value = tv.toegankelijkheid; }
     if (tv.bouwjaar)         { const el = document.getElementById('eq-bouwjaar');         if (el) el.value = tv.bouwjaar; }

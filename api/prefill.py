@@ -128,20 +128,25 @@ class handler(BaseHTTPRequestHandler):
                         sp_prefill = _fetch_sp_file(f"{PREFILL_DIR}/{pid}_prefill.json")
                         if sp_prefill:
                             pf = sp_prefill
-                            pf["_bron"] = "prefills/{pid}_prefill.json"
+                            pf["_bron"] = f"prefills/{pid}_prefill.json"
 
                     # Merge index-velden als fallback voor ontbrekende prefill-velden
-                    # protocol_suggestie meenemen zodat EQ-projecten zonder discipline-veld
-                    # toch het juiste module krijgen (index berekent dit via sp_folder).
-                    for key in ("projectnummer", "adres", "opdrachtgever", "discipline",
-                                "protocol_suggestie"):
+                    for key in ("projectnummer", "adres", "opdrachtgever", "discipline"):
                         pf.setdefault(key, project.get(key, ""))
                     pf.setdefault("projectnummer", pid)
 
+                    # protocol_suggestie: index-waarde heeft voorrang (berekend via sp_folder),
+                    # daarna _compute als fallback. Lege string uit index = geen suggestie.
+                    idx_ps = project.get("protocol_suggestie") or ""
+                    if idx_ps:
+                        pf.setdefault("protocol_suggestie", idx_ps)
+
                     # Bereken protocol-suggestie op basis van discipline/velden
                     suggestie, protocollen = _compute_protocol_suggestie(pf)
-                    pf.setdefault("protocol_suggestie", suggestie)
-                    pf.setdefault("protocollen", protocollen)
+                    if "protocol_suggestie" not in pf:
+                        pf["protocol_suggestie"] = suggestie
+                    if "protocollen" not in pf:
+                        pf["protocollen"] = protocollen
 
                     body = json.dumps({"ok": True, "prefill": pf})
                     status = 200
