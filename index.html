@@ -1674,9 +1674,9 @@ function prefill(forceMod) {
       if (!S.eq_n2k_nabij) {
         _twSet('eq_n2k_nabij', PROJECT.n2k_afstand_m < 3000 ? 'y' : 'n');
       }
-      // AERIUS: als N2K binnen 3 km → waarschijnlijk rekenplichtig
-      if (!S.eq_aerius && PROJECT.n2k_afstand_m < 3000) {
-        _twSet('eq_aerius', 'y');
+      // AERIUS: binnen 3 km → ja, buiten 3 km → n.v.t.
+      if (!S.eq_aerius) {
+        _twSet('eq_aerius', PROJECT.n2k_afstand_m < 3000 ? 'y' : 'v');
       }
     }
     // Provincie prefill
@@ -1700,7 +1700,7 @@ function prefill(forceMod) {
     // N2K naam hint in toelichting
     if (PROJECT.n2k_naam) {
       const tlEl = document.getElementById('eq-n2k-toelichting');
-      if (tlEl) tlEl.placeholder = 'Dichtstbijzijnd gebied: ' + PROJECT.n2k_naam;
+      if (tlEl && !tlEl.value) tlEl.value = 'Dichtstbijzijnd gebied: ' + PROJECT.n2k_naam;
     }
     // Gebouwbewoners risico: auto-toggle gebouw aanwezig
     if (PROJECT.gebouwbewoners_risico && !S.eq_gebouw) {
