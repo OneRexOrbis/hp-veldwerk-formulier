@@ -79,8 +79,12 @@ def _compute_protocol_suggestie(pf: dict) -> tuple[str, list[str]]:
     peilbuizen = int(pf.get("peilbuizen") or 0)
     analysepakket = (pf.get("analysepakket") or "").lower()
 
-    # EQ disciplines
+    # EQ disciplines — ook als de index al protocol_suggestie='eq' had ingesteld
     if discipline in ("EQ", "ECOLOGIE", "ECOLOGISCHE QUICKSCAN", "ECOLOGY"):
+        return "eq", ["eq"]
+    if str(pf.get("protocol_suggestie") or "").lower() == "eq":
+        return "eq", ["eq"]
+    if "eq" in [str(p).lower() for p in (pf.get("protocollen") or [])]:
         return "eq", ["eq"]
 
     # BRL 1000 disciplines
@@ -127,7 +131,10 @@ class handler(BaseHTTPRequestHandler):
                             pf["_bron"] = "prefills/{pid}_prefill.json"
 
                     # Merge index-velden als fallback voor ontbrekende prefill-velden
-                    for key in ("projectnummer", "adres", "opdrachtgever", "discipline"):
+                    # protocol_suggestie meenemen zodat EQ-projecten zonder discipline-veld
+                    # toch het juiste module krijgen (index berekent dit via sp_folder).
+                    for key in ("projectnummer", "adres", "opdrachtgever", "discipline",
+                                "protocol_suggestie"):
                         pf.setdefault(key, project.get(key, ""))
                     pf.setdefault("projectnummer", pid)
 
