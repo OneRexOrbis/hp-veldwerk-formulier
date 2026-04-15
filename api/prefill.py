@@ -79,6 +79,10 @@ def _compute_protocol_suggestie(pf: dict) -> tuple[str, list[str]]:
     peilbuizen = int(pf.get("peilbuizen") or 0)
     analysepakket = (pf.get("analysepakket") or "").lower()
 
+    # EQ disciplines
+    if discipline in ("EQ", "ECOLOGIE", "ECOLOGISCHE QUICKSCAN", "ECOLOGY"):
+        return "eq", ["eq"]
+
     # BRL 1000 disciplines
     if discipline in ("AP", "AP04", "BRL1000", "BRL1001", "1001"):
         return "1001", ["1001"]

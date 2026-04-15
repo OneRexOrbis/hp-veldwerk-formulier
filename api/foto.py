@@ -120,6 +120,8 @@ class handler(BaseHTTPRequestHandler):
         mimetype     = body.get("mimetype", "image/jpeg")
         categorie    = (body.get("categorie") or "rapport").strip().lower()
         opnamedatum  = (body.get("opnamedatum") or "").strip()
+        lat          = body.get("lat")
+        lon          = body.get("lon")
 
         if not pid or not data_b64:
             return self._json(400, {"ok": False, "error": "project en data_base64 zijn verplicht"})
@@ -146,7 +148,10 @@ class handler(BaseHTTPRequestHandler):
             sp_pad  = f"{folder}/{submap}/{sp_naam}"
 
             _upload(sp_pad, foto_bytes, mimetype)
-            self._json(200, {"ok": True, "bestandsnaam": sp_naam, "map": submap})
+            resp_data: dict = {"ok": True, "bestandsnaam": sp_naam, "map": submap}
+            if lat is not None: resp_data["lat"] = lat
+            if lon is not None: resp_data["lon"] = lon
+            self._json(200, resp_data)
 
         except Exception as e:
             self._json(500, {"ok": False, "error": str(e)})

@@ -18,6 +18,7 @@
     --dk:#1B1B1B;--gy:#6B7280;--gy-l:#F3F4F6;--bd:#E5E7EB;
     --rd:#DC2626;--am:#D97706;
     --mod-c:var(--hp);--mod-pale:var(--hp-pale);--mod-bg:var(--hp-bg);
+  --eq:#1b7a6e;--eq-l:#2ba291;--eq-pale:#c8f0e8;--eq-bg:#f0faf7;
   }
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:'DM Sans',-apple-system,sans-serif;color:var(--dk);background:var(--gy-l);-webkit-font-smoothing:antialiased}
@@ -179,6 +180,7 @@
   .pick-badge.brl2000{background:var(--hp-pale);color:var(--hp)}
   .pick-badge.brl1001{background:var(--hp-pale);color:var(--hp)}
   .pick-badge.brl1002{background:var(--hp-pale);color:var(--hp)}
+  .pick-badge.eq{background:var(--eq-pale);color:var(--eq)}
   .pick-empty{text-align:center;color:var(--gy);font-size:13px;padding:32px 20px}
   .pick-loading{text-align:center;color:var(--gy);font-size:12px;padding:16px}
   #main-content{display:none}
@@ -323,6 +325,10 @@
       <label class="proto-opt" id="pr-2000">
         <input type="radio" name="proto" value="2000" onchange="switchProtocol('2000')">
         <span class="proto-lbl"><b>BRL 2000</b> — Bodemonderzoek</span>
+      </label>
+      <label class="proto-opt" id="pr-eq">
+        <input type="radio" name="proto" value="eq" onchange="switchProtocol('eq')">
+        <span class="proto-lbl"><b>Ecologische Quickscan</b> — Omgevingswet / Bal</span>
       </label>
     </div>
     <!-- Protocol 2018 add-on — alleen zichtbaar bij BRL 2000 -->
@@ -830,6 +836,140 @@
     </div>
   </div><!-- /mod-1002 -->
 
+  <!-- MODULE: Ecologische Quickscan -->
+  <div id="mod-eq" class="module-section">
+
+    <!-- Weersomstandigheden -->
+    <div class="card">
+      <div class="card-t"><span class="ic">&#127748;</span>Weersomstandigheden</div>
+      <div class="sections">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="fld"><label>Datum</label><input type="date" id="eq-datum" oninput="_eqBroedseizoenCheck()"></div>
+          <div class="fld"><label>Tijdstip</label><input type="time" id="eq-tijdstip"></div>
+          <div class="fld"><label>Temperatuur (°C)</label><input type="number" id="eq-temp" min="-20" max="45" placeholder="12"></div>
+          <div class="fld"><label>Wind (Beaufort)</label>
+            <select id="eq-wind-bft"><option value="">—</option>
+              <option value="0">0 — windstil</option><option value="1">1 — zwak</option><option value="2">2 — zwak</option>
+              <option value="3">3 — matig</option><option value="4">4 — matig</option><option value="5">5 — vrij krachtig</option>
+              <option value="6">6 — krachtig</option><option value="7">7 — hard</option><option value="8">8 — stormachtig</option>
+            </select>
+          </div>
+          <div class="fld"><label>Windrichting</label>
+            <select id="eq-windrichting"><option value="">—</option>
+              <option>N</option><option>NO</option><option>O</option><option>ZO</option>
+              <option>Z</option><option>ZW</option><option>W</option><option>NW</option>
+            </select>
+          </div>
+          <div class="fld"><label>Bewolking (%)</label><input type="number" id="eq-bewolking" min="0" max="100" placeholder="50"></div>
+          <div class="fld" style="grid-column:1/-1"><label>Neerslag</label>
+            <select id="eq-neerslag"><option value="">—</option>
+              <option>Geen</option><option>Licht</option><option>Matig</option><option>Zwaar</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Seizoenswaarschuwing -->
+    <div id="eq-broedseizoen-banner" style="display:none;background:#fff3cd;border:1.5px solid #f0ad4e;border-radius:8px;padding:10px 14px;margin-bottom:8px;font-size:13px">
+      <b>&#9888;&#65039; Broedseizoen actief</b> (15 mrt – 15 jul) — extra aandacht voor nestactiviteit.
+      <div class="trow" style="margin-top:8px"><span class="tl">Maatregelen getroffen?</span>
+        <div class="tsw" data-f="eq_broedmaatr"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button><button onclick="tw(this,'v')">N.v.t.</button></div>
+      </div>
+    </div>
+
+    <!-- Terreinbeschrijving -->
+    <div class="card">
+      <div class="card-t"><span class="ic">&#128506;&#65039;</span>Terreinbeschrijving</div>
+      <div class="sections">
+        <div class="fld"><label>Huidig gebruik</label><textarea id="eq-huidig-gebruik" rows="2" placeholder="bijv. bedrijfsterrein met loodsen, braakliggend grasland..."></textarea></div>
+        <div class="fld"><label>Terreintype</label>
+          <select id="eq-terreintype"><option value="">— kies —</option>
+            <option>Bebouwd — wonen</option><option>Bebouwd — bedrijf</option>
+            <option>Bos — loofbos</option><option>Bos — naaldbos</option>
+            <option>Natuur — nat</option><option>Natuur — droog</option>
+            <option>Water</option><option>Agrarisch — grasland</option>
+            <option>Agrarisch — akker</option><option>Gemengd</option>
+          </select>
+        </div>
+        <div class="trow"><span class="tl">Gebouw(en) aanwezig?</span>
+          <div class="tsw" data-f="eq_gebouw" onchange="document.getElementById('eq-gebouw-detail').style.display=S.eq_gebouw==='y'?'block':'none'"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div>
+        </div>
+        <div id="eq-gebouw-detail" style="display:none;padding:4px 0 4px 4px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div class="fld"><label>Bouwjaar</label><input type="number" id="eq-bouwjaar" placeholder="1987"></div>
+            <div class="fld"><label>Gebouwtype</label>
+              <select id="eq-gebouwtype"><option value="">—</option>
+                <option>Woning</option><option>Schuur/loods</option><option>Bedrijfshal</option>
+                <option>Kantoor</option><option>Kerk/monument</option><option>Overig</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="fld"><label>Vegetatie</label><textarea id="eq-vegetatie" rows="2" placeholder="bijv. ruige bermen met brandnetel, structuurrijke houtrand..."></textarea></div>
+        <div class="fld"><label>Waterpartijen / sloten</label><textarea id="eq-water" rows="1" placeholder="bijv. geen / sloot langs N-zijde ca. 80 m"></textarea></div>
+        <div class="fld"><label>Toegankelijkheid</label>
+          <select id="eq-toegankelijkheid"><option value="">—</option>
+            <option>Goed</option><option>Matig</option><option>Slecht</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Soortgroepbeoordelingen (door JS gegenereerd) -->
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--eq);padding:4px 0 6px">
+      Soortgroepbeoordelingen
+    </div>
+    <div id="eq-soortgroepen"></div>
+
+    <!-- Houtopstanden -->
+    <div class="card">
+      <div class="card-t"><span class="ic">&#127795;</span>Houtopstanden</div>
+      <div class="sections">
+        <div class="trow"><span class="tl">Bomen / houtopstanden aanwezig?</span>
+          <div class="tsw" data-f="eq_hout_aanwezig"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div>
+        </div>
+        <div class="trow"><span class="tl">Kap gepland?</span>
+          <div class="tsw" data-f="eq_hout_kap"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button><button onclick="tw(this,'v')">N.v.t.</button></div>
+        </div>
+        <div class="trow"><span class="tl">Herplantplicht van toepassing?</span>
+          <div class="tsw" data-f="eq_hout_herplant"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button><button onclick="tw(this,'v')">N.v.t.</button></div>
+        </div>
+        <div class="fld"><label>Toelichting</label><textarea id="eq-hout-toelichting" rows="2" placeholder="bijv. 3 eiken met holten, stamomtrek >50 cm..."></textarea></div>
+      </div>
+    </div>
+
+    <!-- Stikstof / AERIUS -->
+    <div class="card">
+      <div class="card-t"><span class="ic">&#127981;</span>Stikstof / AERIUS</div>
+      <div class="sections">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="trow" style="grid-column:1/-1"><span class="tl">Natura 2000-gebied binnen 3 km?</span>
+            <div class="tsw" data-f="eq_n2k_nabij"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div>
+          </div>
+          <div class="fld"><label>Afstand N2K (m)</label><input type="number" id="eq-n2k-afstand" placeholder="1250"></div>
+          <div class="trow"><span class="tl">Bouw- / sloopactiviteit?</span>
+            <div class="tsw" data-f="eq_bouw_sloop"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div>
+          </div>
+        </div>
+        <div class="trow"><span class="tl">AERIUS-berekening nodig?</span>
+          <div class="tsw" data-f="eq_aerius"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button><button onclick="tw(this,'v')">N.v.t.</button></div>
+        </div>
+        <div class="fld"><label>Toelichting</label><textarea id="eq-n2k-toelichting" rows="1"></textarea></div>
+      </div>
+    </div>
+
+    <!-- Opmerkingen -->
+    <div class="card">
+      <div class="card-t"><span class="ic">&#128221;</span>Opmerkingen</div>
+      <div class="sections">
+        <div class="fld"><textarea id="eq-opmerkingen" rows="3" placeholder="Overige veldwaarnemingen, bijzonderheden voor Lieke..."></textarea></div>
+      </div>
+    </div>
+
+    <div class="norm">Omgevingswet art. 11.27 (zorgplicht) — Besluit activiteiten leefomgeving.</div>
+  </div><!-- /mod-eq -->
+
   <!-- ═══ EXPORT BAR ═══ -->
   <div class="actions no-print" style="border-top:2px solid var(--bd);padding-top:16px">
     <button class="btn btn-d" id="btn-json" onclick="doJSON()" style="display:none">📄 Export JSON</button>
@@ -912,6 +1052,7 @@ function detectModule() {
   const p = PROJECT.protocollen || [];
   if (d === 'AP04' || d === 'BRL1001' || d === '1001' || d === 'BRL1000' || p.includes('1001')) return '1001';
   if (d === 'BRL1002' || d === '1002' || p.includes('1002')) return '1002';
+  if (d === 'EQ' || d === 'ECOLOGIE' || p.includes('eq')) return 'eq';
   return '2000';
 }
 
@@ -922,7 +1063,8 @@ function activateModule(mod) {
 
   const colors = { '2000': ['var(--hp)','var(--hp-pale)','var(--hp-bg)','BRL 2000','Veldwerk Compliance','BRL SIKB 2000 — Protocol 2001 / 2002 / 2018'],
                    '1001': ['var(--hp)','var(--hp-pale)','var(--hp-bg)','AP04 / 1001','AP04 Partijkeuring','BRL SIKB 1000 — Protocol 1001'],
-                   '1002': ['var(--hp)','var(--hp-pale)','var(--hp-bg)','BRL 1002','Partijkeuring Bouwstoffen','BRL SIKB 1000 — Protocol 1002'] };
+                   '1002': ['var(--hp)','var(--hp-pale)','var(--hp-bg)','BRL 1002','Partijkeuring Bouwstoffen','BRL SIKB 1000 — Protocol 1002'],
+                   'eq':  ['var(--eq)','var(--eq-pale)','var(--eq-bg)','EQ','Ecologische Quickscan','Omgevingswet — Besluit activiteiten leefomgeving'] };
   const [c, pale, bg, badge, titel, sub] = colors[mod];
   document.documentElement.style.setProperty('--mod-c', c);
   document.documentElement.style.setProperty('--mod-pale', pale);
@@ -1407,6 +1549,42 @@ function prefill(forceMod) {
       if (u) { document.getElementById('bw-sn').value = u.naam; }
     }
   }
+  // ─── EQ prefill ───────────────────────────────────────────
+  if (mod === 'eq') {
+    // Banner info
+    const locNaam = PROJECT.adres || PROJECT.projectnummer || '';
+    const locInfo = [PROJECT.opdrachtgever, PROJECT.ecoloog || _gebruikersnaam()].filter(Boolean).join(' — ');
+    const el = document.getElementById('eq-locatie-naam');
+    if (el) el.textContent = locNaam;
+    const eli = document.getElementById('eq-locatie-info');
+    if (eli) eli.textContent = locInfo;
+    // Datum voorinvullen
+    const datEl = document.getElementById('eq-datum');
+    if (datEl && !datEl.value) {
+      datEl.value = (PROJECT.datum_veldbezoek || new Date().toISOString().slice(0,10));
+      _eqBroedseizoenCheck();
+    }
+    // BAG bouwjaar prefill
+    if (PROJECT.bouwjaar) {
+      const bjEl = document.getElementById('eq-bouwjaar');
+      if (bjEl && !bjEl.value) bjEl.value = PROJECT.bouwjaar;
+    }
+    // N2K afstand prefill
+    if (PROJECT.n2k_afstand_m != null) {
+      const n2kEl = document.getElementById('eq-n2k-afstand');
+      if (n2kEl && !n2kEl.value) n2kEl.value = PROJECT.n2k_afstand_m;
+      // Auto-toggle nabij als < 3000 m
+      if (!S.eq_n2k_nabij) {
+        const nabij = PROJECT.n2k_afstand_m < 3000 ? 'y' : 'n';
+        const twEl = document.querySelector('[data-f="eq_n2k_nabij"]');
+        if (twEl) { twEl.querySelectorAll('button').forEach(b => { b.classList.toggle('active', (b.dataset.v||b.textContent.trim().toLowerCase()[0]) === nabij); }); S.eq_n2k_nabij = nabij; }
+      }
+    }
+    // Soortgroepen genereren
+    _eqInitSoortgroepen();
+    return;
+  }
+
 
   // Laboratorium: PROJECT.laboratorium > standaard Eurofins Omegam
   const labEl = document.getElementById('f-laboratorium');
@@ -1477,6 +1655,7 @@ function saveModule(mod) { showToast(`✓ Module ${mod} opgeslagen`); }
 
 // ─── Build export ──────────────────────────────────
 function buildExport() {
+  if (activeModule === 'eq') return buildExportEQ();
   if (activeModule === '1001') return buildExport1001();
   if (activeModule === '1002') return buildExport1002();
   return buildExport2000();
@@ -1693,6 +1872,193 @@ async function definitiefMelden() {
 function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
 
 // ─── FOTO'S ────────────────────────────────────────
+// ─── EQ — Ecologische Quickscan ─────────────────────────────────────────
+const EQ_SOORTGROEPEN = [
+  {key:'vleermuizen',         label:'Vleermuizen',                  ic:'🦇'},
+  {key:'vogels_jaarrond',     label:'Vogels (jaarrond beschermd)',   ic:'🪹'},
+  {key:'broedvogels',         label:'Broedvogels',                   ic:'🐦'},
+  {key:'amfibieen',           label:'Amfibieën',                       ic:'🐸'},
+  {key:'grondgeb_zoogdieren', label:'Grondgebonden zoogdieren',      ic:'🦔'},
+  {key:'vissen',              label:'Vissen',                        ic:'🐟'},
+  {key:'planten',             label:'Planten',                       ic:'🌱'},
+  {key:'reptielen',           label:'Reptielen',                     ic:'🦎'},
+  {key:'ongewervelden',       label:'Ongewervelden',                 ic:'🦋'},
+];
+
+// GPS cache
+let _eqGpsCache = null;  // {lat, lon, ts}
+const _EQ_GPS_TTL = 5 * 60 * 1000;  // 5 minuten
+
+// EQ foto metadata: [{id, bestandsnaam, beschrijving, soortgroep, lat, lon}]
+let _eqFotos = [];
+
+function _eqInitSoortgroepen() {
+  const container = document.getElementById('eq-soortgroepen');
+  if (!container) return;
+  container.innerHTML = '';
+  EQ_SOORTGROEPEN.forEach(sg => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = [
+      '<div class="card-t"><span class="ic">' + sg.ic + '</span>' + sg.label + '</div>',
+      '<div class="sections">',
+        '<div class="trow"><span class="tl">Geschikt habitat aanwezig?</span>',
+          '<div class="tsw" data-f="eq_' + sg.key + '_hab">',
+            '<button onclick="tw(this,\'y\')">Ja</button>',
+            '<button onclick="tw(this,\'n\')">Nee</button>',
+            '<button onclick="tw(this,\'o\')">Onbekend</button>',
+          '</div></div>',
+        '<div class="fld"><label>Waarnemingen</label>',
+          '<textarea id="eq-' + sg.key + '-waarn" rows="2" placeholder="bijv. geen waarnemingen / sporen van vleermuizen gezien..."></textarea>',
+        '</div>',
+        '<div class="trow"><span class="tl">Vervolgonderzoek nodig?</span>',
+          '<div class="tsw" data-f="eq_' + sg.key + '_vervolg"',
+               ' onchange="document.getElementById(\'eq-' + sg.key + '-toel\').style.display=S[\'eq_' + sg.key + '_vervolg\']=== \'y\'?\'block\':\'none\'">',
+            '<button onclick="tw(this,\'y\')">Ja</button>',
+            '<button onclick="tw(this,\'n\')">Nee</button>',
+          '</div></div>',
+        '<div class="fld" id="eq-' + sg.key + '-toel" style="display:none">',
+          '<label>Toelichting vervolgonderzoek</label>',
+          '<textarea rows="1" id="eq-' + sg.key + '-toelta"></textarea>',
+        '</div>',
+      '</div>',
+    ].join('');
+    container.appendChild(card);
+  });
+}
+
+function _eqBroedseizoenCheck() {
+  const d = document.getElementById('eq-datum');
+  if (!d || !d.value) return;
+  const [,mm,dd] = d.value.split('-').map(Number);
+  const inBroed = (mm === 3 && dd >= 15) || (mm >= 4 && mm <= 6) || (mm === 7 && dd <= 15);
+  const banner = document.getElementById('eq-broedseizoen-banner');
+  if (banner) banner.style.display = inBroed ? 'block' : 'none';
+}
+
+function _eqGetGPS() {
+  return new Promise(resolve => {
+    // Gebruik cache als minder dan 5 min oud
+    if (_eqGpsCache && (Date.now() - _eqGpsCache.ts < _EQ_GPS_TTL)) {
+      return resolve({lat: _eqGpsCache.lat, lon: _eqGpsCache.lon});
+    }
+    if (!navigator.geolocation) return resolve(null);
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        _eqGpsCache = {lat: +pos.coords.latitude.toFixed(6), lon: +pos.coords.longitude.toFixed(6), ts: Date.now()};
+        resolve({lat: _eqGpsCache.lat, lon: _eqGpsCache.lon});
+      },
+      () => resolve(null),
+      {timeout: 8000, maximumAge: 300000, enableHighAccuracy: true}
+    );
+  });
+}
+
+function _eqFotoMetaVoegToe(uploadId, bestandsnaam, lat, lon) {
+  // Voeg metadata-rij toe onder de foto-thumbnail
+  const kaart = document.getElementById(uploadId);
+  if (!kaart) return;
+  const meta = document.createElement('div');
+  meta.style.cssText = 'width:80px;font-size:9px;margin-top:2px';
+  const sgOpties = EQ_SOORTGROEPEN.map(sg => '<option value="'+sg.key+'">'+sg.label+'</option>').join('');
+  meta.innerHTML = [
+    '<input placeholder="omschrijving" style="width:100%;font-size:9px;border:1px solid var(--bd);border-radius:4px;padding:2px 3px;margin-bottom:2px" ',
+         'id="eq-foto-desc-'+uploadId+'" oninput="_eqFotoMetaUpdate(\''+uploadId+'\',\'desc\')">',
+    '<select style="width:100%;font-size:9px;border:1px solid var(--bd);border-radius:4px;padding:2px" ',
+            'id="eq-foto-sg-'+uploadId+'" onchange="_eqFotoMetaUpdate(\''+uploadId+'\',\'sg\')">',
+      '<option value="">— soortgroep</option>',
+      sgOpties,
+    '</select>',
+  ].join('');
+  kaart.appendChild(meta);
+  // Voeg toe aan _eqFotos array
+  _eqFotos.push({id: uploadId, bestandsnaam, beschrijving: '', soortgroep: '', lat: lat||null, lon: lon||null});
+}
+
+function _eqFotoMetaUpdate(uploadId, veld) {
+  const entry = _eqFotos.find(f => f.id === uploadId);
+  if (!entry) return;
+  if (veld === 'desc') entry.beschrijving = document.getElementById('eq-foto-desc-'+uploadId)?.value || '';
+  if (veld === 'sg')   entry.soortgroep   = document.getElementById('eq-foto-sg-'+uploadId)?.value || '';
+}
+
+function buildExportEQ() {
+  const gebruiker = _gebruikerObj();
+  const soortgroepen = {};
+  EQ_SOORTGROEPEN.forEach(sg => {
+    soortgroepen[sg.key] = {
+      habitat_geschikt:  S['eq_' + sg.key + '_hab']    || null,
+      waarnemingen:      (document.getElementById('eq-' + sg.key + '-waarn')?.value || '').trim() || null,
+      vervolgonderzoek:  S['eq_' + sg.key + '_vervolg'] || null,
+      toelichting:       (document.getElementById('eq-' + sg.key + '-toelta')?.value || '').trim() || null,
+    };
+  });
+  const datum = document.getElementById('eq-datum')?.value || null;
+  const [,mm,dd] = (datum||'').split('-').map(Number);
+  const broedseizoen = !!(mm && ((mm===3&&dd>=15)||(mm>=4&&mm<=6)||(mm===7&&dd<=15)));
+  return {
+    _meta: {
+      schema:        'hp_veldwerk_eq_v1',
+      generated:     new Date().toISOString(),
+      app:           'HP Veldwerk EQ v1.0',
+      ingevuld_door: _gebruikersnaam(),
+      gebruiker_id:  gebruiker?.id || null,
+    },
+    protocol_selectie: {
+      gekozen: 'eq',
+      reden: (document.getElementById('proto-reden')?.value || '').trim() || null,
+    },
+    project: {
+      projectnummer:  PROJECT.projectnummer,
+      adres:          PROJECT.adres,
+      opdrachtgever:  PROJECT.opdrachtgever,
+      projectleider:  PROJECT.projectleider,
+      ecoloog:        PROJECT.ecoloog || _gebruikersnaam(),
+      assistent:      (document.getElementById('eq-assistent')?.value || '').trim() || null,
+      datum_veldbezoek: datum,
+    },
+    weersomstandigheden: {
+      datum:       datum,
+      tijdstip:    document.getElementById('eq-tijdstip')?.value || null,
+      temp:        _num('eq-temp'),
+      wind_beaufort: +(document.getElementById('eq-wind-bft')?.value || '') || null,
+      windrichting: document.getElementById('eq-windrichting')?.value || null,
+      bewolking_pct: _num('eq-bewolking'),
+      neerslag:    document.getElementById('eq-neerslag')?.value || null,
+    },
+    terreinbeschrijving: {
+      huidig_gebruik:   (document.getElementById('eq-huidig-gebruik')?.value || '').trim() || null,
+      terreintype:      document.getElementById('eq-terreintype')?.value || null,
+      gebouw_aanwezig:  S.eq_gebouw || null,
+      bouwjaar:         _num('eq-bouwjaar'),
+      gebouwtype:       document.getElementById('eq-gebouwtype')?.value || null,
+      vegetatie:        (document.getElementById('eq-vegetatie')?.value || '').trim() || null,
+      waterpartijen:    (document.getElementById('eq-water')?.value || '').trim() || null,
+      toegankelijkheid: document.getElementById('eq-toegankelijkheid')?.value || null,
+    },
+    seizoen: {
+      broedseizoen,
+      maatregelen: S.eq_broedmaatr || null,
+    },
+    soortgroepen,
+    houtopstanden: {
+      aanwezig:     S.eq_hout_aanwezig || null,
+      kap_gepland:  S.eq_hout_kap      || null,
+      herplantplicht: S.eq_hout_herplant || null,
+      toelichting:  (document.getElementById('eq-hout-toelichting')?.value || '').trim() || null,
+    },
+    stikstof: {
+      n2k_nabij:    S.eq_n2k_nabij  || null,
+      afstand_m:    _num('eq-n2k-afstand'),
+      bouw_sloop:   S.eq_bouw_sloop || null,
+      aerius_nodig: S.eq_aerius     || null,
+      toelichting:  (document.getElementById('eq-n2k-toelichting')?.value || '').trim() || null,
+    },
+    fotos: _eqFotos.map(({bestandsnaam,beschrijving,soortgroep,lat,lon}) => ({bestandsnaam,beschrijving,soortgroep,lat,lon})),
+    opmerkingen: (document.getElementById('eq-opmerkingen')?.value || '').trim() || null,
+  };
+}
+
 const FOTO_MAX_PX = 1920;
 const FOTO_KWALITEIT = 0.85;
 
@@ -1771,6 +2137,9 @@ async function _fotoVerwerken(file, categorie) {
   // EXIF opnamedatum lezen vóór resize (werkt op ongewijzigde bytes)
   const exifDatum = await _leesExifDatum(file);
   const opnamedatum = exifDatum || _datumVanFile(file);
+  // EQ: GPS locatie ophalen
+  let _eqFotoGps = null;
+  if (activeModule === 'eq') { _eqFotoGps = await _eqGetGPS(); }
 
   const id = 'foto_' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
   const wachtrij = document.getElementById(
@@ -1800,7 +2169,7 @@ async function _fotoVerwerken(file, categorie) {
         const fr2 = new FileReader();
         fr2.onload = ev => {
           const b64 = ev.target.result.split(',')[1];
-          _fotoUploaden(id, file.name, b64, 'image/jpeg', categorie, opnamedatum);
+          _fotoUploaden(id, file.name, b64, 'image/jpeg', categorie, opnamedatum, _eqFotoGps?.lat||null, _eqFotoGps?.lon||null);
         };
         fr2.readAsDataURL(blob);
       }, 'image/jpeg', FOTO_KWALITEIT);
@@ -1810,7 +2179,7 @@ async function _fotoVerwerken(file, categorie) {
   reader.readAsDataURL(file);
 }
 
-async function _fotoUploaden(id, naam, b64, mimetype, categorie, opnamedatum) {
+async function _fotoUploaden(id, naam, b64, mimetype, categorie, opnamedatum, lat, lon) {
   try {
     const resp = await fetch(`${API_URL}/api/foto`, {
       method: 'POST',
@@ -1822,6 +2191,8 @@ async function _fotoUploaden(id, naam, b64, mimetype, categorie, opnamedatum) {
         mimetype,
         categorie:    categorie || 'rapport',
         opnamedatum:  opnamedatum || null,
+        lat:          lat  || null,
+        lon:          lon  || null,
       })
     });
     const result = await resp.json();
@@ -1831,6 +2202,8 @@ async function _fotoUploaden(id, naam, b64, mimetype, categorie, opnamedatum) {
       kaart.querySelector('div').innerHTML = '✅';
       kaart.querySelector('div').style.background = '#d1fae5';
       showToast(`✓ ${naam} geüpload`);
+      // EQ: voeg foto-metadata veld toe
+      if (activeModule === 'eq') _eqFotoMetaVoegToe(id, naam, lat, lon);
     } else {
       kaart.querySelector('div').innerHTML = '❌';
       kaart.querySelector('div').style.background = '#fee2e2';
@@ -2296,7 +2669,54 @@ function _herstelDraft(data) {
     set('bw-monsters-n', bwPr.aantal_monsters||'');
     set('bw-ts-aanvang', (ap.tijdsbesteding||{}).aanvang||'');
     set('bw-ts-einde', (ap.tijdsbesteding||{}).einde||'');
-  } catch(e) { console.warn('Draft herstel gedeeltelijk:', e); }
+  
+  // ─── EQ draft restore ─────────────────────────────────────
+  if (d.soortgroepen && activeModule === 'eq') {
+    // Weersvelden
+    const wv = d.weersomstandigheden || {};
+    ['datum','tijdstip','temp','bewolking'].forEach(k => {
+      const el = document.getElementById('eq-' + k); if (el) el.value = wv[k] || '';
+    });
+    if (wv.wind_beaufort != null) { const el = document.getElementById('eq-wind-bft'); if (el) el.value = wv.wind_beaufort; }
+    if (wv.windrichting)  { const el = document.getElementById('eq-windrichting'); if (el) el.value = wv.windrichting; }
+    if (wv.neerslag)      { const el = document.getElementById('eq-neerslag'); if (el) el.value = wv.neerslag; }
+    if (wv.datum) _eqBroedseizoenCheck();
+    // Terreinvelden
+    const tv = d.terreinbeschrijving || {};
+    ['huidig-gebruik','vegetatie','water'].forEach(k => {
+      const el = document.getElementById('eq-'+k); if (el) el.value = tv[k.replace('-','_')] || '';
+    });
+    if (tv.terreintype)      { const el = document.getElementById('eq-terreintype');      if (el) el.value = tv.terreintype; }
+    if (tv.toegankelijkheid) { const el = document.getElementById('eq-toegankelijkheid'); if (el) el.value = tv.toegankelijkheid; }
+    if (tv.bouwjaar)         { const el = document.getElementById('eq-bouwjaar');         if (el) el.value = tv.bouwjaar; }
+    if (tv.gebouwtype)       { const el = document.getElementById('eq-gebouwtype');       if (el) el.value = tv.gebouwtype; }
+    if (tv.gebouw_aanwezig === 'y') { const det = document.getElementById('eq-gebouw-detail'); if (det) det.style.display = 'block'; }
+    // Soortgroepen toggles + textareas
+    const sg = d.soortgroepen || {};
+    EQ_SOORTGROEPEN.forEach(grp => {
+      const g = sg[grp.key] || {};
+      if (g.habitat_geschikt) _twSet('eq_' + grp.key + '_hab',    g.habitat_geschikt);
+      if (g.vervolgonderzoek) _twSet('eq_' + grp.key + '_vervolg', g.vervolgonderzoek);
+      const waEl = document.getElementById('eq-'+grp.key+'-waarn');  if (waEl && g.waarnemingen) waEl.value = g.waarnemingen;
+      const toEl = document.getElementById('eq-'+grp.key+'-toelta'); if (toEl && g.toelichting)  toEl.value = g.toelichting;
+      if (g.vervolgonderzoek === 'y') { const toel = document.getElementById('eq-'+grp.key+'-toel'); if (toel) toel.style.display = 'block'; }
+    });
+    // Houtopstanden, stikstof
+    const ho = d.houtopstanden || {}, st = d.stikstof || {};
+    if (ho.aanwezig)      _twSet('eq_hout_aanwezig', ho.aanwezig);
+    if (ho.kap_gepland)   _twSet('eq_hout_kap',      ho.kap_gepland);
+    if (ho.herplantplicht)_twSet('eq_hout_herplant', ho.herplantplicht);
+    if (ho.toelichting)   { const el = document.getElementById('eq-hout-toelichting'); if (el) el.value = ho.toelichting; }
+    if (st.n2k_nabij)     _twSet('eq_n2k_nabij',  st.n2k_nabij);
+    if (st.bouw_sloop)    _twSet('eq_bouw_sloop', st.bouw_sloop);
+    if (st.aerius_nodig)  _twSet('eq_aerius',     st.aerius_nodig);
+    if (st.afstand_m != null) { const el = document.getElementById('eq-n2k-afstand');    if (el) el.value = st.afstand_m; }
+    if (st.toelichting)   { const el = document.getElementById('eq-n2k-toelichting');    if (el) el.value = st.toelichting; }
+    if (d.seizoen?.maatregelen) _twSet('eq_broedmaatr', d.seizoen.maatregelen);
+    if (d.opmerkingen)    { const el = document.getElementById('eq-opmerkingen');         if (el) el.value = d.opmerkingen; }
+    if (Array.isArray(d.fotos)) _eqFotos = d.fotos;
+  }
+} catch(e) { console.warn('Draft herstel gedeeltelijk:', e); }
 }
 
 // ─── Init ──────────────────────────────────────────
