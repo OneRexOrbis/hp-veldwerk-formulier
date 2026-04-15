@@ -1626,7 +1626,29 @@ function prefill(forceMod) {
     }
     // Fase default naar 1
     if (!S.eq_fase) _twSet('eq_fase', '1');
-    // Soortgroepen genereren
+    // NNN-banner in stikstof-kaart
+    if (PROJECT.in_nnn) {
+      const stCard = document.querySelector('[data-f="eq_n2k_nabij"]')?.closest('.card');
+      if (stCard && !stCard.querySelector('#eq-nnn-hint')) {
+        const h = document.createElement('div');
+        h.id = 'eq-nnn-hint';
+        h.style.cssText = 'font-size:11px;color:#495057;background:#d1ecf1;border:1px solid #bee5eb;border-radius:4px;padding:4px 8px;margin-bottom:6px';
+        h.textContent = '\u2139\ufe0f Locatie ligt binnen NNN (Nationaal Natuur Netwerk)';
+        stCard.querySelector('.sections')?.prepend(h);
+      }
+    }
+    // N2K naam hint in toelichting
+    if (PROJECT.n2k_naam) {
+      const tlEl = document.getElementById('eq-n2k-toelichting');
+      if (tlEl) tlEl.placeholder = 'Dichtstbijzijnd gebied: ' + PROJECT.n2k_naam;
+    }
+    // Gebouwbewoners risico: auto-toggle gebouw aanwezig
+    if (PROJECT.gebouwbewoners_risico && !S.eq_gebouw) {
+      _twSet('eq_gebouw', 'y');
+      const det = document.getElementById('eq-gebouw-detail');
+      if (det) det.style.display = 'block';
+    }
+    // Soortgroepen genereren (met soorten_hints meegeven)
     _eqInitSoortgroepen();
     return;
   }
@@ -1974,6 +1996,30 @@ function _eqInitSoortgroepen() {
         '</div>',
       '</div>',
     ].join('');
+    // Soorten-hints in placeholder (GBIF data uit harvest)
+    const hints = (PROJECT.soorten_hints || {})[sg.key];
+    if (hints && hints.length) {
+      const ta = card.querySelector('#eq-' + sg.key + '-waarn');
+      if (ta) ta.placeholder = ta.placeholder +
+        '\n\nBekend in omgeving (GBIF 1\u202fkm): ' + hints.join(', ');
+    }
+    // Relevante soortgroep markeren (habitattype uit harvest)
+    const relevanteGroepen = PROJECT.relevante_soortgroepen || [];
+    // soortendata gebruikt andere keys: map naar EQ-keys
+    const _relevanteMap = {vleermuizen:'vleermuizen',vogels:'vogels_jaarrond',
+      vogels:'broedvogels',amfibieen:'amfibieen',zoogdieren:'grondgeb_zoogdieren',
+      reptielen:'reptielen',vaatplanten:'planten'};
+    const isRelevant = relevanteGroepen.some(r => r === sg.key || _relevanteMap[r] === sg.key);
+    if (isRelevant) {
+      const ct = card.querySelector('.card-t');
+      if (ct && !ct.querySelector('.eq-rel')) {
+        const badge = document.createElement('span');
+        badge.className = 'eq-rel';
+        badge.style.cssText = 'font-size:9px;background:var(--eq-pale);color:var(--eq);border-radius:3px;padding:1px 5px;margin-left:6px;font-weight:700;vertical-align:middle';
+        badge.textContent = 'relevant';
+        ct.appendChild(badge);
+      }
+    }
     container.appendChild(card);
   });
 }
@@ -2064,6 +2110,9 @@ function buildExportEQ() {
       projectnummer:  PROJECT.projectnummer,
       adres:          PROJECT.adres,
       provincie:      PROJECT.provincie || (document.getElementById('eq-provincie')?.value || '').trim() || null,
+      gemeente:       PROJECT.gemeente  || null,
+      project_lat:    PROJECT.lat       || null,
+      project_lon:    PROJECT.lon       || null,
       opdrachtgever:  PROJECT.opdrachtgever,
       projectleider:  PROJECT.projectleider,
       ecoloog:        PROJECT.ecoloog || _gebruikersnaam(),
