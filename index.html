@@ -1819,7 +1819,7 @@ function buildExport2000() {
       protocol_2001:{conform:S.f1_conform||null,afgerond:S.f1_afgerond||null,fotos:S.f1_fotos||null,overdracht:S.f1_overdracht||null,bentoniet:S.f1_bentoniet||null,peilbuizen:S.f1_peilbuizen||null,peilbuizen_aantal:parseInt(document.getElementById('f1-pb-aantal')?.value)||null,filtergrind:S.f1_filtergrind||null,asbest:S.f1_asbest||null,meerwerk:S.f1_meerwerk||null,meerwerk_akkoord_pl:S.f1_meerwerk_akkoord||null,gestaakte_boringen:S.f1_gestaakt||null,gestaakte_boringen_toelichting:document.getElementById('f1-gestaakt-toel').value||null,afwijkingen:S.f1_afwijkingen||null,afwijkingen_toelichting:document.getElementById('f1-afw').value||null},
       grond:{overtollig:document.getElementById('f1-grond').value||null},
       opmerkingen:document.getElementById('f1-opm').value||null,
-      conformiteitsverklaring:{ondertekend:sigs[1]?.hasDraw()||false,naam:document.getElementById('f1-sn').value,datum:document.getElementById('f1-sd').value,handtekening_base64:sigs[1]?.hasDraw()?sigs[1].canvas.toDataURL('image/png'):null}
+      conformiteitsverklaring:{ondertekend:sigs[1]?.hasDraw()||!!document.getElementById('sig1-b64')?.value,naam:document.getElementById('f1-sn').value,datum:document.getElementById('f1-sd').value,handtekening_base64:sigs[1]?.hasDraw()?sigs[1].canvas.toDataURL('image/png'):(document.getElementById('sig1-b64')?.value||null)}
     }
   };
   if (PROJECT.protocollen.includes('2018')) {
@@ -1837,7 +1837,7 @@ function buildExport2000() {
     };
   }
   if (PROJECT.protocollen.includes('2002')) {
-    data.fase2={lmra:{veilig:S.f2_lmra_veilig||null,toegang:S.f2_lmra_toegang||null,tekening:S.f2_lmra_tekening||null},protocol_2002:{conform:S.f2_conform||null,afgerond:S.f2_afgerond||null,wachttijd:S.f2_wachttijd||null,drijflaag:S.f2_drijflaag||null,beluchting:S.f2_beluchting||null,filtratie:S.f2_filtratie||null,ec_aanvang:S.f2_ec_aanvang||null,ec_stabiel:S.f2_ec_stabiel||null,o2_gemeten:S.f2_o2||null,ntu_ph_gemeten:S.f2_ntu_ph||null,overdracht:S.f2_overdracht||null,zintuiglijk:document.getElementById('f2-zintuig').value||null,meerwerk:S.f2_meerwerk||null,meerwerk_akkoord_pl:S.f2_meerwerk_akkoord||null,afwijkingen:S.f2_afwijkingen||null,afwijkingen_toelichting:document.getElementById('f2-afw').value||null},opmerkingen:document.getElementById('f2-opm').value||null,conformiteitsverklaring:{ondertekend:sigs[2]?.hasDraw()||false,naam:document.getElementById('f2-sn').value,datum:document.getElementById('f2-sd').value,handtekening_base64:sigs[2]?.hasDraw()?sigs[2].canvas.toDataURL('image/png'):null}};
+    data.fase2={lmra:{veilig:S.f2_lmra_veilig||null,toegang:S.f2_lmra_toegang||null,tekening:S.f2_lmra_tekening||null},protocol_2002:{conform:S.f2_conform||null,afgerond:S.f2_afgerond||null,wachttijd:S.f2_wachttijd||null,drijflaag:S.f2_drijflaag||null,beluchting:S.f2_beluchting||null,filtratie:S.f2_filtratie||null,ec_aanvang:S.f2_ec_aanvang||null,ec_stabiel:S.f2_ec_stabiel||null,o2_gemeten:S.f2_o2||null,ntu_ph_gemeten:S.f2_ntu_ph||null,overdracht:S.f2_overdracht||null,zintuiglijk:document.getElementById('f2-zintuig').value||null,meerwerk:S.f2_meerwerk||null,meerwerk_akkoord_pl:S.f2_meerwerk_akkoord||null,afwijkingen:S.f2_afwijkingen||null,afwijkingen_toelichting:document.getElementById('f2-afw').value||null},opmerkingen:document.getElementById('f2-opm').value||null,conformiteitsverklaring:{ondertekend:sigs[2]?.hasDraw()||!!document.getElementById('sig2-b64')?.value,naam:document.getElementById('f2-sn').value,datum:document.getElementById('f2-sd').value,handtekening_base64:sigs[2]?.hasDraw()?sigs[2].canvas.toDataURL('image/png'):(document.getElementById('sig2-b64')?.value||null)}};
   data.fase2.voorpompen_conform = S.f2_vp_conform || null;
   data.fase2.ec_gestabiliseerd = S.f2_ec_gestab || null;
   data.fase2.voorpompen_afw = document.getElementById('f2-vp-afw')?.value || null;
@@ -1864,7 +1864,7 @@ function buildExport1001() {
     afwijkingen:{aanwezig:S.ap_afwijkingen||null,toelichting:document.getElementById('ap-afw').value||null},
     opmerkingen:document.getElementById('ap-opm').value||null,
     tijdsbesteding:{aanvang:document.getElementById('ap-ts-aanvang').value||null,einde:document.getElementById('ap-ts-einde').value||null,opmerkingen:document.getElementById('ap-ts-opm').value||null},
-    conformiteit:{ondertekend:sigs[3]?.hasDraw()||false,naam:document.getElementById('ap-sn').value,datum:document.getElementById('ap-sd').value,handtekening_base64:sigs[3]?.hasDraw()?sigs[3].canvas.toDataURL('image/png'):null}
+    conformiteit:{ondertekend:sigs[3]?.hasDraw()||!!document.getElementById('sig3-b64')?.value,naam:document.getElementById('ap-sn').value,datum:document.getElementById('ap-sd').value,handtekening_base64:sigs[3]?.hasDraw()?sigs[3].canvas.toDataURL('image/png'):(document.getElementById('sig3-b64')?.value||null)}
   };
 }
 
@@ -1883,7 +1883,7 @@ function buildExport1002() {
     tijdsbesteding:{aanvang:document.getElementById('bw-ts-aanvang')?.value||null,einde:document.getElementById('bw-ts-einde')?.value||null},
     afwijkingen:{aanwezig:S.bw_afwijkingen||null,toelichting:document.getElementById('bw-afw').value||null},
     opmerkingen:document.getElementById('bw-opm').value||null,
-    conformiteit:{ondertekend:sigs[4]?.hasDraw()||false,naam:document.getElementById('bw-sn').value,datum:document.getElementById('bw-sd').value,handtekening_base64:sigs[4]?.hasDraw()?sigs[4].canvas.toDataURL('image/png'):null}
+    conformiteit:{ondertekend:sigs[4]?.hasDraw()||!!document.getElementById('sig4-b64')?.value,naam:document.getElementById('bw-sn').value,datum:document.getElementById('bw-sd').value,handtekening_base64:sigs[4]?.hasDraw()?sigs[4].canvas.toDataURL('image/png'):(document.getElementById('sig4-b64')?.value||null)}
   };
 }
 

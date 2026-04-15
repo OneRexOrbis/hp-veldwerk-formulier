@@ -1,6 +1,6 @@
 // Service Worker — HP Veldwerk Formulier
 // Cache de app-shell zodat hij ook start zonder netwerk (pincode-scherm)
-const CACHE = 'hp-vw-v18';
+const CACHE = 'hp-vw-v19';
 const APP_SHELL = ['/', '/index.html'];
 
 self.addEventListener('install', e => {
