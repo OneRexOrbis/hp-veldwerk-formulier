@@ -2083,6 +2083,24 @@ function _eqFotoMetaUpdate(uploadId, veld) {
   if (veld === 'sg')   entry.soortgroep   = document.getElementById('eq-foto-sg-'+uploadId)?.value || '';
 }
 
+// ─── EQ helpers ───────────────────────────────────────────────────────────
+function _num(id) {
+  const v = document.getElementById(id)?.value;
+  const n = parseFloat(v);
+  return isNaN(n) ? null : n;
+}
+
+function _twSet(field, val) {
+  if (val == null) return;
+  S[field] = String(val);
+  const sw = document.querySelector(`.tsw[data-f="${field}"]`);
+  if (!sw) return;
+  sw.querySelectorAll('button').forEach(b => {
+    const bv = b.dataset.v || b.textContent.trim().toLowerCase()[0];
+    b.classList.toggle('active', bv === String(val));
+  });
+}
+
 function buildExportEQ() {
   const gebruiker = _gebruikerObj();
   const soortgroepen = {};
@@ -2782,9 +2800,9 @@ function _herstelDraft(data) {
     set('bw-ts-einde', (ap.tijdsbesteding||{}).einde||'');
   
   // ─── EQ draft restore ─────────────────────────────────────
-  if (d.soortgroepen && activeModule === 'eq') {
+  if (data.soortgroepen && activeModule === 'eq') {
     // Weersvelden
-    const wv = d.weersomstandigheden || {};
+    const wv = data.weersomstandigheden || {};
     ['datum','tijdstip','temp','bewolking'].forEach(k => {
       const el = document.getElementById('eq-' + k); if (el) el.value = wv[k] || '';
     });
@@ -2793,7 +2811,7 @@ function _herstelDraft(data) {
     if (wv.neerslag)      { const el = document.getElementById('eq-neerslag'); if (el) el.value = wv.neerslag; }
     if (wv.datum) _eqBroedseizoenCheck();
     // Terreinvelden
-    const tv = d.terreinbeschrijving || {};
+    const tv = data.terreinbeschrijving || {};
     ['huidig-gebruik','vegetatie','water'].forEach(k => {
       const el = document.getElementById('eq-'+k); if (el) el.value = tv[k.replace('-','_')] || '';
     });
@@ -2803,7 +2821,7 @@ function _herstelDraft(data) {
     if (tv.gebouwtype)       { const el = document.getElementById('eq-gebouwtype');       if (el) el.value = tv.gebouwtype; }
     if (tv.gebouw_aanwezig === 'y') { const det = document.getElementById('eq-gebouw-detail'); if (det) det.style.display = 'block'; }
     // Soortgroepen toggles + textareas
-    const sg = d.soortgroepen || {};
+    const sg = data.soortgroepen || {};
     EQ_SOORTGROEPEN.forEach(grp => {
       const g = sg[grp.key] || {};
       if (g.habitat_geschikt) _twSet('eq_' + grp.key + '_hab',    g.habitat_geschikt);
@@ -2813,7 +2831,7 @@ function _herstelDraft(data) {
       if (g.vervolgonderzoek === 'y') { const toel = document.getElementById('eq-'+grp.key+'-toel'); if (toel) toel.style.display = 'block'; }
     });
     // Houtopstanden, stikstof
-    const ho = d.houtopstanden || {}, st = d.stikstof || {};
+    const ho = data.houtopstanden || {}, st = data.stikstof || {};
     if (ho.aanwezig)      _twSet('eq_hout_aanwezig', ho.aanwezig);
     if (ho.kap_gepland)   _twSet('eq_hout_kap',      ho.kap_gepland);
     if (ho.herplantplicht)_twSet('eq_hout_herplant', ho.herplantplicht);
@@ -2823,19 +2841,19 @@ function _herstelDraft(data) {
     if (st.aerius_nodig)  _twSet('eq_aerius',     st.aerius_nodig);
     if (st.afstand_m != null) { const el = document.getElementById('eq-n2k-afstand');    if (el) el.value = st.afstand_m; }
     if (st.toelichting)   { const el = document.getElementById('eq-n2k-toelichting');    if (el) el.value = st.toelichting; }
-    if (d.seizoen?.maatregelen) _twSet('eq_broedmaatr', d.seizoen.maatregelen);
-    if (d.opmerkingen)    { const el = document.getElementById('eq-opmerkingen');         if (el) el.value = d.opmerkingen; }
+    if (data.seizoen?.maatregelen) _twSet('eq_broedmaatr', data.seizoen.maatregelen);
+    if (data.opmerkingen)    { const el = document.getElementById('eq-opmerkingen');         if (el) el.value = data.opmerkingen; }
     // Provincie + assistent
-    if (d.project?.provincie) { const el = document.getElementById('eq-provincie'); if (el) el.value = d.project.provincie; }
-    if (d.project?.assistent)  { const el = document.getElementById('eq-assistent');  if (el) el.value = d.project.assistent; }
+    if (data.project?.provincie) { const el = document.getElementById('eq-provincie'); if (el) el.value = data.project.provincie; }
+    if (data.project?.assistent)  { const el = document.getElementById('eq-assistent');  if (el) el.value = data.project.assistent; }
     // Fase
-    if (d._meta?.fase) _twSet('eq_fase', String(d._meta.fase));
+    if (data._meta?.fase) _twSet('eq_fase', String(data._meta.fase));
     // Tweede veldbezoek
-    const tv = d.tweede_veldbezoek || {};
+    const tv = data.tweede_veldbezoek || {};
     if (tv.nodig) { _twSet('eq_tv_nodig', tv.nodig); const det = document.getElementById('eq-tv-detail'); if (det) det.style.display = tv.nodig === 'y' ? 'block' : 'none'; }
     if (tv.reden)       { const el = document.getElementById('eq-tv-reden'); if (el) el.value = tv.reden; }
     if (tv.datum_fase2) { const el = document.getElementById('eq-tv-datum'); if (el) el.value = tv.datum_fase2; }
-    if (Array.isArray(d.fotos)) _eqFotos = d.fotos;
+    if (Array.isArray(data.fotos)) _eqFotos = data.fotos;
   }
 } catch(e) { console.warn('Draft herstel gedeeltelijk:', e); }
 }
