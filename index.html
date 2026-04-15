@@ -839,6 +839,20 @@
   <!-- MODULE: Ecologische Quickscan -->
   <div id="mod-eq" class="module-section">
 
+    <!-- Veldwerk info: provincie, assistent, fase -->
+    <div class="card">
+      <div class="card-t"><span class="ic">&#128203;</span>Veldwerk info</div>
+      <div class="sections">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="fld"><label>Provincie</label><input id="eq-provincie" placeholder="bijv. Noord-Brabant"></div>
+          <div class="fld"><label>Assistent</label><input id="eq-assistent" placeholder="naam medewerker"></div>
+        </div>
+        <div class="trow"><span class="tl">Fase veldbezoek</span>
+          <div class="tsw" data-f="eq_fase"><button onclick="tw(this,'1')">Fase 1</button><button onclick="tw(this,'2')">Fase 2</button></div>
+        </div>
+      </div>
+    </div>
+
     <!-- Weersomstandigheden -->
     <div class="card">
       <div class="card-t"><span class="ic">&#127748;</span>Weersomstandigheden</div>
@@ -964,6 +978,31 @@
       <div class="card-t"><span class="ic">&#128221;</span>Opmerkingen</div>
       <div class="sections">
         <div class="fld"><textarea id="eq-opmerkingen" rows="3" placeholder="Overige veldwaarnemingen, bijzonderheden voor Lieke..."></textarea></div>
+      </div>
+    </div>
+
+    <!-- Tweede veldbezoek -->
+    <div class="card">
+      <div class="card-t"><span class="ic">&#128197;</span>Tweede veldbezoek</div>
+      <div class="sections">
+        <div class="trow"><span class="tl">Tweede veldbezoek nodig?</span>
+          <div class="tsw" data-f="eq_tv_nodig" onchange="document.getElementById('eq-tv-detail').style.display=S.eq_tv_nodig==='y'?'block':'none'">
+            <button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button>
+          </div>
+        </div>
+        <div id="eq-tv-detail" style="display:none;padding:4px 0 0 4px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div class="fld" style="grid-column:1/-1"><label>Reden</label>
+              <select id="eq-tv-reden">
+                <option value="">&#8212; kies &#8212;</option>
+                <option value="vleermuizen">Vleermuizen &#8212; avondbezoek / uitvliegtelling</option>
+                <option value="broedvogels">Broedvogels &#8212; herbezoek broedseizoen</option>
+                <option value="anders">Anders</option>
+              </select>
+            </div>
+            <div class="fld"><label>Verwachte datum fase 2</label><input type="date" id="eq-tv-datum"></div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1580,6 +1619,13 @@ function prefill(forceMod) {
         if (twEl) { twEl.querySelectorAll('button').forEach(b => { b.classList.toggle('active', (b.dataset.v||b.textContent.trim().toLowerCase()[0]) === nabij); }); S.eq_n2k_nabij = nabij; }
       }
     }
+    // Provincie prefill
+    if (PROJECT.provincie) {
+      const pvEl = document.getElementById('eq-provincie');
+      if (pvEl && !pvEl.value) pvEl.value = PROJECT.provincie;
+    }
+    // Fase default naar 1
+    if (!S.eq_fase) _twSet('eq_fase', '1');
     // Soortgroepen genereren
     _eqInitSoortgroepen();
     return;
@@ -1839,13 +1885,18 @@ function _activeerMeldenKnop() {
 
 async function definitiefMelden() {
   if (!PROJECT.projectnummer) { showToast('⚠ Geen project geselecteerd'); return; }
-  if (!confirm('Definitief melden? Het formulier wordt ingediend en omgezet naar PDF.')) return;
+  const _eqFase = activeModule === 'eq' ? (+(S.eq_fase||'1') === 2 ? 2 : 1) : null;
+  const _confirmTxt = activeModule === 'eq'
+    ? `EQ fase ${_eqFase} definitief opslaan? De JSON wordt opgeslagen in AI Sjablonen op SharePoint.`
+    : 'Definitief melden? Het formulier wordt ingediend en omgezet naar PDF.';
+  if (!confirm(_confirmTxt)) return;
   const btn = document.getElementById('btn-opslaan');
   btn.disabled = true;
   btn.textContent = '⏳ Bezig...';
   try {
     const data = buildExport();
-    const resp = await fetch(`${API_URL}/api/compliance`, {
+    const _endpoint = activeModule === 'eq' ? `${API_URL}/api/eq_opslaan` : `${API_URL}/api/compliance`;
+    const resp = await fetch(_endpoint, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(data)
@@ -1857,7 +1908,7 @@ async function definitiefMelden() {
       _localClear();
       clearTimeout(_lsTimer);
       _draftStatusToon('');
-      showToast('✓ Ingediend — PDF volgt binnen 5 min');
+      showToast(activeModule === 'eq' ? `✓ EQ fase ${_eqFase} opgeslagen — JSON in AI Sjablonen` : '✓ Ingediend — PDF volgt binnen 5 min');
     } else {
       showToast('✗ Fout: ' + (result.error || 'onbekend'));
     }
@@ -2003,6 +2054,7 @@ function buildExportEQ() {
       app:           'HP Veldwerk EQ v1.0',
       ingevuld_door: _gebruikersnaam(),
       gebruiker_id:  gebruiker?.id || null,
+      fase:          +(S.eq_fase || '1'),
     },
     protocol_selectie: {
       gekozen: 'eq',
@@ -2011,6 +2063,7 @@ function buildExportEQ() {
     project: {
       projectnummer:  PROJECT.projectnummer,
       adres:          PROJECT.adres,
+      provincie:      PROJECT.provincie || (document.getElementById('eq-provincie')?.value || '').trim() || null,
       opdrachtgever:  PROJECT.opdrachtgever,
       projectleider:  PROJECT.projectleider,
       ecoloog:        PROJECT.ecoloog || _gebruikersnaam(),
@@ -2055,6 +2108,11 @@ function buildExportEQ() {
       toelichting:  (document.getElementById('eq-n2k-toelichting')?.value || '').trim() || null,
     },
     fotos: _eqFotos.map(({bestandsnaam,beschrijving,soortgroep,lat,lon}) => ({bestandsnaam,beschrijving,soortgroep,lat,lon})),
+    tweede_veldbezoek: {
+      nodig:       S.eq_tv_nodig || null,
+      reden:       document.getElementById('eq-tv-reden')?.value || null,
+      datum_fase2: document.getElementById('eq-tv-datum')?.value || null,
+    },
     opmerkingen: (document.getElementById('eq-opmerkingen')?.value || '').trim() || null,
   };
 }
@@ -2714,6 +2772,16 @@ function _herstelDraft(data) {
     if (st.toelichting)   { const el = document.getElementById('eq-n2k-toelichting');    if (el) el.value = st.toelichting; }
     if (d.seizoen?.maatregelen) _twSet('eq_broedmaatr', d.seizoen.maatregelen);
     if (d.opmerkingen)    { const el = document.getElementById('eq-opmerkingen');         if (el) el.value = d.opmerkingen; }
+    // Provincie + assistent
+    if (d.project?.provincie) { const el = document.getElementById('eq-provincie'); if (el) el.value = d.project.provincie; }
+    if (d.project?.assistent)  { const el = document.getElementById('eq-assistent');  if (el) el.value = d.project.assistent; }
+    // Fase
+    if (d._meta?.fase) _twSet('eq_fase', String(d._meta.fase));
+    // Tweede veldbezoek
+    const tv = d.tweede_veldbezoek || {};
+    if (tv.nodig) { _twSet('eq_tv_nodig', tv.nodig); const det = document.getElementById('eq-tv-detail'); if (det) det.style.display = tv.nodig === 'y' ? 'block' : 'none'; }
+    if (tv.reden)       { const el = document.getElementById('eq-tv-reden'); if (el) el.value = tv.reden; }
+    if (tv.datum_fase2) { const el = document.getElementById('eq-tv-datum'); if (el) el.value = tv.datum_fase2; }
     if (Array.isArray(d.fotos)) _eqFotos = d.fotos;
   }
 } catch(e) { console.warn('Draft herstel gedeeltelijk:', e); }
