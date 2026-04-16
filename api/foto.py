@@ -17,7 +17,9 @@ Bestandsnaam op SharePoint: {YYYYMMDD_HHMMSS}_{bestandsnaam}
 import base64
 import json
 import os
+import re
 import time
+import urllib.error
 import urllib.request
 import urllib.parse
 from datetime import datetime
@@ -84,7 +86,6 @@ def _ensure_folder(folder_path: str) -> None:
     """Maak folder aan op SharePoint als die nog niet bestaat (no-op als al aanwezig)."""
     drive_id = os.environ["DRIVE_ID"]
     token = _get_token()
-    # Splits in parent + child
     parent, child = folder_path.rsplit("/", 1)
     url = (
         f"https://graph.microsoft.com/v1.0/drives/{drive_id}/root:/"
@@ -174,8 +175,7 @@ class handler(BaseHTTPRequestHandler):
 
             # Gebruik EXIF opnamedatum als die is meegegeven en geldig is (YYYYMMDD_HHMMSS),
             # anders server-tijdstip. Zo sorteert de bijlage op opnametijd, niet uploadtijd.
-            import re as _re
-            if opnamedatum and _re.fullmatch(r'\d{8}_\d{6}', opnamedatum):
+            if opnamedatum and re.fullmatch(r'\d{8}_\d{6}', opnamedatum):
                 ts = opnamedatum
             else:
                 ts = datetime.now().strftime("%Y%m%d_%H%M%S")
