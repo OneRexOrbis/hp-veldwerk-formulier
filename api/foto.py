@@ -80,6 +80,37 @@ def _sp_folder(pid: str) -> str | None:
     return None
 
 
+def _ensure_folder(folder_path: str) -> None:
+    """Maak folder aan op SharePoint als die nog niet bestaat (no-op als al aanwezig)."""
+    drive_id = os.environ["DRIVE_ID"]
+    token = _get_token()
+    # Splits in parent + child
+    parent, child = folder_path.rsplit("/", 1)
+    url = (
+        f"https://graph.microsoft.com/v1.0/drives/{drive_id}/root:/"
+        f"{urllib.parse.quote(parent, safe='/')}:/children"
+    )
+    body = json.dumps({
+        "name": child,
+        "folder": {},
+        "@microsoft.graph.conflictBehavior": "fail"
+    }).encode()
+    req = urllib.request.Request(
+        url, data=body, method="POST",
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Content-Type":  "application/json",
+        }
+    )
+    try:
+        urllib.request.urlopen(req, timeout=10)
+    except urllib.error.HTTPError as e:
+        if e.code == 409:
+            pass  # Map bestaat al — prima
+        else:
+            raise
+
+
 def _upload(sp_pad: str, data: bytes, mimetype: str) -> None:
     drive_id = os.environ["DRIVE_ID"]
     token = _get_token()
@@ -94,7 +125,7 @@ def _upload(sp_pad: str, data: bytes, mimetype: str) -> None:
             "Content-Type":  mimetype,
         }
     )
-    urllib.request.urlopen(req, timeout=30)
+    urllib.request.urlopen(req, timeout=45)
 
 
 class handler(BaseHTTPRequestHandler):
@@ -137,6 +168,10 @@ class handler(BaseHTTPRequestHandler):
                 return self._json(404, {"ok": False, "error": f"Project {pid} niet gevonden"})
 
             submap = FOTOS_VERIF_MAP if categorie == "verificatie" else FOTOS_MAP
+
+            # Zorg dat de Foto's submap bestaat op SharePoint
+            _ensure_folder(f"{folder}/{submap}")
+
             # Gebruik EXIF opnamedatum als die is meegegeven en geldig is (YYYYMMDD_HHMMSS),
             # anders server-tijdstip. Zo sorteert de bijlage op opnametijd, niet uploadtijd.
             import re as _re

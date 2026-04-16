@@ -1,0 +1,22 @@
+{
+  "functions": {
+    "api/foto.py": {
+      "maxDuration": 60
+    },
+    "api/compliance.py": {
+      "maxDuration": 30
+    },
+    "api/eq_opslaan.py": {
+      "maxDuration": 30
+    },
+    "api/prefill.py": {
+      "maxDuration": 15
+    },
+    "api/projects.py": {
+      "maxDuration": 15
+    },
+    "api/draft.py": {
+      "maxDuration": 15
+    }
+  }
+}
