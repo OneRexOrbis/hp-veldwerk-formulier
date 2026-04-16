@@ -214,6 +214,74 @@
     @page{size:A4;margin:15mm}
   }
   .print-footer{display:none}
+
+  /* ═══ MOBILE ═══ */
+  @media (max-width:480px){
+    /* ─ Header: wrap items so badge + buttons drop below title ─ */
+    .header{flex-wrap:wrap;padding:10px 12px;gap:8px}
+    .header h1{font-size:14px}
+    .header p{font-size:10px}
+    .logo-box{width:30px;height:30px;font-size:10px;border-radius:6px}
+    .mod-badge{font-size:9px;padding:2px 6px;order:10}
+    .back-btn{font-size:10px;padding:4px 8px;order:11}
+
+    /* ─ Phase tabs: stack vertically on very small screens ─ */
+    .phase-bar{flex-direction:column}
+    .phase-tab{padding:10px 12px;text-align:left;border-bottom:none;border-left:3px solid transparent}
+    .phase-tab.active{border-bottom:none;border-left-color:var(--hp)}
+
+    /* ─ Cards, proj, partij: tighter margins ─ */
+    .card,.proj,.partij-banner,.norm{margin-left:8px;margin-right:8px}
+    .card{padding:12px}
+    .proj{padding:12px 14px}
+
+    /* ─ Toggle rows: allow label text to wrap, keep switch anchored right ─ */
+    .trow{padding:8px 10px;gap:8px;align-items:flex-start}
+    .trow .tl{font-size:12px;line-height:1.4;min-width:0}
+    .tsw{flex-shrink:0}
+    .tsw button{padding:6px 10px;font-size:11px;min-height:36px}
+
+    /* ─ Bijmenging rows: wrap so bar goes below ─ */
+    .bij-row{flex-wrap:wrap;gap:6px}
+    .bij-lbl{flex:1 1 100%;font-size:12px}
+    .bij-row input[type=number]{width:56px}
+    .bij-bar-wrap{flex:1;min-width:60px}
+
+    /* ─ Signature: taller for fat-finger drawing ─ */
+    .sig-box{height:130px}
+    .sig-stored-img{height:130px}
+
+    /* ─ Fields: larger touch targets ─ */
+    .fld input,.fld select,.fld textarea{padding:11px 12px;font-size:14px}
+    .fld select{min-height:44px}
+
+    /* ─ Protocol picker options: bigger tap target ─ */
+    .proto-opt{padding:12px 14px}
+
+    /* ─ Action buttons: stack vertically ─ */
+    .actions{flex-direction:column;gap:10px;margin:16px 8px 30px}
+    .btn{padding:14px;font-size:14px;min-height:48px}
+
+    /* ─ Pick filter buttons ─ */
+    .pick-filters{gap:4px;padding:6px 8px 4px}
+    .pfbtn{padding:8px 4px;font-size:11px}
+
+    /* ─ Picker results ─ */
+    .pick-result{margin:0 8px 8px;padding:12px}
+    .pick-search{margin:8px}
+
+    /* ─ PIN box: fit narrow screens ─ */
+    .pin-box{width:calc(100vw - 32px);max-width:320px;padding:28px 24px}
+    .pin-digits{gap:8px}
+    .pin-digits input{width:44px;height:50px;font-size:20px}
+
+    /* ─ Section titles ─ */
+    .section-title{margin:14px 8px 6px;font-size:13px}
+
+    /* ─ Toast: avoid edge clipping ─ */
+    .toast{left:16px;right:16px;transform:translateY(80px);width:auto;text-align:center}
+    .toast.show{transform:translateY(0)}
+  }
 </style>
 </head>
 <body>
@@ -271,7 +339,7 @@
 <div id="main-content">
   <div class="header">
     <div class="logo-box">H&P</div>
-    <div><h1 id="hdr-titel">Veldwerk Compliance</h1><p id="hdr-sub">BRL SIKB 2000 — Protocol 2001 / 2002 / 2018</p></div>
+    <div style="flex:1;min-width:0"><h1 id="hdr-titel">Veldwerk Compliance</h1><p id="hdr-sub" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">BRL SIKB 2000 — Protocol 2001 / 2002 / 2018</p></div>
     <span class="mod-badge" id="hdr-badge">BRL 2000</span>
     <button class="back-btn no-print" onclick="showPicker()" title="Ander project kiezen">&#8592; Project</button>
     <button class="back-btn no-print" onclick="uitloggen()" title="Uitloggen" style="margin-left:4px;background:none;border:1px solid rgba(255,255,255,.4);font-size:11px">⎋ Uitlog</button>
