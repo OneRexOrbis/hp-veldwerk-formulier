@@ -1103,6 +1103,10 @@
 <script>
 // ─── API ───────────────────────────────────────────
 const API_URL = '';
+// Foto's gaan naar de Omen (persistent Flask, geen cold-start timeout).
+// Vereist Tailscale op het apparaat. Valt terug op Vercel als Omen niet bereikbaar.
+const FOTO_OMEN_URL = 'http://100.115.79.123:8092';
+const FOTO_OMEN_TIMEOUT_MS = 20000; // 20s — ruim genoeg voor SP upload inclusief ensure_folder
 
 // Opgeslagen handtekeningen (base64 PNG) — aangeleverd door Hans
 // Formaat: { userId: "data:image/png;base64,..." }
@@ -2464,40 +2468,66 @@ async function _fotoVerwerken(file, categorie) {
   reader.readAsDataURL(file);
 }
 
-async function _fotoUploaden(id, naam, b64, mimetype, categorie, opnamedatum, lat, lon) {
+async function _fotoPost(baseUrl, payload) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), FOTO_OMEN_TIMEOUT_MS);
   try {
-    const resp = await fetch(`${API_URL}/api/foto`, {
+    const resp = await fetch(`${baseUrl}/api/foto`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        project:      PROJECT.projectnummer,
-        bestandsnaam: naam,
-        data_base64:  b64,
-        mimetype,
-        categorie:    categorie || 'rapport',
-        opnamedatum:  opnamedatum || null,
-        lat:          lat  || null,
-        lon:          lon  || null,
-      })
+      body: JSON.stringify(payload),
+      signal: ctrl.signal,
     });
-    const result = await resp.json();
-    const kaart = document.getElementById(id);
-    if (!kaart) return;
-    if (result.ok) {
-      kaart.querySelector('div').innerHTML = '✅';
-      kaart.querySelector('div').style.background = '#d1fae5';
-      showToast(`✓ ${naam} geüpload`);
-      // EQ: voeg foto-metadata veld toe
-      if (activeModule === 'eq') _eqFotoMetaVoegToe(id, naam, lat, lon);
-    } else {
-      kaart.querySelector('div').innerHTML = '❌';
-      kaart.querySelector('div').style.background = '#fee2e2';
-      showToast(`✗ Upload mislukt: ${result.error||'onbekend'}`);
-    }
+    clearTimeout(timer);
+    return await resp.json();
   } catch(e) {
-    const kaart = document.getElementById(id);
-    if (kaart) { kaart.querySelector('div').innerHTML = '❌'; kaart.querySelector('div').style.background='#fee2e2'; }
-    showToast('✗ Verbindingsfout bij foto-upload');
+    clearTimeout(timer);
+    throw e;
+  }
+}
+
+async function _fotoUploaden(id, naam, b64, mimetype, categorie, opnamedatum, lat, lon) {
+  const payload = {
+    project:      PROJECT.projectnummer,
+    bestandsnaam: naam,
+    data_base64:  b64,
+    mimetype,
+    categorie:    categorie || 'rapport',
+    opnamedatum:  opnamedatum || null,
+    lat:          lat  || null,
+    lon:          lon  || null,
+  };
+
+  let result = null;
+  let via = 'omen';
+
+  try {
+    result = await _fotoPost(FOTO_OMEN_URL, payload);
+  } catch(e) {
+    // Omen niet bereikbaar (geen Tailscale of server down) → Vercel fallback
+    via = 'vercel';
+    try {
+      result = await _fotoPost(API_URL, payload);
+    } catch(e2) {
+      const kaart = document.getElementById(id);
+      if (kaart) { kaart.querySelector('div').innerHTML = '❌'; kaart.querySelector('div').style.background='#fee2e2'; }
+      showToast('✗ Verbindingsfout bij foto-upload (Omen + Vercel geprobeerd)');
+      return;
+    }
+  }
+
+  const kaart = document.getElementById(id);
+  if (!kaart) return;
+  if (result.ok) {
+    kaart.querySelector('div').innerHTML = '✅';
+    kaart.querySelector('div').style.background = '#d1fae5';
+    const viaTekst = via === 'vercel' ? ' (via Vercel)' : '';
+    showToast(`✓ ${naam} geüpload${viaTekst}`);
+    if (activeModule === 'eq') _eqFotoMetaVoegToe(id, naam, lat, lon);
+  } else {
+    kaart.querySelector('div').innerHTML = '❌';
+    kaart.querySelector('div').style.background = '#fee2e2';
+    showToast(`✗ Upload mislukt: ${result.error||'onbekend'}`);
   }
 }
 
