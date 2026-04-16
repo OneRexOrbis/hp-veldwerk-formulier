@@ -472,7 +472,6 @@
         <div class="trow"><span class="tl">Opdracht afgerond?</span><div class="tsw" data-f="f1_afgerond"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
         <div class="trow"><span class="tl">Foto's genomen?</span><div class="tsw" data-f="f1_fotos"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
         <div class="trow"><span class="tl">Monsteroverdracht grond?</span><div class="tsw" data-f="f1_overdracht"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
-        <div class="trow"><span class="tl">Boorgaten afgewerkt (bentoniet)?</span><div class="tsw" data-f="f1_bentoniet"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
         <div class="trow"><span class="tl">Peilbuizen geplaatst + voorgepompt?</span><div class="tsw" data-f="f1_peilbuizen"><button onclick="tw(this,'y');document.getElementById('cond-pb-aantal').style.display='flex'">Ja</button><button onclick="tw(this,'n');document.getElementById('cond-pb-aantal').style.display='none'">Nee</button><button onclick="tw(this,'v');document.getElementById('cond-pb-aantal').style.display='none'">N.v.t.</button></div></div>
         <div class="fld" id="cond-pb-aantal" style="display:none;margin:2px 0 4px"><label>Aantal peilbuizen geplaatst</label><input type="number" id="f1-pb-aantal" min="1" placeholder="bijv. 3"></div>
         <div class="trow"><span class="tl">Filters omstort met filtergrind?</span><div class="tsw" data-f="f1_filtergrind"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button><button onclick="tw(this,'v')">N.v.t.</button></div></div>
@@ -1600,7 +1599,7 @@ function prefill(forceMod) {
     }
     if (!PROJECT.protocollen.includes('2002') && !(PROJECT.peilbuizen > 0) && PROJECT.protocol_suggestie !== '2002') document.getElementById('ptab2').style.display = 'none';
     updatePhaseDots();
-    if (!PROJECT.boormeester && _gebruikerRol() === 'boormeester') {
+    if (!document.getElementById('f1-sn').value) {
       const u = _gebruikerObj();
       if (u) { document.getElementById('f1-sn').value = u.naam; }
     }
@@ -1642,7 +1641,7 @@ function prefill(forceMod) {
     }
     const plan1001 = PROJECT.plan || {};
     if (plan1001.aantal_grepen) document.getElementById('ap-grepen-totaal').value = plan1001.aantal_grepen;
-    if (!PROJECT.monsternemer && !PROJECT.boormeester && _gebruikerRol() === 'boormeester') {
+    if (!document.getElementById('ap-sn').value) {
       const u = _gebruikerObj();
       if (u) { document.getElementById('ap-sn').value = u.naam; }
     }
@@ -1699,7 +1698,7 @@ function prefill(forceMod) {
     if (p1002.producent || p1002.leverancier) document.getElementById('bw-producent').value = p1002.producent || p1002.leverancier || '';
     if (p1002.soortelijk_gewicht || p1002.dichtheid) { document.getElementById('bw-sg').value = p1002.soortelijk_gewicht || p1002.dichtheid || ''; bwBereken(); }
     if (p1002.grootte_m3 || p1002.volume_m3) { document.getElementById('bw-m3').value = p1002.grootte_m3 || p1002.volume_m3 || ''; bwBereken(); }
-    if (!PROJECT.monsternemer && !PROJECT.boormeester && _gebruikerRol() === 'boormeester') {
+    if (!document.getElementById('bw-sn').value) {
       const u = _gebruikerObj();
       if (u) { document.getElementById('bw-sn').value = u.naam; }
     }
