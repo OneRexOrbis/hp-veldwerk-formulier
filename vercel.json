@@ -1,7 +1,7 @@
 {
   "functions": {
     "api/foto.py": {
-      "maxDuration": 60
+      "maxDuration": 15
     },
     "api/compliance.py": {
       "maxDuration": 30

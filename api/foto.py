@@ -1,36 +1,48 @@
 """
 Vercel serverless function: POST /api/foto
 
-Upload een foto naar {projectmap}/Foto's/ op SharePoint.
+Maakt een SharePoint Upload Session aan. De browser uploadt de foto
+daarna DIRECT naar SharePoint (geen bytes via Vercel — geen 4.5 MB body
+limiet, geen cold-start timeout).
+
+Flow:
+  Browser POST /api/foto met {project, bestandsnaam, categorie, ...}
+  → Server: token + index lookup + ensure Foto's folder + createUploadSession
+  → Server returns {ok, uploadUrl, sp_naam, sp_folder}
+  → Browser PUT de file bytes naar uploadUrl (direct naar SharePoint)
 
 Body (JSON):
   {
-    "project":     "P2600125",
+    "project":      "P2600125",
     "bestandsnaam": "IMG_001.jpg",
-    "data_base64": "<base64-encoded bytes>",
-    "mimetype":    "image/jpeg"
+    "mimetype":     "image/jpeg",           // optioneel
+    "categorie":    "rapport"|"verificatie",
+    "opnamedatum":  "YYYYMMDD_HHMMSS"       // optioneel (EXIF)
   }
 
-De sp_folder wordt opgezocht in veldwerk_projects_index.json.
-Bestandsnaam op SharePoint: {YYYYMMDD_HHMMSS}_{bestandsnaam}
+Response:
+  {
+    "ok":        true,
+    "uploadUrl": "https://...sharepoint.com/...&token=...",
+    "sp_naam":   "20260417_152334_IMG_001.jpg",
+    "sp_folder": "General/Lopende projecten/.../Foto's"
+  }
 """
-import base64
 import json
 import os
 import re
 import time
 import urllib.error
-import urllib.request
 import urllib.parse
+import urllib.request
 from datetime import datetime
 from http.server import BaseHTTPRequestHandler
 
 INDEX_SP_PATH   = "General/HP Automatiseringen/veldwerk_projects_index.json"
 FOTOS_MAP       = "Foto's"
 FOTOS_VERIF_MAP = "Foto's verificatie"
-MAX_MB          = 20
 
-_cache = {"token": None, "token_ts": 0, "index": None, "index_ts": 0}
+_cache = {"token": None, "token_ts": 0.0, "index": None, "index_ts": 0.0}
 INDEX_TTL = 300
 
 
@@ -68,14 +80,13 @@ def _get_index() -> list:
     )
     req = urllib.request.Request(url, headers={"Authorization": f"Bearer {token}"})
     resp = urllib.request.urlopen(req, timeout=10)
-    data = json.loads(resp.read())
-    projecten = data.get("projecten", [])
+    projecten = json.loads(resp.read()).get("projecten", [])
     _cache["index"] = projecten
     _cache["index_ts"] = now
     return projecten
 
 
-def _sp_folder(pid: str) -> str | None:
+def _sp_folder(pid: str):
     for p in _get_index():
         if p.get("projectnummer") == pid:
             return p.get("sp_folder")
@@ -83,7 +94,7 @@ def _sp_folder(pid: str) -> str | None:
 
 
 def _ensure_folder(folder_path: str) -> None:
-    """Maak folder aan op SharePoint als die nog niet bestaat (no-op als al aanwezig)."""
+    """Maak folder aan als die nog niet bestaat (409 = al aanwezig, dat is OK)."""
     drive_id = os.environ["DRIVE_ID"]
     token = _get_token()
     parent, child = folder_path.rsplit("/", 1)
@@ -94,39 +105,36 @@ def _ensure_folder(folder_path: str) -> None:
     body = json.dumps({
         "name": child,
         "folder": {},
-        "@microsoft.graph.conflictBehavior": "fail"
+        "@microsoft.graph.conflictBehavior": "fail",
     }).encode()
     req = urllib.request.Request(
         url, data=body, method="POST",
-        headers={
-            "Authorization": f"Bearer {token}",
-            "Content-Type":  "application/json",
-        }
+        headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
     )
     try:
         urllib.request.urlopen(req, timeout=10)
     except urllib.error.HTTPError as e:
-        if e.code == 409:
-            pass  # Map bestaat al — prima
-        else:
+        if e.code != 409:
             raise
 
 
-def _upload(sp_pad: str, data: bytes, mimetype: str) -> None:
+def _create_upload_session(sp_path: str) -> str:
+    """Microsoft Graph createUploadSession — returns short-lived uploadUrl (~15 min)."""
     drive_id = os.environ["DRIVE_ID"]
     token = _get_token()
     url = (
         f"https://graph.microsoft.com/v1.0/drives/{drive_id}/root:/"
-        f"{urllib.parse.quote(sp_pad, safe='/')}:/content"
+        f"{urllib.parse.quote(sp_path, safe='/')}:/createUploadSession"
     )
+    body = json.dumps({
+        "item": {"@microsoft.graph.conflictBehavior": "replace"}
+    }).encode()
     req = urllib.request.Request(
-        url, data=data, method="PUT",
-        headers={
-            "Authorization": f"Bearer {token}",
-            "Content-Type":  mimetype,
-        }
+        url, data=body, method="POST",
+        headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
     )
-    urllib.request.urlopen(req, timeout=45)
+    resp = urllib.request.urlopen(req, timeout=10)
+    return json.loads(resp.read())["uploadUrl"]
 
 
 class handler(BaseHTTPRequestHandler):
@@ -138,9 +146,6 @@ class handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         length = int(self.headers.get("Content-Length", 0))
-        if length > MAX_MB * 1024 * 1024:
-            return self._json(413, {"ok": False, "error": f"Bestand te groot (max {MAX_MB} MB)"})
-
         try:
             body = json.loads(self.rfile.read(length))
         except Exception:
@@ -148,48 +153,48 @@ class handler(BaseHTTPRequestHandler):
 
         pid          = (body.get("project") or "").strip()
         bestandsnaam = (body.get("bestandsnaam") or "foto.jpg").strip()
-        data_b64     = body.get("data_base64", "")
-        mimetype     = body.get("mimetype", "image/jpeg")
         categorie    = (body.get("categorie") or "rapport").strip().lower()
         opnamedatum  = (body.get("opnamedatum") or "").strip()
-        lat          = body.get("lat")
-        lon          = body.get("lon")
 
-        if not pid or not data_b64:
-            return self._json(400, {"ok": False, "error": "project en data_base64 zijn verplicht"})
-
-        try:
-            foto_bytes = base64.b64decode(data_b64)
-        except Exception:
-            return self._json(400, {"ok": False, "error": "Ongeldige base64 data"})
+        if not pid:
+            return self._json(400, {"ok": False, "error": "project is verplicht"})
 
         try:
             folder = _sp_folder(pid)
             if not folder:
-                return self._json(404, {"ok": False, "error": f"Project {pid} niet gevonden"})
+                return self._json(404, {"ok": False, "error": f"Project {pid} niet in index"})
 
             submap = FOTOS_VERIF_MAP if categorie == "verificatie" else FOTOS_MAP
+            foto_folder = f"{folder}/{submap}"
+            _ensure_folder(foto_folder)
 
-            # Zorg dat de Foto's submap bestaat op SharePoint
-            _ensure_folder(f"{folder}/{submap}")
-
-            # Gebruik EXIF opnamedatum als die is meegegeven en geldig is (YYYYMMDD_HHMMSS),
-            # anders server-tijdstip. Zo sorteert de bijlage op opnametijd, niet uploadtijd.
             if opnamedatum and re.fullmatch(r'\d{8}_\d{6}', opnamedatum):
                 ts = opnamedatum
             else:
                 ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-            sp_naam = f"{ts}_{bestandsnaam}"
-            sp_pad  = f"{folder}/{submap}/{sp_naam}"
+            # Bestandsnaam veilig maken voor SharePoint (geen / \ : * ? " < > |)
+            safe_naam = re.sub(r'[\\/:*?"<>|]', '_', bestandsnaam)
+            sp_naam = f"{ts}_{safe_naam}"
+            sp_path = f"{foto_folder}/{sp_naam}"
 
-            _upload(sp_pad, foto_bytes, mimetype)
-            resp_data: dict = {"ok": True, "bestandsnaam": sp_naam, "map": submap}
-            if lat is not None: resp_data["lat"] = lat
-            if lon is not None: resp_data["lon"] = lon
-            self._json(200, resp_data)
+            upload_url = _create_upload_session(sp_path)
 
+            self._json(200, {
+                "ok":        True,
+                "uploadUrl": upload_url,
+                "sp_naam":   sp_naam,
+                "sp_folder": foto_folder,
+            })
+
+        except urllib.error.HTTPError as e:
+            try:
+                err_body = e.read().decode("utf-8", errors="replace")
+            except Exception:
+                err_body = ""
+            self._json(500, {"ok": False,
+                             "error": f"Graph HTTP {e.code}: {err_body[:200]}"})
         except Exception as e:
-            self._json(500, {"ok": False, "error": str(e)})
+            self._json(500, {"ok": False, "error": f"{type(e).__name__}: {e}"})
 
     def _json(self, status: int, data: dict):
         body = json.dumps(data).encode()

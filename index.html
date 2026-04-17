@@ -1102,10 +1102,9 @@
 <script>
 // ─── API ───────────────────────────────────────────
 const API_URL = '';
-// Foto's gaan naar de Omen (persistent Flask, geen cold-start timeout).
-// Vereist Tailscale op het apparaat. Valt terug op Vercel als Omen niet bereikbaar.
-const FOTO_OMEN_URL = 'http://100.115.79.123:8092';
-const FOTO_OMEN_TIMEOUT_MS = 20000; // 20s — ruim genoeg voor SP upload inclusief ensure_folder
+// Foto's gebruiken SharePoint Upload Session: Vercel maakt een pre-authenticated
+// upload URL, browser PUT de bytes direct naar SharePoint (bypass Vercel body-limit
+// en cold-start timeout, werkt zonder Tailscale, geen mixed-content issues).
 
 // Opgeslagen handtekeningen (base64 PNG) — aangeleverd door Hans
 // Formaat: { userId: "data:image/png;base64,..." }
@@ -2454,12 +2453,8 @@ async function _fotoVerwerken(file, categorie) {
       canvas.height = Math.round(img.height * schaal);
       canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
       canvas.toBlob(blob => {
-        const fr2 = new FileReader();
-        fr2.onload = ev => {
-          const b64 = ev.target.result.split(',')[1];
-          _fotoUploaden(id, file.name, b64, 'image/jpeg', categorie, opnamedatum, _eqFotoGps?.lat||null, _eqFotoGps?.lon||null);
-        };
-        fr2.readAsDataURL(blob);
+        // Upload blob rechtstreeks — geen base64 meer (bespaart 33% en vermijdt Vercel body-limit)
+        _fotoUploaden(id, file.name, blob, 'image/jpeg', categorie, opnamedatum, _eqFotoGps?.lat||null, _eqFotoGps?.lon||null);
       }, 'image/jpeg', FOTO_KWALITEIT);
     };
     img.src = e.target.result;
@@ -2467,66 +2462,52 @@ async function _fotoVerwerken(file, categorie) {
   reader.readAsDataURL(file);
 }
 
-async function _fotoPost(baseUrl, payload) {
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), FOTO_OMEN_TIMEOUT_MS);
-  try {
-    const resp = await fetch(`${baseUrl}/api/foto`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(payload),
-      signal: ctrl.signal,
-    });
-    clearTimeout(timer);
-    return await resp.json();
-  } catch(e) {
-    clearTimeout(timer);
-    throw e;
-  }
-}
-
-async function _fotoUploaden(id, naam, b64, mimetype, categorie, opnamedatum, lat, lon) {
-  const payload = {
-    project:      PROJECT.projectnummer,
-    bestandsnaam: naam,
-    data_base64:  b64,
-    mimetype,
-    categorie:    categorie || 'rapport',
-    opnamedatum:  opnamedatum || null,
-    lat:          lat  || null,
-    lon:          lon  || null,
+async function _fotoUploaden(id, naam, blob, mimetype, categorie, opnamedatum, lat, lon) {
+  const kaart = document.getElementById(id);
+  const markFail = (msg) => {
+    if (kaart) { kaart.querySelector('div').innerHTML = '❌'; kaart.querySelector('div').style.background='#fee2e2'; }
+    showToast(`✗ Upload mislukt: ${msg}`);
   };
 
-  let result = null;
-  let via = 'omen';
-
   try {
-    result = await _fotoPost(FOTO_OMEN_URL, payload);
-  } catch(e) {
-    // Omen niet bereikbaar (geen Tailscale of server down) → Vercel fallback
-    via = 'vercel';
-    try {
-      result = await _fotoPost(API_URL, payload);
-    } catch(e2) {
-      const kaart = document.getElementById(id);
-      if (kaart) { kaart.querySelector('div').innerHTML = '❌'; kaart.querySelector('div').style.background='#fee2e2'; }
-      showToast('✗ Verbindingsfout bij foto-upload (Omen + Vercel geprobeerd)');
-      return;
-    }
-  }
+    // Stap 1: vraag Vercel om een SharePoint upload session URL
+    const sessResp = await fetch(`${API_URL}/api/foto`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        project:      PROJECT.projectnummer,
+        bestandsnaam: naam,
+        mimetype,
+        categorie:    categorie || 'rapport',
+        opnamedatum:  opnamedatum || null,
+      }),
+    });
+    let sess;
+    try { sess = await sessResp.json(); }
+    catch { return markFail(`session HTTP ${sessResp.status}`); }
+    if (!sess.ok) return markFail(sess.error || 'session geweigerd');
 
-  const kaart = document.getElementById(id);
-  if (!kaart) return;
-  if (result.ok) {
+    // Stap 2: PUT de file-bytes direct naar SharePoint (bypass Vercel)
+    const size = blob.size;
+    const putResp = await fetch(sess.uploadUrl, {
+      method: 'PUT',
+      headers: {
+        'Content-Length': String(size),
+        'Content-Range':  `bytes 0-${size - 1}/${size}`,
+      },
+      body: blob,
+    });
+    if (!putResp.ok) return markFail(`SharePoint ${putResp.status}`);
+
+    if (!kaart) return;
     kaart.querySelector('div').innerHTML = '✅';
     kaart.querySelector('div').style.background = '#d1fae5';
-    const viaTekst = via === 'vercel' ? ' (via Vercel)' : '';
-    showToast(`✓ ${naam} geüpload${viaTekst}`);
-    if (activeModule === 'eq') _eqFotoMetaVoegToe(id, naam, lat, lon);
-  } else {
-    kaart.querySelector('div').innerHTML = '❌';
-    kaart.querySelector('div').style.background = '#fee2e2';
-    showToast(`✗ Upload mislukt: ${result.error||'onbekend'}`);
+    showToast(`✓ ${naam} geüpload`);
+    if (activeModule === 'eq') _eqFotoMetaVoegToe(id, sess.sp_naam || naam, lat, lon);
+    return;
+  } catch(e) {
+    console.error('[foto] upload faalde:', e);
+    return markFail(e.message || e);
   }
 }
 
