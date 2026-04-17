@@ -676,10 +676,28 @@
       <div class="fld"><label>Type partij</label><select id="ap-type-keuring"><option value="">— kies —</option><option value="Depot">Depot</option><option value="In-situ">In-situ</option></select></div>
       <div class="fld"><label>Herkomst partij</label><input id="ap-herkomst" placeholder="bijv. slooplocatie, grondwerkzaamheden"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <div class="fld"><label>Volume (m³)</label><input type="number" id="ap-volume-m3" step="0.1" placeholder="—" oninput="apBerekenTonnage()"></div>
+        <div class="fld"><label>Volume (m³) <span style="font-size:10px;color:#888" id="ap-vol-lbl">handmatig</span></label><input type="number" id="ap-volume-m3" step="0.1" placeholder="—" oninput="delete this.dataset.auto;apBerekenTonnage();document.getElementById('ap-vol-lbl').textContent='handmatig'"></div>
         <div class="fld"><label>Dichtheid (ton/m³)</label><input type="number" id="ap-dichtheid" step="0.01" value="1.7" placeholder="1.7" oninput="apBerekenTonnage()"></div>
         <div class="fld"><label>Tonnage (ton) <span style="font-size:10px;color:#888">auto</span></label><input type="number" id="ap-tonnage" step="0.1" placeholder="auto" oninput="delete this.dataset.auto"></div>
         <div class="fld"><label>Erkenning monsternemer</label><input id="ap-cert" placeholder="NC-SIK-10093"></div>
+      </div>
+    </div>
+
+    <div class="section-title"><span>📐</span> Partijafmetingen (L × B × H/D)</div>
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+        <label style="font-size:12px;color:#555;white-space:nowrap">Rekenregel (factor)</label>
+        <input type="number" id="ap-rekenregel" value="0.75" step="0.01" min="0.1" max="1" style="width:70px;padding:4px 6px;border:1px solid #ccc;border-radius:4px;font-size:12px" oninput="apBerekenAfm()">
+        <span style="font-size:10px;color:#888">standaard 0,75 — Protocol 1001 Bijlage 1</span>
+      </div>
+      <div style="display:grid;grid-template-columns:22px 1fr 1fr 1fr 46px 50px 22px;gap:3px;font-size:10px;font-weight:600;color:#666;margin-bottom:4px;padding:0 1px">
+        <span></span><span>L (m)</span><span>B (m)</span><span>H/D (m)</span><span style="text-align:center">m²</span><span style="text-align:center">m³</span><span></span>
+      </div>
+      <div id="ap-afm-rijen"></div>
+      <button onclick="apAfmAdd()" class="dp-add" style="margin-top:6px">＋ Meetvak toevoegen</button>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;border-top:1px solid #e0e0e0;padding-top:8px">
+        <div class="fld"><label>Totaal opp. (m²)</label><input id="ap-opp-m2" readonly placeholder="auto" style="background:var(--gy-l);color:var(--gy)"></div>
+        <div class="fld"><label>Totaal volume (m³)</label><input id="ap-vol-berekend" readonly placeholder="auto" style="background:var(--gy-l);color:var(--gy)"></div>
       </div>
     </div>
 
@@ -1517,6 +1535,66 @@ function apBerekenTonnage() {
   }
 }
 
+// ─── Partijafmetingen (L×B×H/D tabel) ──────────────
+let apAfmNr = 0;
+function apAfmAdd() {
+  apAfmNr++;
+  const nr = apAfmNr;
+  const c = document.getElementById('ap-afm-rijen');
+  const div = document.createElement('div');
+  div.id = 'ap-afm-row-' + nr;
+  div.style = 'display:grid;grid-template-columns:22px 1fr 1fr 1fr 46px 50px 22px;gap:3px;align-items:center;margin-bottom:3px';
+  const inp = 'style="padding:3px 4px;font-size:12px;border:1px solid #ccc;border-radius:3px;width:100%"';
+  const ro  = 'style="padding:3px 2px;font-size:11px;border:1px solid #e0e0e0;border-radius:3px;background:#f5f5f5;color:#555;text-align:center;width:100%"';
+  div.innerHTML =
+    `<span style="font-size:10px;color:#aaa;text-align:center">${nr}</span>`
+    + `<input type="number" step="0.1" min="0" placeholder="L" data-afm-l ${inp} oninput="apBerekenAfm()">`
+    + `<input type="number" step="0.1" min="0" placeholder="B" data-afm-b ${inp} oninput="apBerekenAfm()">`
+    + `<input type="number" step="0.01" min="0" placeholder="H/D" data-afm-hd ${inp} oninput="apBerekenAfm()">`
+    + `<input readonly data-afm-m2 placeholder="—" ${ro}>`
+    + `<input readonly data-afm-m3 placeholder="—" ${ro}>`
+    + `<button onclick="document.getElementById('ap-afm-row-${nr}').remove();apBerekenAfm()" style="color:#c0392b;background:none;border:none;cursor:pointer;font-size:15px;padding:0;line-height:1">✕</button>`;
+  c.appendChild(div);
+}
+
+function apBerekenAfm() {
+  const rr = parseFloat(document.getElementById('ap-rekenregel')?.value) || 0.75;
+  let totM2 = 0, totM3 = 0;
+  document.querySelectorAll('#ap-afm-rijen > div').forEach(row => {
+    const l  = parseFloat(row.querySelector('[data-afm-l]')?.value)  || 0;
+    const b  = parseFloat(row.querySelector('[data-afm-b]')?.value)  || 0;
+    const hd = parseFloat(row.querySelector('[data-afm-hd]')?.value) || 0;
+    const m2 = l * b;
+    const m3 = m2 * hd * rr;
+    row.querySelector('[data-afm-m2]').value = m2 ? m2.toFixed(2) : '';
+    row.querySelector('[data-afm-m3]').value = m3 ? m3.toFixed(2) : '';
+    totM2 += m2; totM3 += m3;
+  });
+  const oppEl = document.getElementById('ap-opp-m2');
+  const volBEl = document.getElementById('ap-vol-berekend');
+  if (oppEl) oppEl.value = totM2 ? totM2.toFixed(2) : '';
+  if (volBEl) volBEl.value = totM3 ? totM3.toFixed(2) : '';
+  // Auto-vul volume-m3 als niet handmatig overschreven
+  const volEl = document.getElementById('ap-volume-m3');
+  if (volEl && totM3 && (volEl.dataset.auto === '1' || !volEl.value)) {
+    volEl.value = totM3.toFixed(1);
+    volEl.dataset.auto = '1';
+    document.getElementById('ap-vol-lbl').textContent = 'auto ↑';
+    apBerekenTonnage();
+  }
+}
+
+function apAfmGetData() {
+  return Array.from(document.querySelectorAll('#ap-afm-rijen > div')).map((row, i) => ({
+    nr: i + 1,
+    l_m:  parseFloat(row.querySelector('[data-afm-l]')?.value)  || null,
+    b_m:  parseFloat(row.querySelector('[data-afm-b]')?.value)  || null,
+    hd_m: parseFloat(row.querySelector('[data-afm-hd]')?.value) || null,
+    opp_m2: parseFloat(row.querySelector('[data-afm-m2]')?.value) || null,
+    vol_m3: parseFloat(row.querySelector('[data-afm-m3]')?.value) || null,
+  })).filter(r => r.l_m || r.b_m || r.hd_m);
+}
+
 // ─── Grepen berekeningen ────────────────────────────
 function apBerekenGrepen() {
   const mm = parseInt(document.getElementById('ap-mengmonsters')?.value) || 0;
@@ -1677,6 +1755,7 @@ function prefill(forceMod) {
       if (u) { document.getElementById('ap-sn').value = u.naam; }
     }
     if (!document.querySelector('#ap-dp-rijen > div')) apDpAdd(); // standaard 1 deelpartij (alleen als leeg)
+    if (!document.querySelector('#ap-afm-rijen > div')) apAfmAdd(); // standaard 1 meetvak (alleen als leeg)
     // Erkenning monsternemer HP vast
     const apCertEl = document.getElementById('ap-cert');
     if (apCertEl && !apCertEl.value) apCertEl.value = 'NC-SIK-10093';
@@ -1967,7 +2046,8 @@ function buildExport1001() {
   return {
     _meta:{schema:'hp_veldwerk_1001_v1',generated:new Date().toISOString(),app:'HP Veldwerk Compliance v3.0',ingevuld_door:_gebruikersnaam()||null,gebruiker_id:sessionStorage.getItem('hp_vw_id')||null,sessie_start:sessionStorage.getItem('hp_vw_sessie_start')||null},
     protocol_selectie:{gesuggereerd:_protocolSuggestie,gekozen:'1001',gewijzigd:_protocolSuggestie!=='1001',gewijzigd_door:_gebruikersnaam()||null,reden:document.getElementById('proto-reden')?.value||null},
-    project:{...PROJECT,cert_monsternemer:document.getElementById('ap-cert').value||null,tonnage_ton:parseFloat(document.getElementById('ap-tonnage')?.value)||null,dichtheid:parseFloat(document.getElementById('ap-dichtheid')?.value)||null,volume_m3_ingevuld:parseFloat(document.getElementById('ap-volume-m3')?.value)||null},
+    project:{...PROJECT,cert_monsternemer:document.getElementById('ap-cert').value||null,tonnage_ton:parseFloat(document.getElementById('ap-tonnage')?.value)||null,dichtheid:parseFloat(document.getElementById('ap-dichtheid')?.value)||null,volume_m3_ingevuld:parseFloat(document.getElementById('ap-volume-m3')?.value)||null,oppervlakte_m2:parseFloat(document.getElementById('ap-opp-m2')?.value)||null,rekenregel:parseFloat(document.getElementById('ap-rekenregel')?.value)||0.75},
+    afmetingen:apAfmGetData(),
     partij:{...(PROJECT.partij||{}),type_keuring:document.getElementById('ap-type-keuring').value||null,herkomst:document.getElementById('ap-herkomst').value||null},
     deelpartijen:apDpGetData(),
     terreininspectie:{toegankelijk:S.ap_terrein_toegang||null,veilig:S.ap_terrein_veilig||null,nen_5725:S.ap_terrein_nen||null,bijzonderheden:document.getElementById('ap-terrein-bijz').value||null,uitgevoerd_door:document.getElementById('ap-terrein-door')?.value||null},
@@ -3280,6 +3360,21 @@ function _herstelDraft(data) {
     set('ap-herkomst', (ap.project||{}).herkomst||'');
     set('ap-dichtheid', (ap.project||{}).dichtheid||'');
     set('ap-volume-m3', (ap.project||{}).volume_m3_ingevuld||'');
+    set('ap-rekenregel', (ap.project||{}).rekenregel||'0.75');
+    // Herstel partijafmetingen-rijen
+    const apAfms = ap.afmetingen || [];
+    if (apAfms.length) {
+      document.querySelectorAll('#ap-afm-rijen > div').forEach(r => r.remove()); apAfmNr = 0;
+      apAfms.forEach(afm => {
+        apAfmAdd();
+        const row = document.getElementById('ap-afm-row-' + apAfmNr);
+        if (!row) return;
+        if (afm.l_m)  row.querySelector('[data-afm-l]').value  = afm.l_m;
+        if (afm.b_m)  row.querySelector('[data-afm-b]').value  = afm.b_m;
+        if (afm.hd_m) row.querySelector('[data-afm-hd]').value = afm.hd_m;
+      });
+      apBerekenAfm();
+    }
     // Herstel AP04 deelpartij-rijen
     const apDps = ap.deelpartijen || [];
     if (apDps.length) {
