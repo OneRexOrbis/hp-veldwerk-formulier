@@ -1,36 +1,43 @@
 """
 Vercel serverless function: POST /api/foto
 
-Maakt een SharePoint Upload Session aan. De browser uploadt de foto
-daarna DIRECT naar SharePoint (geen bytes via Vercel — geen 4.5 MB body
-limiet, geen cold-start timeout).
+DUAL-MODE:
+  (1) LEGACY DIRECT UPLOAD — als body.data_base64 aanwezig is:
+      De oude flow waarbij de browser de bytes base64-encoded stuurt en
+      Vercel direct naar SharePoint uploadt.
+      Behouden omdat service-worker caches oude frontend-versies kunnen
+      leveren die nog geen Upload Session kennen. Zonder dit vangnet
+      gelooft de oude app dat het gelukt is zonder iets te uploaden.
 
-Flow:
-  Browser POST /api/foto met {project, bestandsnaam, categorie, ...}
-  → Server: token + index lookup + ensure Foto's folder + createUploadSession
-  → Server returns {ok, uploadUrl, sp_naam, sp_folder}
-  → Browser PUT de file bytes naar uploadUrl (direct naar SharePoint)
+  (2) UPLOAD SESSION — als data_base64 ontbreekt:
+      Browser krijgt een pre-authenticated SharePoint upload-URL en PUTet
+      de bytes direct (geen Vercel body-limit, geen timeout).
+
+Beide paden gebruiken dezelfde token/index/ensure-folder helpers.
 
 Body (JSON):
   {
-    "project":      "P2600125",
-    "bestandsnaam": "IMG_001.jpg",
-    "mimetype":     "image/jpeg",           // optioneel
+    "project":      "P2600125",           // verplicht
+    "bestandsnaam": "IMG_001.jpg",        // verplicht
     "categorie":    "rapport"|"verificatie",
-    "opnamedatum":  "YYYYMMDD_HHMMSS"       // optioneel (EXIF)
+    "opnamedatum":  "YYYYMMDD_HHMMSS",    // optioneel (EXIF)
+    "mimetype":     "image/jpeg",         // optioneel
+
+    "data_base64":  "<bytes>"             // alleen voor LEGACY mode
   }
 
-Response:
-  {
-    "ok":        true,
-    "uploadUrl": "https://...sharepoint.com/...&token=...",
-    "sp_naam":   "20260417_152334_IMG_001.jpg",
-    "sp_folder": "General/Lopende projecten/.../Foto's"
-  }
+Response LEGACY:
+  {"ok": true, "bestandsnaam": "20260417_...jpg", "map": "Foto's"}
+
+Response UPLOAD SESSION:
+  {"ok": true, "uploadUrl": "https://...", "sp_naam": "20260417_...jpg",
+   "sp_folder": "General/Lopende projecten/.../Foto's"}
 """
+import base64
 import json
 import os
 import re
+import sys
 import time
 import urllib.error
 import urllib.parse
@@ -41,9 +48,15 @@ from http.server import BaseHTTPRequestHandler
 INDEX_SP_PATH   = "General/HP Automatiseringen/veldwerk_projects_index.json"
 FOTOS_MAP       = "Foto's"
 FOTOS_VERIF_MAP = "Foto's verificatie"
+MAX_MB          = 20
 
 _cache = {"token": None, "token_ts": 0.0, "index": None, "index_ts": 0.0}
 INDEX_TTL = 300
+
+
+def _log(msg: str) -> None:
+    """Zichtbaar in Vercel function logs."""
+    print(f"[foto] {msg}", file=sys.stderr, flush=True)
 
 
 def _get_token() -> str:
@@ -94,7 +107,7 @@ def _sp_folder(pid: str):
 
 
 def _ensure_folder(folder_path: str) -> None:
-    """Maak folder aan als die nog niet bestaat (409 = al aanwezig, dat is OK)."""
+    """Maak folder aan als die nog niet bestaat (409 = al aanwezig = OK)."""
     drive_id = os.environ["DRIVE_ID"]
     token = _get_token()
     parent, child = folder_path.rsplit("/", 1)
@@ -118,8 +131,23 @@ def _ensure_folder(folder_path: str) -> None:
             raise
 
 
+def _upload_bytes(sp_path: str, data: bytes, mimetype: str) -> None:
+    """LEGACY: Direct PUT van bytes naar SharePoint (via Vercel)."""
+    drive_id = os.environ["DRIVE_ID"]
+    token = _get_token()
+    url = (
+        f"https://graph.microsoft.com/v1.0/drives/{drive_id}/root:/"
+        f"{urllib.parse.quote(sp_path, safe='/')}:/content"
+    )
+    req = urllib.request.Request(
+        url, data=data, method="PUT",
+        headers={"Authorization": f"Bearer {token}", "Content-Type": mimetype}
+    )
+    urllib.request.urlopen(req, timeout=45)
+
+
 def _create_upload_session(sp_path: str) -> str:
-    """Microsoft Graph createUploadSession — returns short-lived uploadUrl (~15 min)."""
+    """Microsoft Graph createUploadSession — returns short-lived uploadUrl."""
     drive_id = os.environ["DRIVE_ID"]
     token = _get_token()
     url = (
@@ -153,8 +181,10 @@ class handler(BaseHTTPRequestHandler):
 
         pid          = (body.get("project") or "").strip()
         bestandsnaam = (body.get("bestandsnaam") or "foto.jpg").strip()
+        mimetype     = body.get("mimetype", "image/jpeg")
         categorie    = (body.get("categorie") or "rapport").strip().lower()
         opnamedatum  = (body.get("opnamedatum") or "").strip()
+        data_b64     = body.get("data_base64")  # None voor new flow, string voor legacy
 
         if not pid:
             return self._json(400, {"ok": False, "error": "project is verplicht"})
@@ -162,6 +192,7 @@ class handler(BaseHTTPRequestHandler):
         try:
             folder = _sp_folder(pid)
             if not folder:
+                _log(f"Project {pid} niet in index")
                 return self._json(404, {"ok": False, "error": f"Project {pid} niet in index"})
 
             submap = FOTOS_VERIF_MAP if categorie == "verificatie" else FOTOS_MAP
@@ -172,29 +203,49 @@ class handler(BaseHTTPRequestHandler):
                 ts = opnamedatum
             else:
                 ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-            # Bestandsnaam veilig maken voor SharePoint (geen / \ : * ? " < > |)
             safe_naam = re.sub(r'[\\/:*?"<>|]', '_', bestandsnaam)
             sp_naam = f"{ts}_{safe_naam}"
             sp_path = f"{foto_folder}/{sp_naam}"
 
-            upload_url = _create_upload_session(sp_path)
-
-            self._json(200, {
-                "ok":        True,
-                "uploadUrl": upload_url,
-                "sp_naam":   sp_naam,
-                "sp_folder": foto_folder,
-            })
+            if data_b64:
+                # ─── LEGACY: direct upload via Vercel ────────────────────────
+                if len(data_b64) > MAX_MB * 1024 * 1024 * 4 // 3 + 100:
+                    return self._json(413, {"ok": False,
+                                             "error": f"Bestand te groot (max {MAX_MB} MB)"})
+                try:
+                    foto_bytes = base64.b64decode(data_b64)
+                except Exception:
+                    return self._json(400, {"ok": False, "error": "Ongeldige base64"})
+                _upload_bytes(sp_path, foto_bytes, mimetype)
+                _log(f"LEGACY upload OK: {sp_path} ({len(foto_bytes)} bytes)")
+                resp_data = {"ok": True, "bestandsnaam": sp_naam, "map": submap}
+                lat, lon = body.get("lat"), body.get("lon")
+                if lat is not None: resp_data["lat"] = lat
+                if lon is not None: resp_data["lon"] = lon
+                return self._json(200, resp_data)
+            else:
+                # ─── NEW: Upload Session (direct browser → SharePoint) ───────
+                upload_url = _create_upload_session(sp_path)
+                _log(f"Session aangemaakt: {sp_path}")
+                return self._json(200, {
+                    "ok":        True,
+                    "uploadUrl": upload_url,
+                    "sp_naam":   sp_naam,
+                    "sp_folder": foto_folder,
+                })
 
         except urllib.error.HTTPError as e:
             try:
                 err_body = e.read().decode("utf-8", errors="replace")
             except Exception:
                 err_body = ""
-            self._json(500, {"ok": False,
-                             "error": f"Graph HTTP {e.code}: {err_body[:200]}"})
+            _log(f"Graph HTTP {e.code}: {err_body[:300]}")
+            return self._json(500, {"ok": False,
+                                    "error": f"Graph HTTP {e.code}: {err_body[:200]}"})
         except Exception as e:
-            self._json(500, {"ok": False, "error": f"{type(e).__name__}: {e}"})
+            _log(f"Exception {type(e).__name__}: {e}")
+            return self._json(500, {"ok": False,
+                                    "error": f"{type(e).__name__}: {e}"})
 
     def _json(self, status: int, data: dict):
         body = json.dumps(data).encode()
