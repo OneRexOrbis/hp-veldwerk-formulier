@@ -666,8 +666,8 @@
       <div class="fld"><label>Type partij</label><select id="ap-type-keuring"><option value="">— kies —</option><option value="Depot">Depot</option><option value="In-situ">In-situ</option></select></div>
       <div class="fld"><label>Herkomst partij</label><input id="ap-herkomst" placeholder="bijv. slooplocatie, grondwerkzaamheden"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
-        <div class="fld"><label>Dichtheid (ton/m³)</label><input type="number" id="ap-dichtheid" step="0.01" value="1.65" placeholder="1.65" oninput="apBerekenTonnage()"></div>
-        <div class="fld"><label>Tonnage (ton) <span style="font-size:10px;color:#888">auto</span></label><input type="number" id="ap-tonnage" step="0.1" placeholder="auto"></div>
+        <div class="fld"><label>Dichtheid (ton/m³)</label><input type="number" id="ap-dichtheid" step="0.01" value="1.7" placeholder="1.7" oninput="apBerekenTonnage()"></div>
+        <div class="fld"><label>Tonnage (ton) <span style="font-size:10px;color:#888">auto</span></label><input type="number" id="ap-tonnage" step="0.1" placeholder="auto" oninput="delete this.dataset.auto"></div>
         <div class="fld"><label>Erkenning monsternemer (BRL SIKB 1000)</label><input id="ap-cert" placeholder="bijv. NC-SIK-10093"></div>
       </div>
     </div>
@@ -1478,8 +1478,9 @@ function apBerekenTonnage() {
   const dicht = parseFloat(document.getElementById('ap-dichtheid')?.value) || 0;
   const vol = parseFloat((PROJECT.partij || {}).volume_m3 || 0);
   const el = document.getElementById('ap-tonnage');
-  if (el && dicht && vol && !el.value) {
+  if (el && dicht && vol && (el.dataset.auto === '1' || !el.value)) {
     el.value = Math.round(vol * dicht * 10) / 10;
+    el.dataset.auto = '1';
   }
 }
 
@@ -1651,9 +1652,9 @@ function prefill(forceMod) {
     // Aantal mengmonsters default 2
     const apMmEl = document.getElementById('ap-mengmonsters');
     if (apMmEl && !apMmEl.value) { apMmEl.value = '2'; apBerekenGrepen(); }
-    // Dichtheid: afleiden uit partijtype (alleen als nog op default 1.65)
+    // Dichtheid: afleiden uit partijtype (alleen als nog op default 1.7)
     const apDichtEl = document.getElementById('ap-dichtheid');
-    if (apDichtEl && apDichtEl.value === '1.65') {
+    if (apDichtEl && apDichtEl.value === '1.7') {
       const t = ((PROJECT.partij||{}).type||'').toLowerCase();
       const d = t.includes('bagger')||t.includes('slib') ? '1.50'
               : t.includes('veen') ? '1.30'
@@ -1930,7 +1931,7 @@ function buildExport1001() {
   return {
     _meta:{schema:'hp_veldwerk_1001_v1',generated:new Date().toISOString(),app:'HP Veldwerk Compliance v3.0',ingevuld_door:_gebruikersnaam()||null,gebruiker_id:sessionStorage.getItem('hp_vw_id')||null,sessie_start:sessionStorage.getItem('hp_vw_sessie_start')||null},
     protocol_selectie:{gesuggereerd:_protocolSuggestie,gekozen:'1001',gewijzigd:_protocolSuggestie!=='1001',gewijzigd_door:_gebruikersnaam()||null,reden:document.getElementById('proto-reden')?.value||null},
-    project:{...PROJECT,cert_monsternemer:document.getElementById('ap-cert').value||null,tonnage_ton:parseFloat(document.getElementById('ap-tonnage')?.value)||null},
+    project:{...PROJECT,cert_monsternemer:document.getElementById('ap-cert').value||null,tonnage_ton:parseFloat(document.getElementById('ap-tonnage')?.value)||null,dichtheid:parseFloat(document.getElementById('ap-dichtheid')?.value)||null},
     partij:{...(PROJECT.partij||{}),type_keuring:document.getElementById('ap-type-keuring').value||null,herkomst:document.getElementById('ap-herkomst').value||null},
     deelpartijen:apDpGetData(),
     terreininspectie:{toegankelijk:S.ap_terrein_toegang||null,veilig:S.ap_terrein_veilig||null,nen_5725:S.ap_terrein_nen||null,bijzonderheden:document.getElementById('ap-terrein-bijz').value||null,uitgevoerd_door:document.getElementById('ap-terrein-door')?.value||null},
@@ -3020,7 +3021,8 @@ function _herstelDraft(data) {
     // 1001
     const ap = data;
     set('ap-cert', (ap.project||{}).cert_monsternemer||'');
-    set('ap-tonnage', (ap.project||{}).tonnage_ton||'');
+    const apTonnageEl = document.getElementById('ap-tonnage');
+    if (apTonnageEl) { apTonnageEl.value = (ap.project||{}).tonnage_ton||''; delete apTonnageEl.dataset.auto; }
     const apTK = (ap.partij||{}).type_keuring; if (apTK) { const el=document.getElementById('ap-type-keuring'); if(el) el.value=apTK; }
     set('ap-terrein-bijz', (ap.terreininspectie||{}).bijzonderheden||'');
     const apPc = ap.partijcontrole || {};
