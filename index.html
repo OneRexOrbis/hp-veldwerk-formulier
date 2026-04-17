@@ -2416,50 +2416,91 @@ function _datumVanFile(file) {
 
 function fotoGekozen(input, categorie) {
   if (!PROJECT.projectnummer) { showToast('⚠ Eerst een project kiezen'); input.value=''; return; }
-  Array.from(input.files).forEach(file => _fotoVerwerken(file, categorie || 'rapport'));
+  const files = Array.from(input.files || []);
+  if (files.length === 0) { showToast('⚠ Geen foto geselecteerd'); input.value=''; return; }
+  files.forEach(file => {
+    _fotoVerwerken(file, categorie || 'rapport').catch(e => {
+      console.error('[foto] _fotoVerwerken uncaught:', e);
+      showToast('✗ Foto fout: ' + (e?.message || e));
+    });
+  });
   input.value = '';
 }
 
 async function _fotoVerwerken(file, categorie) {
-  // EXIF opnamedatum lezen vóór resize (werkt op ongewijzigde bytes)
-  const exifDatum = await _leesExifDatum(file);
-  const opnamedatum = exifDatum || _datumVanFile(file);
-  // EQ: GPS locatie ophalen
-  let _eqFotoGps = null;
-  if (activeModule === 'eq') { _eqFotoGps = await _eqGetGPS(); }
-
+  // STAP 1 — DIRECT kaartje in beeld (vóór welke await dan ook).
+  //          Zo ziet de gebruiker áltijd dat er iets gebeurt, ook als
+  //          iOS onderweg ergens crasht.
   const id = 'foto_' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
   const wachtrij = document.getElementById(
     categorie === 'verificatie' ? 'foto-wachtrij-verif' : 'foto-wachtrij-rapport'
   );
-
-  // Thumbnail kaartje aanmaken
+  if (!wachtrij) { showToast('✗ Foto-wachtrij niet gevonden'); return; }
   const kaart = document.createElement('div');
   kaart.id = id;
   kaart.style.cssText = 'width:80px;text-align:center;position:relative';
   kaart.innerHTML = `
     <div style="width:80px;height:80px;background:var(--gy-l);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px">⏳</div>
-    <div style="font-size:9px;color:var(--gy);margin-top:3px;word-break:break-all">${file.name.slice(0,16)}</div>`;
+    <div style="font-size:9px;color:var(--gy);margin-top:3px;word-break:break-all">${(file.name || 'foto').slice(0,16)}</div>`;
   wachtrij.appendChild(kaart);
 
-  // Resize via canvas, dan uploaden
-  const reader = new FileReader();
-  reader.onload = e => {
-    const img = new Image();
-    img.onload = () => {
-      const schaal = Math.min(1, FOTO_MAX_PX / Math.max(img.width, img.height));
-      const canvas = document.createElement('canvas');
-      canvas.width = Math.round(img.width * schaal);
-      canvas.height = Math.round(img.height * schaal);
-      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-      canvas.toBlob(blob => {
-        // Upload blob rechtstreeks — geen base64 meer (bespaart 33% en vermijdt Vercel body-limit)
-        _fotoUploaden(id, file.name, blob, 'image/jpeg', categorie, opnamedatum, _eqFotoGps?.lat||null, _eqFotoGps?.lon||null);
-      }, 'image/jpeg', FOTO_KWALITEIT);
-    };
-    img.src = e.target.result;
+  const markKaartError = (msg) => {
+    const k = document.getElementById(id);
+    if (k) {
+      const box = k.querySelector('div');
+      if (box) { box.innerHTML = '❌'; box.style.background='#fee2e2'; }
+    }
+    showToast('✗ ' + msg);
   };
-  reader.readAsDataURL(file);
+
+  // STAP 2 — EXIF + GPS (niet-fataal, errors worden gelogd maar genegeerd)
+  let opnamedatum = null;
+  try { opnamedatum = await _leesExifDatum(file); } catch(e) { console.warn('[foto] exif:', e); }
+  if (!opnamedatum) { try { opnamedatum = _datumVanFile(file); } catch(_) {} }
+
+  let _eqFotoGps = null;
+  if (activeModule === 'eq') {
+    try { _eqFotoGps = await _eqGetGPS(); } catch(e) { console.warn('[foto] gps:', e); }
+  }
+
+  // STAP 3 — Lees file, decode naar <img>, resize via canvas naar JPEG blob.
+  //          Safari (iOS 11+) kan HEIC decoden in <img>, maar er zijn edge cases
+  //          in PWA-mode. Elke stap heeft een eigen error-pad.
+  let blob;
+  try {
+    const dataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload  = ev => resolve(ev.target.result);
+      reader.onerror = () => reject(new Error('kan foto niet lezen'));
+      reader.readAsDataURL(file);
+    });
+
+    const img = await new Promise((resolve, reject) => {
+      const i = new Image();
+      i.onload  = () => resolve(i);
+      i.onerror = () => reject(new Error('foto-formaat niet ondersteund (HEIC?)'));
+      i.src = dataUrl;
+    });
+
+    const schaal = Math.min(1, FOTO_MAX_PX / Math.max(img.width, img.height));
+    const canvas = document.createElement('canvas');
+    canvas.width  = Math.round(img.width  * schaal);
+    canvas.height = Math.round(img.height * schaal);
+    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    blob = await new Promise((resolve, reject) => {
+      canvas.toBlob(b => b ? resolve(b) : reject(new Error('canvas leeg (iOS memory?)')),
+        'image/jpeg', FOTO_KWALITEIT);
+    });
+  } catch(e) {
+    console.error('[foto] verwerk:', e);
+    markKaartError(e.message || 'verwerk faalde');
+    return;
+  }
+
+  // STAP 4 — Uploaden (eigen foutpaden zitten in _fotoUploaden zelf)
+  await _fotoUploaden(id, file.name || 'foto.jpg', blob, 'image/jpeg',
+    categorie, opnamedatum, _eqFotoGps?.lat||null, _eqFotoGps?.lon||null);
 }
 
 async function _fotoUploaden(id, naam, blob, mimetype, categorie, opnamedatum, lat, lon) {
