@@ -670,13 +670,13 @@
     <div class="partij-banner">
       <div class="pb-title">⛏️ Partijkeuring</div>
       <div class="pb-naam" id="ap-partij-naam">—</div>
-      <div class="pb-info" id="ap-partij-info"></div>
     </div>
     <div class="card">
       <div class="card-t"><span class="ic">📋</span>Partijgegevens aanvullend</div>
       <div class="fld"><label>Type partij</label><select id="ap-type-keuring"><option value="">— kies —</option><option value="Depot">Depot</option><option value="In-situ">In-situ</option></select></div>
       <div class="fld"><label>Herkomst partij</label><input id="ap-herkomst" placeholder="bijv. slooplocatie, grondwerkzaamheden"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px">
+        <div class="fld"><label>Volume (m³)</label><input type="number" id="ap-volume-m3" step="0.1" placeholder="—" oninput="apBerekenTonnage()"></div>
         <div class="fld"><label>Dichtheid (ton/m³)</label><input type="number" id="ap-dichtheid" step="0.01" value="1.7" placeholder="1.7" oninput="apBerekenTonnage()"></div>
         <div class="fld"><label>Tonnage (ton) <span style="font-size:10px;color:#888">auto</span></label><input type="number" id="ap-tonnage" step="0.1" placeholder="auto" oninput="delete this.dataset.auto"></div>
         <div class="fld"><label>Erkenning monsternemer (BRL SIKB 1000)</label><input id="ap-cert" placeholder="bijv. NC-SIK-10093"></div>
@@ -1496,8 +1496,8 @@ function bwBereken() {
 // ─── Tonnage berekening AP04 (volume × dichtheid) ───
 function apBerekenTonnage() {
   const dicht = parseFloat(document.getElementById('ap-dichtheid')?.value) || 0;
-  const vol = parseFloat((PROJECT.partij || {}).volume_m3 || 0);
-  const el = document.getElementById('ap-tonnage');
+  const vol   = parseFloat(document.getElementById('ap-volume-m3')?.value) || 0;
+  const el    = document.getElementById('ap-tonnage');
   if (el && dicht && vol && (el.dataset.auto === '1' || !el.value)) {
     el.value = Math.round(vol * dicht * 10) / 10;
     el.dataset.auto = '1';
@@ -1672,6 +1672,11 @@ function prefill(forceMod) {
     // Aantal mengmonsters default 2
     const apMmEl = document.getElementById('ap-mengmonsters');
     if (apMmEl && !apMmEl.value) { apMmEl.value = '2'; apBerekenGrepen(); }
+    // Volume m³ prefill uit project index (alleen als veld nog leeg)
+    const apVolEl = document.getElementById('ap-volume-m3');
+    if (apVolEl && !apVolEl.value && (PROJECT.partij||{}).volume_m3) {
+      apVolEl.value = PROJECT.partij.volume_m3;
+    }
     // Dichtheid: afleiden uit partijtype (alleen als nog op default 1.7)
     const apDichtEl = document.getElementById('ap-dichtheid');
     if (apDichtEl && apDichtEl.value === '1.7') {
@@ -1951,7 +1956,7 @@ function buildExport1001() {
   return {
     _meta:{schema:'hp_veldwerk_1001_v1',generated:new Date().toISOString(),app:'HP Veldwerk Compliance v3.0',ingevuld_door:_gebruikersnaam()||null,gebruiker_id:sessionStorage.getItem('hp_vw_id')||null,sessie_start:sessionStorage.getItem('hp_vw_sessie_start')||null},
     protocol_selectie:{gesuggereerd:_protocolSuggestie,gekozen:'1001',gewijzigd:_protocolSuggestie!=='1001',gewijzigd_door:_gebruikersnaam()||null,reden:document.getElementById('proto-reden')?.value||null},
-    project:{...PROJECT,cert_monsternemer:document.getElementById('ap-cert').value||null,tonnage_ton:parseFloat(document.getElementById('ap-tonnage')?.value)||null,dichtheid:parseFloat(document.getElementById('ap-dichtheid')?.value)||null},
+    project:{...PROJECT,cert_monsternemer:document.getElementById('ap-cert').value||null,tonnage_ton:parseFloat(document.getElementById('ap-tonnage')?.value)||null,dichtheid:parseFloat(document.getElementById('ap-dichtheid')?.value)||null,volume_m3_ingevuld:parseFloat(document.getElementById('ap-volume-m3')?.value)||null},
     partij:{...(PROJECT.partij||{}),type_keuring:document.getElementById('ap-type-keuring').value||null,herkomst:document.getElementById('ap-herkomst').value||null},
     deelpartijen:apDpGetData(),
     terreininspectie:{toegankelijk:S.ap_terrein_toegang||null,veilig:S.ap_terrein_veilig||null,nen_5725:S.ap_terrein_nen||null,bijzonderheden:document.getElementById('ap-terrein-bijz').value||null,uitgevoerd_door:document.getElementById('ap-terrein-door')?.value||null},
@@ -2147,10 +2152,24 @@ async function definitiefMelden() {
 function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
 
 // ─── BARCODE SCANNER ───────────────────────────────
+// Native BarcodeDetector (Chrome/Android) met ZXing-fallback voor iOS Safari
 let _bcStream = null;
 let _bcDetector = null;
 let _bcAnimFrame = null;
 let _bcTargetId = null;
+let _bcZXingReader = null;
+let _bcZXingLib = null;
+
+async function _bcLoadZXing() {
+  if (_bcZXingLib) return _bcZXingLib;
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/umd/index.min.js';
+    s.onload = () => { _bcZXingLib = window.ZXingBrowser; resolve(_bcZXingLib); };
+    s.onerror = () => reject(new Error('ZXing laden mislukt'));
+    document.head.appendChild(s);
+  });
+}
 
 async function openBarcodeScanner(targetId) {
   _bcTargetId = targetId;
@@ -2160,35 +2179,51 @@ async function openBarcodeScanner(targetId) {
   modal.classList.add('open');
   status.textContent = 'Camera starten…';
 
-  // BarcodeDetector support check
-  if (!('BarcodeDetector' in window)) {
-    status.textContent = '⚠️ Barcode scanner niet ondersteund in deze browser. Voer de code handmatig in.';
-    return;
-  }
-
-  try {
-    _bcDetector = new BarcodeDetector({ formats: ['code_128', 'code_39', 'ean_13', 'ean_8', 'qr_code', 'data_matrix'] });
-  } catch(e) {
-    status.textContent = '⚠️ Kan scanner niet initialiseren. Voer code handmatig in.';
-    return;
-  }
-
   try {
     _bcStream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
     });
     video.srcObject = _bcStream;
     await video.play();
-    status.textContent = '🔍 Richt camera op de barcode van de emmer…';
-    _bcScan();
   } catch(e) {
     status.textContent = '⚠️ Camera toegang geweigerd. Controleer browserinstellingen.';
+    return;
+  }
+
+  if ('BarcodeDetector' in window) {
+    // Native pad — Chrome / Android
+    try {
+      _bcDetector = new BarcodeDetector({ formats: ['code_128', 'code_39', 'ean_13', 'ean_8', 'qr_code', 'data_matrix'] });
+    } catch(e) { _bcDetector = null; }
+  }
+
+  if (_bcDetector) {
+    status.textContent = '🔍 Richt camera op de barcode van de emmer…';
+    _bcScan();
+  } else {
+    // ZXing-fallback — iOS Safari
+    status.textContent = '🔍 Scanner laden…';
+    try {
+      const ZXing = await _bcLoadZXing();
+      _bcZXingReader = new ZXing.BrowserMultiFormatReader();
+      status.textContent = '🔍 Richt camera op de barcode van de emmer…';
+      _bcZXingReader.decodeFromVideoDevice(undefined, video, (result, err) => {
+        if (result) {
+          const code = result.getText();
+          const el = document.getElementById(_bcTargetId);
+          if (el) { el.value = code; el.dispatchEvent(new Event('input')); }
+          showToast('✓ Labcode gescand: ' + code);
+          closeBarcodeScanner();
+        }
+      });
+    } catch(e) {
+      status.textContent = '⚠️ Scanner niet beschikbaar. Voer de labcode handmatig in.';
+    }
   }
 }
 
 function _bcScan() {
   const video = document.getElementById('bc-video');
-  const status = document.getElementById('bc-status');
   if (!_bcStream || !video.readyState || video.readyState < 2) {
     _bcAnimFrame = requestAnimationFrame(_bcScan);
     return;
@@ -2210,6 +2245,7 @@ function _bcScan() {
 
 function closeBarcodeScanner() {
   if (_bcAnimFrame) { cancelAnimationFrame(_bcAnimFrame); _bcAnimFrame = null; }
+  if (_bcZXingReader) { try { _bcZXingReader.reset(); } catch(_) {} _bcZXingReader = null; }
   if (_bcStream) { _bcStream.getTracks().forEach(t => t.stop()); _bcStream = null; }
   const video = document.getElementById('bc-video');
   if (video) { video.srcObject = null; }
@@ -3215,6 +3251,7 @@ function _herstelDraft(data) {
     set('ap-fotos-aantal', (ap.fotos_inmeting||{}).fotos_aantal||'');
     set('ap-herkomst', (ap.project||{}).herkomst||'');
     set('ap-dichtheid', (ap.project||{}).dichtheid||'');
+    set('ap-volume-m3', (ap.project||{}).volume_m3_ingevuld||'');
     // Herstel AP04 deelpartij-rijen
     const apDps = ap.deelpartijen || [];
     if (apDps.length) {
