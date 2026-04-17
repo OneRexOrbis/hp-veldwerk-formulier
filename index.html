@@ -675,11 +675,11 @@
       <div class="card-t"><span class="ic">📋</span>Partijgegevens aanvullend</div>
       <div class="fld"><label>Type partij</label><select id="ap-type-keuring"><option value="">— kies —</option><option value="Depot">Depot</option><option value="In-situ">In-situ</option></select></div>
       <div class="fld"><label>Herkomst partij</label><input id="ap-herkomst" placeholder="bijv. slooplocatie, grondwerkzaamheden"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <div class="fld"><label>Volume (m³)</label><input type="number" id="ap-volume-m3" step="0.1" placeholder="—" oninput="apBerekenTonnage()"></div>
         <div class="fld"><label>Dichtheid (ton/m³)</label><input type="number" id="ap-dichtheid" step="0.01" value="1.7" placeholder="1.7" oninput="apBerekenTonnage()"></div>
         <div class="fld"><label>Tonnage (ton) <span style="font-size:10px;color:#888">auto</span></label><input type="number" id="ap-tonnage" step="0.1" placeholder="auto" oninput="delete this.dataset.auto"></div>
-        <div class="fld"><label>Erkenning monsternemer (BRL SIKB 1000)</label><input id="ap-cert" placeholder="bijv. NC-SIK-10093"></div>
+        <div class="fld"><label>Erkenning monsternemer</label><input id="ap-cert" placeholder="NC-SIK-10093"></div>
       </div>
     </div>
 
