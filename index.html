@@ -161,6 +161,17 @@
   .toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--dk);color:white;padding:10px 20px;border-radius:8px;font-size:12px;font-weight:600;z-index:200;transition:transform .3s}
   .toast.show{transform:translateX(-50%) translateY(0)}
 
+  /* ─── Barcode Scanner ─── */
+  #bc-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:999;flex-direction:column;align-items:center;justify-content:center}
+  #bc-modal.open{display:flex}
+  #bc-video{width:100%;max-width:480px;border-radius:10px;border:3px solid #fff}
+  #bc-aim{position:absolute;width:240px;height:80px;border:3px solid #0f0;border-radius:6px;pointer-events:none;box-shadow:0 0 0 2000px rgba(0,0,0,.4)}
+  #bc-status{color:#fff;margin-top:14px;font-size:13px;font-weight:600;text-align:center}
+  #bc-close{margin-top:18px;background:#fff;color:#111;border:none;padding:10px 28px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer}
+  .labcode-wrap{display:flex;gap:6px;align-items:center}
+  .labcode-wrap input{flex:1}
+  .btn-scan{background:var(--mod-c,#1976d2);color:#fff;border:none;border-radius:6px;padding:7px 10px;font-size:16px;cursor:pointer;white-space:nowrap;line-height:1}
+
   /* ─── Picker screen ─── */
   #picker-screen{display:none}
   #picker-screen.vis{display:block}
@@ -686,7 +697,6 @@
 
       <div class="fld" style="margin-top:8px"><label>Bijzonderheden</label><input id="ap-terrein-bijz" placeholder="Bijv. slechte weersomstandigheden..."></div>
       <div class="trow" style="margin-top:8px"><span class="tl">Conform NEN 5725?</span><div class="tsw" data-f="ap_terrein_nen"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button><button onclick="tw(this,'v')">N.v.t.</button></div></div>
-      <div class="fld" style="margin-top:8px"><label>Terreininspectie uitgevoerd door</label><input id="ap-terrein-door" placeholder="Naam uitvoerder"></div>
     </div>
 
     <div class="section-title"><span>🛡️</span> LMRA</div>
@@ -735,7 +745,7 @@
         <div class="fld"><label>Aantal mengmonsters <span class="req">*</span></label><input type="number" id="ap-mengmonsters" min="1" placeholder="2" oninput="apBerekenGrepen()"></div>
         <div class="fld"><label>Totaal aantal grepen</label><input type="number" id="ap-grepen-totaal" min="1" placeholder="20" oninput="apBerekenGrepen()"></div>
         <div class="fld"><label>Grepen per mengmonster (auto)</label><input id="ap-grepen-per-mm" readonly placeholder="auto" style="background:var(--gy-l);color:var(--gy)"></div>
-        <div class="fld"><label>Labcode</label><input id="ap-labcode" placeholder="L-2026-XXXX"></div>
+        <div class="fld"><label>Labcode</label><div class="labcode-wrap"><input id="ap-labcode" placeholder="L-2026-XXXX"><button type="button" class="btn-scan" onclick="openBarcodeScanner('ap-labcode')" title="Scan barcode">📷</button></div></div>
         <div class="fld"><label>Greepgewicht emmer A (gram)</label><input type="number" id="ap-greep-a" min="0" placeholder="180"></div>
         <div class="fld"><label>Greepgewicht emmer B (gram)</label><input type="number" id="ap-greep-b" min="0" placeholder="180"></div>
       </div>
@@ -744,8 +754,8 @@
     </div>
     <div class="card">
       <div class="card-t"><span class="ic">⏱️</span>Tijdsbesteding monsterneming (Protocol 1001 §6.2.17)</div>
-      <div class="fld"><label>Aanvang</label><input type="time" id="ap-ts-aanvang"></div>
-      <div class="fld"><label>Einde</label><input type="time" id="ap-ts-einde"></div>
+      <div class="fld"><label>Aanvang</label><input type="time" id="ap-ts-aanvang" step="900"></div>
+      <div class="fld"><label>Einde</label><input type="time" id="ap-ts-einde" step="900"></div>
       <div class="fld"><label>Opmerkingen</label><textarea id="ap-ts-opm" rows="2" placeholder="bijv. wachttijden, weersomstandigheden"></textarea></div>
     </div>
     <div class="card">
@@ -870,7 +880,7 @@
       <div class="trow"><span class="tl">Verzegeld transport?</span><div class="tsw" data-f="bw_mo_verzegeld"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
       <div class="trow"><span class="tl">Aangeleverd bij lab binnen 24 uur?</span><div class="tsw" data-f="bw_mo_24u"><button onclick="tw(this,'y')">Ja</button><button onclick="tw(this,'n')">Nee</button></div></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
-        <div class="fld"><label>Labcode</label><input id="bw-labcode" placeholder="RDL-2026-XXXX"></div>
+        <div class="fld"><label>Labcode</label><div class="labcode-wrap"><input id="bw-labcode" placeholder="RDL-2026-XXXX"><button type="button" class="btn-scan" onclick="openBarcodeScanner('bw-labcode')" title="Scan barcode">📷</button></div></div>
         <div class="fld"><label>Laboratorium</label><input id="bw-lab" placeholder=""></div>
       </div>
     </div>
@@ -878,8 +888,8 @@
     <div class="card">
       <div class="card-t"><span class="ic">⏱️</span>Tijdsbesteding monsterneming</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <div class="fld"><label>Aanvang</label><input type="time" id="bw-ts-aanvang"></div>
-        <div class="fld"><label>Einde</label><input type="time" id="bw-ts-einde"></div>
+        <div class="fld"><label>Aanvang</label><input type="time" id="bw-ts-aanvang" step="900"></div>
+        <div class="fld"><label>Einde</label><input type="time" id="bw-ts-einde" step="900"></div>
       </div>
     </div>
     <div class="card">
@@ -1098,6 +1108,16 @@
 </div><!-- /app-shell -->
 
 <div class="toast" id="toast"></div>
+
+<!-- ─── Barcode Scanner Modal ─── -->
+<div id="bc-modal" role="dialog" aria-modal="true" aria-label="Barcode scanner">
+  <div style="position:relative;display:flex;align-items:center;justify-content:center;width:100%;max-width:480px">
+    <video id="bc-video" autoplay playsinline muted></video>
+    <div id="bc-aim"></div>
+  </div>
+  <div id="bc-status">Camera starten…</div>
+  <button id="bc-close" onclick="closeBarcodeScanner()">✕ Sluiten</button>
+</div>
 
 <script>
 // ─── API ───────────────────────────────────────────
@@ -2089,6 +2109,79 @@ async function definitiefMelden() {
 }
 
 function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
+
+// ─── BARCODE SCANNER ───────────────────────────────
+let _bcStream = null;
+let _bcDetector = null;
+let _bcAnimFrame = null;
+let _bcTargetId = null;
+
+async function openBarcodeScanner(targetId) {
+  _bcTargetId = targetId;
+  const modal = document.getElementById('bc-modal');
+  const video = document.getElementById('bc-video');
+  const status = document.getElementById('bc-status');
+  modal.classList.add('open');
+  status.textContent = 'Camera starten…';
+
+  // BarcodeDetector support check
+  if (!('BarcodeDetector' in window)) {
+    status.textContent = '⚠️ Barcode scanner niet ondersteund in deze browser. Voer de code handmatig in.';
+    return;
+  }
+
+  try {
+    _bcDetector = new BarcodeDetector({ formats: ['code_128', 'code_39', 'ean_13', 'ean_8', 'qr_code', 'data_matrix'] });
+  } catch(e) {
+    status.textContent = '⚠️ Kan scanner niet initialiseren. Voer code handmatig in.';
+    return;
+  }
+
+  try {
+    _bcStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+    });
+    video.srcObject = _bcStream;
+    await video.play();
+    status.textContent = '🔍 Richt camera op de barcode van de emmer…';
+    _bcScan();
+  } catch(e) {
+    status.textContent = '⚠️ Camera toegang geweigerd. Controleer browserinstellingen.';
+  }
+}
+
+function _bcScan() {
+  const video = document.getElementById('bc-video');
+  const status = document.getElementById('bc-status');
+  if (!_bcStream || !video.readyState || video.readyState < 2) {
+    _bcAnimFrame = requestAnimationFrame(_bcScan);
+    return;
+  }
+  _bcDetector.detect(video).then(barcodes => {
+    if (barcodes && barcodes.length > 0) {
+      const code = barcodes[0].rawValue;
+      const el = document.getElementById(_bcTargetId);
+      if (el) { el.value = code; el.dispatchEvent(new Event('input')); }
+      showToast('✓ Labcode gescand: ' + code);
+      closeBarcodeScanner();
+    } else {
+      _bcAnimFrame = requestAnimationFrame(_bcScan);
+    }
+  }).catch(() => {
+    _bcAnimFrame = requestAnimationFrame(_bcScan);
+  });
+}
+
+function closeBarcodeScanner() {
+  if (_bcAnimFrame) { cancelAnimationFrame(_bcAnimFrame); _bcAnimFrame = null; }
+  if (_bcStream) { _bcStream.getTracks().forEach(t => t.stop()); _bcStream = null; }
+  const video = document.getElementById('bc-video');
+  if (video) { video.srcObject = null; }
+  document.getElementById('bc-modal')?.classList.remove('open');
+}
+
+// Sluit scanner bij Escape
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && _bcStream) closeBarcodeScanner(); });
 
 // ─── FOTO'S ────────────────────────────────────────
 // ─── EQ — Ecologische Quickscan ─────────────────────────────────────────
