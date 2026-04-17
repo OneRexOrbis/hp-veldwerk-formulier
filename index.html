@@ -1639,8 +1639,6 @@ function prefill(forceMod) {
       `<b>Opdrachtgever:</b> ${PROJECT.opdrachtgever}<br><b>Projectleider:</b> ${PROJECT.projectleider}<br><b>Monsternemer:</b> ${monsternemer}<br><b>Datum monstername:</b> ${PROJECT.datum_monstername||'—'}<br><b>Protocol:</b> BRL SIKB 1000 / 1001`;
     const p = PROJECT.partij || {};
     document.getElementById('ap-partij-naam').textContent = p.naam || '—';
-    document.getElementById('ap-partij-info').innerHTML =
-      `Type: <b>${p.type||'—'}</b> | Code: <b>${p.partijcode||'—'}</b>${p.volume_m3?' | Volume: <b>'+p.volume_m3+' m³</b>':''}${p.diepte?' | Diepte: <b>'+p.diepte+'</b>':''}`;
     if (monsternemer) {
       const el = document.getElementById('ap-sn');
       el.value = monsternemer;
