@@ -745,7 +745,6 @@
         <div class="fld"><label>Aantal mengmonsters <span class="req">*</span></label><input type="number" id="ap-mengmonsters" min="1" placeholder="2" oninput="apBerekenGrepen()"></div>
         <div class="fld"><label>Totaal aantal grepen</label><input type="number" id="ap-grepen-totaal" min="1" placeholder="20" oninput="apBerekenGrepen()"></div>
         <div class="fld"><label>Grepen per mengmonster (auto)</label><input id="ap-grepen-per-mm" readonly placeholder="auto" style="background:var(--gy-l);color:var(--gy)"></div>
-        <div class="fld"><label>Labcode</label><div class="labcode-wrap"><input id="ap-labcode" placeholder="L-2026-XXXX"><button type="button" class="btn-scan" onclick="openBarcodeScanner('ap-labcode')" title="Scan barcode">📷</button></div></div>
         <div class="fld"><label>Greepgewicht emmer A (gram)</label><input type="number" id="ap-greep-a" min="0" placeholder="180"></div>
         <div class="fld"><label>Greepgewicht emmer B (gram)</label><input type="number" id="ap-greep-b" min="0" placeholder="180"></div>
       </div>
@@ -1428,8 +1427,8 @@ function dpAdd() {
     + `<div class="fld"><label>Conform plan?</label><select data-dp-conform><option value="">—</option><option value="ja">Ja</option><option value="nee">Nee</option></select></div>`
     + `<div class="fld"><label>Gewicht M1 (kg)</label><input type="number" data-dp-m1 step="0.1" placeholder="0"></div>`
     + `<div class="fld"><label>Gewicht M2 (kg)</label><input type="number" data-dp-m2 step="0.1" placeholder="0"></div>`
-    + `<div class="fld"><label>Barcode M1</label><input data-dp-b1 placeholder="BC-0001"></div>`
-    + `<div class="fld"><label>Barcode M2</label><input data-dp-b2 placeholder="BC-0002"></div>`
+    + `<div class="fld"><label>Labcode emmer A</label><div class="labcode-wrap"><input data-dp-b1 id="dp-b1-${nr}" placeholder="BC-0001"><button type="button" class="btn-scan" onclick="openBarcodeScanner('dp-b1-${nr}')" title="Scan emmer A">📷</button></div></div>`
+    + `<div class="fld"><label>Labcode emmer B</label><div class="labcode-wrap"><input data-dp-b2 id="dp-b2-${nr}" placeholder="BC-0002"><button type="button" class="btn-scan" onclick="openBarcodeScanner('dp-b2-${nr}')" title="Scan emmer B">📷</button></div></div>`
     + `</div>`;
   c.appendChild(div);
   dpRows.push(nr);
@@ -1466,13 +1465,24 @@ function apDpAdd() {
   const div = document.createElement('div');
   div.id = 'ap-dp-row-' + nr;
   div.style = 'display:flex;gap:6px;align-items:flex-start;margin-bottom:6px;flex-wrap:wrap;border:1px solid #e0e0e0;border-radius:4px;padding:6px 8px;background:#fafafa';
-  div.innerHTML = `<span style="font-size:10pt;font-weight:bold;color:#1a4e3a;line-height:28px;min-width:16px">${nr}</span>`
+  const scanBtnStyle = `background:var(--hp);color:#fff;border:none;border-radius:4px;padding:4px 7px;cursor:pointer;font-size:13px;flex-shrink:0`;
+  div.innerHTML = `<div style="display:flex;gap:6px;align-items:flex-start;flex-wrap:wrap;width:100%">`
+    + `<span style="font-size:10pt;font-weight:bold;color:#1a4e3a;line-height:28px;min-width:16px">${nr}</span>`
     + `<input data-dp-naam placeholder="Naam deelpartij" style="flex:2;min-width:90px;padding:4px 6px;font-size:12px;border:1px solid #ccc;border-radius:3px">`
     + `<input type="number" data-dp-gewicht placeholder="Gewicht (ton)" step="0.1" style="width:90px;padding:4px 6px;font-size:12px;border:1px solid #ccc;border-radius:3px">`
     + `<input type="number" data-dp-mm placeholder="Mengmon." min="1" style="width:72px;padding:4px 6px;font-size:12px;border:1px solid #ccc;border-radius:3px">`
     + `<input type="number" data-dp-grepen placeholder="Grepen" min="1" style="width:64px;padding:4px 6px;font-size:12px;border:1px solid #ccc;border-radius:3px">`
     + `<input data-dp-opm placeholder="Opmerking" style="flex:2;min-width:80px;padding:4px 6px;font-size:12px;border:1px solid #ccc;border-radius:3px">`
-    + `<button onclick="document.getElementById('ap-dp-row-${nr}').remove()" style="color:#c0392b;background:none;border:none;cursor:pointer;font-size:16px;line-height:1;padding:0 2px">✕</button>`;
+    + `<button onclick="document.getElementById('ap-dp-row-${nr}').remove()" style="color:#c0392b;background:none;border:none;cursor:pointer;font-size:16px;line-height:1;padding:0 2px">✕</button>`
+    + `</div>`
+    + `<div style="display:flex;gap:6px;align-items:center;margin-top:4px">`
+    + `<span style="font-size:10px;color:#555;min-width:56px">Emmer A</span>`
+    + `<input data-dp-lab-a id="ap-dp-lab-a-${nr}" placeholder="Labcode emmer A" style="flex:1;padding:4px 6px;font-size:12px;border:1px solid #ccc;border-radius:3px">`
+    + `<button type="button" onclick="openBarcodeScanner('ap-dp-lab-a-${nr}')" style="${scanBtnStyle}" title="Scan emmer A">📷</button>`
+    + `<span style="font-size:10px;color:#555;min-width:56px;margin-left:4px">Emmer B</span>`
+    + `<input data-dp-lab-b id="ap-dp-lab-b-${nr}" placeholder="Labcode emmer B" style="flex:1;padding:4px 6px;font-size:12px;border:1px solid #ccc;border-radius:3px">`
+    + `<button type="button" onclick="openBarcodeScanner('ap-dp-lab-b-${nr}')" style="${scanBtnStyle}" title="Scan emmer B">📷</button>`
+    + `</div>`;
   c.appendChild(div);
 }
 function apDpGetData() {
@@ -1483,6 +1493,8 @@ function apDpGetData() {
     mengmonsters: parseInt(r.querySelector('[data-dp-mm]')?.value) || null,
     grepen: parseInt(r.querySelector('[data-dp-grepen]')?.value) || null,
     opmerking: r.querySelector('[data-dp-opm]')?.value || null,
+    labcode_a: r.querySelector('[data-dp-lab-a]')?.value || null,
+    labcode_b: r.querySelector('[data-dp-lab-b]')?.value || null,
   })).filter(r => r.naam || r.gewicht_ton);
 }
 
@@ -1962,7 +1974,7 @@ function buildExport1001() {
     lmra:{veilig:S.ap_lmra_veilig||null,gevaren:S.ap_lmra_gevaren||null,pbm:S.ap_lmra_pbm||null,aanvullende_maatregelen:S.ap_lmra_maatr||null,maatregelen_toelichting:document.getElementById('ap-lmra-maatr')?.value||null},
     partijcontrole:{homogeen:S.ap_pc_homogeen||null,geur:S.ap_pc_geur||null,geur_beschrijving:document.getElementById('ap-geur-beschr')?.value||null,kleur:S.ap_pc_kleur||null,kleur_beschrijving:document.getElementById('ap-kleur-beschr')?.value||null,grondsoort:document.getElementById('ap-grondsoort').value||null,vocht:document.getElementById('ap-vocht').value||null,ligging_conform:S.ap_pc_ligging||null,grootte_conform:S.ap_pc_grootte||null},
     bijmenging:{aangetroffen:S.ap_bij_aangetr||null,puin_pct:parseInt(document.getElementById('bij-puin').value)||0,steenachtigen_pct:parseInt(document.getElementById('bij-steen').value)||0,plastic_pct:parseInt(document.getElementById('bij-plastic').value)||0,hout_pct:parseInt(document.getElementById('bij-hout').value)||0,overig_pct:parseInt(document.getElementById('bij-overig').value)||0,overig_toelichting:document.getElementById('bij-overig-toel').value||null},
-    monstername:{conform:S.ap_mn_conform||null,grepen_representatief:S.ap_mn_grepen||null,greepcontrole:S.ap_greepcontrole||null,greepgewicht_a_gram:parseInt(document.getElementById('ap-greep-a').value)||null,greepgewicht_b_gram:parseInt(document.getElementById('ap-greep-b').value)||null,monsters_bewaard:S.ap_mn_bewaard||null,overdracht:S.ap_mn_overdracht||null,binnen_24u:S.ap_mn_24u||null,aantal_mengmonsters:parseInt(document.getElementById('ap-mengmonsters')?.value)||null,aantal_grepen:parseInt(document.getElementById('ap-grepen-totaal')?.value)||null,labcode:document.getElementById('ap-labcode').value||null},
+    monstername:{conform:S.ap_mn_conform||null,grepen_representatief:S.ap_mn_grepen||null,greepcontrole:S.ap_greepcontrole||null,greepgewicht_a_gram:parseInt(document.getElementById('ap-greep-a').value)||null,greepgewicht_b_gram:parseInt(document.getElementById('ap-greep-b').value)||null,monsters_bewaard:S.ap_mn_bewaard||null,overdracht:S.ap_mn_overdracht||null,binnen_24u:S.ap_mn_24u||null,aantal_mengmonsters:parseInt(document.getElementById('ap-mengmonsters')?.value)||null,aantal_grepen:parseInt(document.getElementById('ap-grepen-totaal')?.value)||null},
     fotos_inmeting:{fotos:S.ap_fotos||null,fotos_aantal:parseInt(document.getElementById('ap-fotos-aantal')?.value)||null,fotos_upload:S.ap_fotos_upload||null,situatieschets:S.ap_situatieschets||null,aanduiding_indeling:S.ap_aanduiding||null},
     visuele_asbestinspectie:{aangetroffen:S.ap_asb_aangetroffen||null,beschrijving:document.getElementById('ap-asb-beschr').value||null},
     afwijkingen:{aanwezig:S.ap_afwijkingen||null,toelichting:document.getElementById('ap-afw').value||null},
@@ -3281,6 +3293,8 @@ function _herstelDraft(data) {
         if (dp.mengmonsters) row.querySelector('[data-dp-mm]').value = dp.mengmonsters;
         if (dp.grepen) row.querySelector('[data-dp-grepen]').value = dp.grepen;
         if (dp.opmerking) row.querySelector('[data-dp-opm]').value = dp.opmerking;
+        if (dp.labcode_a) row.querySelector('[data-dp-lab-a]').value = dp.labcode_a;
+        if (dp.labcode_b) row.querySelector('[data-dp-lab-b]').value = dp.labcode_b;
       });
     }
     // 1002
