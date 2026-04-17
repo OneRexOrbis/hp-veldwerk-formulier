@@ -2177,43 +2177,42 @@ async function openBarcodeScanner(targetId) {
   modal.classList.add('open');
   status.textContent = 'Camera starten…';
 
-  try {
-    _bcStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
-    });
-    video.srcObject = _bcStream;
-    await video.play();
-  } catch(e) {
-    status.textContent = '⚠️ Camera toegang geweigerd. Controleer browserinstellingen.';
-    return;
-  }
-
   if ('BarcodeDetector' in window) {
-    // Native pad — Chrome / Android
+    // ── Native pad: Chrome / Android ──────────────────────────────────────
     try {
       _bcDetector = new BarcodeDetector({ formats: ['code_128', 'code_39', 'ean_13', 'ean_8', 'qr_code', 'data_matrix'] });
-    } catch(e) { _bcDetector = null; }
-  }
-
-  if (_bcDetector) {
-    status.textContent = '🔍 Richt camera op de barcode van de emmer…';
-    _bcScan();
+      _bcStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+      });
+      video.srcObject = _bcStream;
+      await video.play();
+      status.textContent = '🔍 Richt camera op de barcode van de emmer…';
+      _bcScan();
+    } catch(e) {
+      status.textContent = '⚠️ Camera toegang geweigerd.';
+    }
   } else {
-    // ZXing-fallback — iOS Safari
+    // ── ZXing-fallback: iOS Safari (laat ZXing de stream zelf beheren) ────
     status.textContent = '🔍 Scanner laden…';
     try {
       const ZXing = await _bcLoadZXing();
       _bcZXingReader = new ZXing.BrowserMultiFormatReader();
       status.textContent = '🔍 Richt camera op de barcode van de emmer…';
-      _bcZXingReader.decodeFromVideoDevice(undefined, video, (result, err) => {
-        if (result) {
-          const code = result.getText();
-          const el = document.getElementById(_bcTargetId);
-          if (el) { el.value = code; el.dispatchEvent(new Event('input')); }
-          showToast('✓ Labcode gescand: ' + code);
-          closeBarcodeScanner();
+      // decodeFromConstraints laat ZXing zelf een stream starten op het video-element
+      // — geen eigen getUserMedia nodig, voorkomt conflict op iOS Safari
+      _bcZXingReader.decodeFromConstraints(
+        { video: { facingMode: 'environment' } },
+        video,
+        (result, err) => {
+          if (result) {
+            const code = result.getText();
+            const el = document.getElementById(_bcTargetId);
+            if (el) { el.value = code; el.dispatchEvent(new Event('input')); }
+            showToast('✓ Labcode gescand: ' + code);
+            closeBarcodeScanner();
+          }
         }
-      });
+      );
     } catch(e) {
       status.textContent = '⚠️ Scanner niet beschikbaar. Voer de labcode handmatig in.';
     }
