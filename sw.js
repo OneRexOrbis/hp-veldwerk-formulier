@@ -2,7 +2,7 @@
 // App-shell cache is offline-fallback, maar index.html gebruikt
 // network-first zodat updates direct doorkomen (voorkomt oude JS met
 // nieuwe backend-contract mismatch).
-const CACHE = 'hp-vw-v27';
+const CACHE = 'hp-vw-v28';
 const APP_SHELL = ['/', '/index.html'];
 
 self.addEventListener('install', e => {

@@ -360,13 +360,13 @@
     <div style="border:1.5px solid var(--hp);border-radius:8px;padding:10px;margin-bottom:10px">
       <div style="font-size:12px;font-weight:600;color:var(--hp);margin-bottom:8px">📋 Rapport — komen in bijlage</div>
       <div style="display:flex;gap:8px;margin-bottom:10px">
-        <label style="flex:1">
-          <input type="file" id="foto-camera-rapport" accept="image/*" capture="environment" style="display:none" onchange="fotoGekozen(this,'rapport')">
-          <div class="btn btn-p" style="text-align:center;cursor:pointer" onclick="document.getElementById('foto-camera-rapport').click()">📸 Camera</div>
+        <label class="btn btn-p" style="flex:1;text-align:center;cursor:pointer;display:block">
+          📸 Camera
+          <input type="file" id="foto-camera-rapport" accept="image/*" capture="environment" onchange="fotoGekozen(this,'rapport')" style="position:absolute;opacity:0;pointer-events:none;width:0;height:0">
         </label>
-        <label style="flex:1">
-          <input type="file" id="foto-galerij-rapport" accept="image/*" multiple style="display:none" onchange="fotoGekozen(this,'rapport')">
-          <div class="btn btn-s" style="text-align:center;cursor:pointer" onclick="document.getElementById('foto-galerij-rapport').click()">🖼️ Galerij</div>
+        <label class="btn btn-s" style="flex:1;text-align:center;cursor:pointer;display:block">
+          🖼️ Galerij
+          <input type="file" id="foto-galerij-rapport" accept="image/*" multiple onchange="fotoGekozen(this,'rapport')" style="position:absolute;opacity:0;pointer-events:none;width:0;height:0">
         </label>
       </div>
       <div id="foto-wachtrij-rapport" style="display:flex;flex-wrap:wrap;gap:8px"></div>
@@ -376,13 +376,13 @@
     <div style="border:1.5px solid var(--bd);border-radius:8px;padding:10px">
       <div style="font-size:12px;font-weight:600;color:var(--gy);margin-bottom:8px">🔍 Verificatie — niet in rapport</div>
       <div style="display:flex;gap:8px;margin-bottom:10px">
-        <label style="flex:1">
-          <input type="file" id="foto-camera-verif" accept="image/*" capture="environment" style="display:none" onchange="fotoGekozen(this,'verificatie')">
-          <div class="btn btn-s" style="text-align:center;cursor:pointer" onclick="document.getElementById('foto-camera-verif').click()">📸 Camera</div>
+        <label class="btn btn-s" style="flex:1;text-align:center;cursor:pointer;display:block">
+          📸 Camera
+          <input type="file" id="foto-camera-verif" accept="image/*" capture="environment" onchange="fotoGekozen(this,'verificatie')" style="position:absolute;opacity:0;pointer-events:none;width:0;height:0">
         </label>
-        <label style="flex:1">
-          <input type="file" id="foto-galerij-verif" accept="image/*" multiple style="display:none" onchange="fotoGekozen(this,'verificatie')">
-          <div class="btn btn-s" style="text-align:center;cursor:pointer" onclick="document.getElementById('foto-galerij-verif').click()">🖼️ Galerij</div>
+        <label class="btn btn-s" style="flex:1;text-align:center;cursor:pointer;display:block">
+          🖼️ Galerij
+          <input type="file" id="foto-galerij-verif" accept="image/*" multiple onchange="fotoGekozen(this,'verificatie')" style="position:absolute;opacity:0;pointer-events:none;width:0;height:0">
         </label>
       </div>
       <div id="foto-wachtrij-verif" style="display:flex;flex-wrap:wrap;gap:8px"></div>
