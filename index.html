@@ -816,8 +816,8 @@
     <div class="card">
       <div class="card-t"><span class="ic">📦</span>Partijregistratie</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <div class="fld"><label>Begintijd</label><input type="time" id="bw-start"></div>
-        <div class="fld"><label>Eindtijd</label><input type="time" id="bw-eind"></div>
+        <div class="fld"><label>Begintijd</label><input type="time" id="bw-start" step="900"></div>
+        <div class="fld"><label>Eindtijd</label><input type="time" id="bw-eind" step="900"></div>
         <div class="fld"><label>Partijgrootte (m³)</label><input type="number" id="bw-m3" step="0.1" placeholder="0" oninput="bwBereken()"></div>
         <div class="fld"><label>Grootte bepaald door</label><select id="bw-grootte-door"><option value="">—</option><option>Opmeting</option><option>Weegbon</option><option>Schatting</option><option>Opgave opdrachtgever</option></select></div>
         <div class="fld"><label>Soortelijk gewicht (t/m³)</label><input type="number" id="bw-sg" step="0.01" placeholder="1.80" oninput="bwBereken()"></div>
