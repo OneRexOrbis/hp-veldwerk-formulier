@@ -2071,8 +2071,44 @@ function _activeerMeldenKnop() {
   btn.style.cursor = '';
 }
 
+function _valideerVoorMelden() {
+  // Geeft null terug als OK, anders een waarschuwingstekst.
+  const v = (id) => (document.getElementById(id)?.value || '').trim();
+  const hasSig = (n) => sigs[n]?.hasDraw() || !!document.getElementById(`sig${n}-b64`)?.value;
+  const hasToggle = () => Object.keys(S).some(k => S[k]);
+
+  if (activeModule === '2001' || activeModule === 'brl2000') {
+    // Controleer of er überhaupt iets ingevuld is (toggles of handtekening)
+    const has2001Data = hasToggle() || hasSig(1) || hasSig(2) || v('f1-sd') || v('f2-sd');
+    if (!has2001Data)
+      return 'Het formulier lijkt nog niet ingevuld — vul minimaal de conformiteitsverklaring in en onderteken.';
+    if (!hasSig(1) && !hasSig(2))
+      return 'Het formulier is nog niet ondertekend (conformiteitsverklaring fase 1 of 2).';
+  }
+  if (activeModule === '1001') {
+    if (!hasToggle())
+      return 'Het formulier lijkt nog niet ingevuld — geen enkel veld is aangevinkt.';
+    if (!hasSig(3))
+      return 'Conformiteitsverklaring is nog niet ondertekend.';
+  }
+  if (activeModule === '1002') {
+    if (!hasToggle())
+      return 'Het formulier lijkt nog niet ingevuld — geen enkel veld is aangevinkt.';
+    if (!hasSig(4))
+      return 'Conformiteitsverklaring is nog niet ondertekend.';
+  }
+  return null;
+}
+
 async function definitiefMelden() {
   if (!PROJECT.projectnummer) { showToast('⚠ Geen project geselecteerd'); return; }
+
+  // Valideer of het formulier zinvol ingevuld is
+  const waarschuwing = _valideerVoorMelden();
+  if (waarschuwing) {
+    if (!confirm(`⚠️ ${waarschuwing}\n\nToch definitief indienen?`)) return;
+  }
+
   const _eqFase = activeModule === 'eq' ? (+(S.eq_fase||'1') === 2 ? 2 : 1) : null;
   const _confirmTxt = activeModule === 'eq'
     ? `EQ fase ${_eqFase} definitief opslaan? De JSON wordt opgeslagen in AI Sjablonen op SharePoint.`
