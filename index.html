@@ -754,8 +754,8 @@
     </div>
     <div class="card">
       <div class="card-t"><span class="ic">⏱️</span>Tijdsbesteding monsterneming (Protocol 1001 §6.2.17)</div>
-      <div class="fld"><label>Aanvang</label><input type="time" id="ap-ts-aanvang" step="900"></div>
-      <div class="fld"><label>Einde</label><input type="time" id="ap-ts-einde" step="900"></div>
+      <div class="fld"><label>Aanvang</label><input type="time" id="ap-ts-aanvang" step="900" onchange="snapQuartier(this)"></div>
+      <div class="fld"><label>Einde</label><input type="time" id="ap-ts-einde" step="900" onchange="snapQuartier(this)"></div>
       <div class="fld"><label>Opmerkingen</label><textarea id="ap-ts-opm" rows="2" placeholder="bijv. wachttijden, weersomstandigheden"></textarea></div>
     </div>
     <div class="card">
@@ -816,8 +816,8 @@
     <div class="card">
       <div class="card-t"><span class="ic">📦</span>Partijregistratie</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <div class="fld"><label>Begintijd</label><input type="time" id="bw-start" step="900"></div>
-        <div class="fld"><label>Eindtijd</label><input type="time" id="bw-eind" step="900"></div>
+        <div class="fld"><label>Begintijd</label><input type="time" id="bw-start" step="900" onchange="snapQuartier(this)"></div>
+        <div class="fld"><label>Eindtijd</label><input type="time" id="bw-eind" step="900" onchange="snapQuartier(this)"></div>
         <div class="fld"><label>Partijgrootte (m³)</label><input type="number" id="bw-m3" step="0.1" placeholder="0" oninput="bwBereken()"></div>
         <div class="fld"><label>Grootte bepaald door</label><select id="bw-grootte-door"><option value="">—</option><option>Opmeting</option><option>Weegbon</option><option>Schatting</option><option>Opgave opdrachtgever</option></select></div>
         <div class="fld"><label>Soortelijk gewicht (t/m³)</label><input type="number" id="bw-sg" step="0.01" placeholder="1.80" oninput="bwBereken()"></div>
@@ -888,8 +888,8 @@
     <div class="card">
       <div class="card-t"><span class="ic">⏱️</span>Tijdsbesteding monsterneming</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <div class="fld"><label>Aanvang</label><input type="time" id="bw-ts-aanvang" step="900"></div>
-        <div class="fld"><label>Einde</label><input type="time" id="bw-ts-einde" step="900"></div>
+        <div class="fld"><label>Aanvang</label><input type="time" id="bw-ts-aanvang" step="900" onchange="snapQuartier(this)"></div>
+        <div class="fld"><label>Einde</label><input type="time" id="bw-ts-einde" step="900" onchange="snapQuartier(this)"></div>
       </div>
     </div>
     <div class="card">
@@ -1113,6 +1113,7 @@
 <div id="bc-modal" role="dialog" aria-modal="true" aria-label="Barcode scanner">
   <div style="position:relative;display:flex;align-items:center;justify-content:center;width:100%;max-width:480px">
     <video id="bc-video" autoplay playsinline muted></video>
+    <div id="bc-reader" style="width:100%;display:none"></div>
     <div id="bc-aim"></div>
   </div>
   <div id="bc-status">Camera starten…</div>
@@ -2149,38 +2150,50 @@ async function definitiefMelden() {
 
 function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
 
-// ─── BARCODE SCANNER ───────────────────────────────
-// Native BarcodeDetector (Chrome/Android) met ZXing-fallback voor iOS Safari
-let _bcStream = null;
-let _bcDetector = null;
-let _bcAnimFrame = null;
-let _bcTargetId = null;
-let _bcZXingReader = null;
-let _bcZXingLib = null;
+// Snap tijdsinput naar dichtstbijzijnde kwartier (werkt op alle iOS-versies)
+function snapQuartier(el) {
+  if (!el.value) return;
+  const [h, m] = el.value.split(':').map(Number);
+  const snapped = Math.round(m / 15) * 15;
+  const hf = snapped === 60 ? (h + 1) % 24 : h;
+  const mf = snapped === 60 ? 0 : snapped;
+  el.value = String(hf).padStart(2,'0') + ':' + String(mf).padStart(2,'0');
+}
 
-async function _bcLoadZXing() {
-  if (_bcZXingLib) return _bcZXingLib;
+// ─── BARCODE SCANNER ───────────────────────────────
+// Native BarcodeDetector (Chrome/Android) + html5-qrcode-fallback voor iOS Safari
+let _bcStream    = null;
+let _bcDetector  = null;
+let _bcAnimFrame = null;
+let _bcTargetId  = null;
+let _bcHtml5     = null;   // html5-qrcode instantie (iOS-pad)
+
+async function _bcLoadHtml5Qrcode() {
+  if (window.Html5Qrcode) return window.Html5Qrcode;
   return new Promise((resolve, reject) => {
     const s = document.createElement('script');
-    s.src = 'https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/umd/index.min.js';
-    s.onload = () => { _bcZXingLib = window.ZXingBrowser; resolve(_bcZXingLib); };
-    s.onerror = () => reject(new Error('ZXing laden mislukt'));
+    s.src = 'https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js';
+    s.onload = () => resolve(window.Html5Qrcode);
+    s.onerror = () => reject(new Error('html5-qrcode laden mislukt'));
     document.head.appendChild(s);
   });
 }
 
 async function openBarcodeScanner(targetId) {
   _bcTargetId = targetId;
-  const modal = document.getElementById('bc-modal');
-  const video = document.getElementById('bc-video');
+  const modal  = document.getElementById('bc-modal');
+  const video  = document.getElementById('bc-video');
+  const reader = document.getElementById('bc-reader');
   const status = document.getElementById('bc-status');
   modal.classList.add('open');
   status.textContent = 'Camera starten…';
 
   if ('BarcodeDetector' in window) {
     // ── Native pad: Chrome / Android ──────────────────────────────────────
+    video.style.display  = '';
+    reader.style.display = 'none';
     try {
-      _bcDetector = new BarcodeDetector({ formats: ['code_128', 'code_39', 'ean_13', 'ean_8', 'qr_code', 'data_matrix'] });
+      _bcDetector = new BarcodeDetector({ formats: ['code_128','code_39','ean_13','ean_8','qr_code','data_matrix'] });
       _bcStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
       });
@@ -2192,29 +2205,29 @@ async function openBarcodeScanner(targetId) {
       status.textContent = '⚠️ Camera toegang geweigerd.';
     }
   } else {
-    // ── ZXing-fallback: iOS Safari (laat ZXing de stream zelf beheren) ────
+    // ── html5-qrcode-fallback: iOS Safari ─────────────────────────────────
+    video.style.display  = 'none';
+    reader.style.display = 'block';
+    reader.innerHTML     = '';
+    document.getElementById('bc-aim').style.display = 'none';
     status.textContent = '🔍 Scanner laden…';
     try {
-      const ZXing = await _bcLoadZXing();
-      _bcZXingReader = new ZXing.BrowserMultiFormatReader();
-      status.textContent = '🔍 Richt camera op de barcode van de emmer…';
-      // decodeFromConstraints laat ZXing zelf een stream starten op het video-element
-      // — geen eigen getUserMedia nodig, voorkomt conflict op iOS Safari
-      _bcZXingReader.decodeFromConstraints(
-        { video: { facingMode: 'environment' } },
-        video,
-        (result, err) => {
-          if (result) {
-            const code = result.getText();
-            const el = document.getElementById(_bcTargetId);
-            if (el) { el.value = code; el.dispatchEvent(new Event('input')); }
-            showToast('✓ Labcode gescand: ' + code);
-            closeBarcodeScanner();
-          }
-        }
+      const Html5Qrcode = await _bcLoadHtml5Qrcode();
+      _bcHtml5 = new Html5Qrcode('bc-reader');
+      await _bcHtml5.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 260, height: 120 } },
+        (code) => {
+          const el = document.getElementById(_bcTargetId);
+          if (el) { el.value = code; el.dispatchEvent(new Event('input')); }
+          showToast('✓ Labcode gescand: ' + code);
+          closeBarcodeScanner();
+        },
+        () => {}   // scan-fout per frame — negeer
       );
+      status.textContent = '🔍 Richt camera op de barcode van de emmer…';
     } catch(e) {
-      status.textContent = '⚠️ Scanner niet beschikbaar. Voer de labcode handmatig in.';
+      status.textContent = '⚠️ Camera toegang geweigerd. Voer de labcode handmatig in.';
     }
   }
 }
@@ -2235,14 +2248,20 @@ function _bcScan() {
     } else {
       _bcAnimFrame = requestAnimationFrame(_bcScan);
     }
-  }).catch(() => {
-    _bcAnimFrame = requestAnimationFrame(_bcScan);
-  });
+  }).catch(() => { _bcAnimFrame = requestAnimationFrame(_bcScan); });
 }
 
 function closeBarcodeScanner() {
   if (_bcAnimFrame) { cancelAnimationFrame(_bcAnimFrame); _bcAnimFrame = null; }
-  if (_bcZXingReader) { try { _bcZXingReader.reset(); } catch(_) {} _bcZXingReader = null; }
+  if (_bcHtml5) {
+    try { _bcHtml5.stop().catch(() => {}); } catch(_) {}
+    _bcHtml5 = null;
+    const reader = document.getElementById('bc-reader');
+    const aim    = document.getElementById('bc-aim');
+    if (reader) { reader.style.display = 'none'; reader.innerHTML = ''; }
+    document.getElementById('bc-video').style.display = '';
+    if (aim) aim.style.display = '';
+  }
   if (_bcStream) { _bcStream.getTracks().forEach(t => t.stop()); _bcStream = null; }
   const video = document.getElementById('bc-video');
   if (video) { video.srcObject = null; }
@@ -2250,7 +2269,7 @@ function closeBarcodeScanner() {
 }
 
 // Sluit scanner bij Escape
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && _bcStream) closeBarcodeScanner(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeBarcodeScanner(); });
 
 // ─── FOTO'S ────────────────────────────────────────
 // ─── EQ — Ecologische Quickscan ─────────────────────────────────────────
