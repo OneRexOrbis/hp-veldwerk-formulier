@@ -2508,6 +2508,10 @@ function _datumVanFile(file) {
   return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}_${String(d.getHours()).padStart(2,'0')}${String(d.getMinutes()).padStart(2,'0')}${String(d.getSeconds()).padStart(2,'0')}`;
 }
 
+// Oplopende teller per categorie; reset bij nieuw project
+const _fotoTeller = { rapport: 0, verificatie: 0 };
+function _fotoTellerReset() { _fotoTeller.rapport = 0; _fotoTeller.verificatie = 0; }
+
 function fotoGekozen(input, categorie) {
   if (!PROJECT.projectnummer) { showToast('⚠ Eerst een project kiezen'); input.value=''; return; }
   const files = Array.from(input.files || []);
@@ -2525,9 +2529,15 @@ async function _fotoVerwerken(file, categorie) {
   // STAP 1 — DIRECT kaartje in beeld (vóór welke await dan ook).
   //          Zo ziet de gebruiker áltijd dat er iets gebeurt, ook als
   //          iOS onderweg ergens crasht.
+
+  // Sequentiële naam: foto1.jpg, foto2.jpg, … (teller per categorie, reset bij nieuw project)
+  const cat = categorie === 'verificatie' ? 'verificatie' : 'rapport';
+  const fotoNr = ++_fotoTeller[cat];
+  const seqNaam = `foto${fotoNr}.jpg`;
+
   const id = 'foto_' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
   const wachtrij = document.getElementById(
-    categorie === 'verificatie' ? 'foto-wachtrij-verif' : 'foto-wachtrij-rapport'
+    cat === 'verificatie' ? 'foto-wachtrij-verif' : 'foto-wachtrij-rapport'
   );
   if (!wachtrij) { showToast('✗ Foto-wachtrij niet gevonden'); return; }
   const kaart = document.createElement('div');
@@ -2535,7 +2545,7 @@ async function _fotoVerwerken(file, categorie) {
   kaart.style.cssText = 'width:80px;text-align:center;position:relative';
   kaart.innerHTML = `
     <div style="width:80px;height:80px;background:var(--gy-l);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px">⏳</div>
-    <div style="font-size:9px;color:var(--gy);margin-top:3px;word-break:break-all">${(file.name || 'foto').slice(0,16)}</div>`;
+    <div style="font-size:9px;color:var(--gy);margin-top:3px;word-break:break-all">${seqNaam}</div>`;
   wachtrij.appendChild(kaart);
 
   const markKaartError = (msg) => {
@@ -2593,7 +2603,7 @@ async function _fotoVerwerken(file, categorie) {
   }
 
   // STAP 4 — Uploaden (eigen foutpaden zitten in _fotoUploaden zelf)
-  await _fotoUploaden(id, file.name || 'foto.jpg', blob, 'image/jpeg',
+  await _fotoUploaden(id, seqNaam, blob, 'image/jpeg',
     categorie, opnamedatum, _eqFotoGps?.lat||null, _eqFotoGps?.lon||null);
 }
 
@@ -2861,6 +2871,7 @@ function selectProject(pid){
       PROJECT.relevante_soortgroepen = pf.relevante_soortgroepen || [];
       PROJECT.soorten_hints          = pf.soorten_hints          || null;
       prefill();
+      _fotoTellerReset();
       showForm();
       _activeerMeldenKnop();
       _toonExportJSON();
